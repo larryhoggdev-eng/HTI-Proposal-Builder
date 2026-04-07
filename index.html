@@ -23,6 +23,8 @@
   .top-bar .btn { padding: 8px 16px; font-size: 12px; }
 
   .main-content { display: flex; flex: 1; overflow: hidden; }
+  .editor-panel { flex: 1; overflow-y: auto; background: #2d2d2d; padding: 20px; }
+  .editor-scroll { max-width: 700px; margin: 0 auto; }
   .form-section { background: #1a1a2e; border-radius: 8px; padding: 12px; margin-bottom: 10px; border: 1px solid #2a2a4a; }
   .form-section h3 { color: #e2a308; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; border-bottom: 1px solid #333; padding-bottom: 6px; }
   .form-row { margin-bottom: 8px; }
@@ -85,8 +87,11 @@
   }
   .sys-selected-tag .tag-x:hover { color: #c0392b; }
 
-  .preview-panel { flex: 1; overflow-y: auto; background: #2d2d2d; padding: 30px; display: flex; justify-content: center; }
-  .preview-scroll { width: 850px; }
+  .preview-panel { flex: 1; overflow-y: auto; background: #3a3a3a; padding: 20px; display: flex; justify-content: center; border-left: 3px solid #e2a308; }
+  .preview-scroll { width: 850px; transform-origin: top center; }
+  .preview-scroll .proposal-page { margin-bottom: 20px; }
+  .preview-scroll .export-content { cursor: default; }
+  .preview-scroll .export-content[contenteditable] { pointer-events: none; }
 
   .form-card { background: #1e1e3a; border-radius: 8px; padding: 16px 20px; margin-bottom: 12px; border: 1px solid #2a2a4a; }
   .form-card h3 {
@@ -117,6 +122,8 @@
   .repeater-row .btn-remove { flex: 0 0 28px; height: 28px; align-self: flex-end; margin-bottom: 0; background: #e74c3c; color: #fff; border: none; border-radius: 50%; font-size: 14px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; line-height: 1; }
   .repeater-row .btn-remove:hover { background: #c0392b; }
 
+  .subsection-label { display: block; font-size: 12px; color: #e2a308; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 14px; margin-bottom: 8px; padding-top: 10px; border-top: 1px solid #333; font-weight: 600; }
+
   .procedure-section-block { background: #12122a; border-radius: 6px; padding: 10px 12px; margin-bottom: 8px; border: 1px solid #2a2a4a; }
   .procedure-section-block .form-row { margin-bottom: 6px; }
   .procedure-step-row { display: flex; gap: 6px; margin-bottom: 4px; align-items: flex-start; }
@@ -133,17 +140,20 @@
     margin-bottom: 20px; position: relative; line-height: 1.4; box-shadow: 0 4px 20px rgba(0,0,0,0.5);
     box-sizing: border-box;
   }
-  .proposal-page.export-page { height: 1056px; overflow: hidden; padding-top: 10px; padding-bottom: 80px; }
+  .proposal-page.export-page { height: 1056px; overflow: hidden; padding-top: 10px; padding-bottom: 10px; }
   .proposal-page * { color: #000; }
-  .hti-header { position: relative; margin-bottom: 0; }
+  .export-content { tab-size: 4; -moz-tab-size: 4; }
+  .hti-header { position: relative; margin-bottom: 20px; }
   .hti-logo-img { width: 100%; display: block; }
-  .hti-header-overlay { position: absolute; bottom: 30px; right: 0; text-align: right; padding: 6px 0; }
+  .hti-header-overlay { position: absolute; bottom: 12px; right: 0; text-align: right; padding: 6px 0; }
+  .proposal-page:first-child .hti-header-overlay { bottom: 30px; }
   .hti-header-title { position: absolute; top: calc(50% + 8px); left: 176px; transform: translateY(-50%); text-align: left; line-height: 0.85; }
   .hti-header-title-main { font-size: 48pt; font-weight: 700; color: #000; font-family: Georgia, serif; }
   .hti-header-title-sub { font-size: 18pt; font-weight: 700; color: #000; font-family: Georgia, serif; }
   .hti-address { font-size: 11pt; color: #000; white-space: nowrap; }
   .hti-date { font-size: 10pt; color: #000; margin-top: 4px; }
-  .page-num { font-size: 10pt; text-align: right; margin-bottom: 10px; color: #555; }
+  .hti-page-num { font-size: 9pt; color: #555; margin-top: 2px; }
+  .page-num { display: none; }
   .recipient { margin-bottom: 16px; font-size: 10.5pt; }
   .recipient strong { font-weight: 700; }
   .greeting { margin-bottom: 4px; }
@@ -193,7 +203,8 @@
   @media print {
     body { background: #fff; }
     .top-bar { display: none !important; }
-    .preview-panel { padding: 0; overflow: visible; background: #fff; }
+    .editor-panel { display: none !important; }
+    .preview-panel { padding: 0; overflow: visible; background: #fff; border: none; }
     .preview-scroll { width: 100%; }
     .form-card { display: none !important; }
   }
@@ -204,19 +215,23 @@
 
   .export-modal-overlay {
     display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 9999;
-    justify-content: center; align-items: flex-start; padding: 30px; overflow-y: auto;
+    flex-direction: column; overflow: hidden;
   }
   .export-modal-overlay.active { display: flex; }
-  .export-modal {
-    background: #1e1e2e; border-radius: 12px; padding: 24px; max-width: 900px; width: 100%;
-  }
   .export-modal-header {
-    display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 24px; background: #1e1e2e; border-bottom: 2px solid #e2a308; flex-shrink: 0;
+  }
+  .export-modal-body {
+    flex: 1; overflow-y: auto; display: flex; justify-content: center;
   }
   .export-modal-header h2 { color: #e2a308; margin: 0; font-size: 18px; }
-  .export-modal-actions { display: flex; gap: 8px; }
+  .export-modal-actions { display: flex; gap: 8px; align-items: center; }
   .export-modal-actions .btn { padding: 10px 24px; }
-  .export-modal-pages { display: flex; flex-direction: column; align-items: center; gap: 20px; }
+  .edit-toolbar { display: flex; gap: 4px; margin-right: 8px; padding-right: 12px; border-right: 1px solid #444; }
+  .edit-toolbar .btn { padding: 6px 10px; font-size: 14px; min-width: 32px; text-align: center; user-select: none; }
+  .export-modal-pages { display: flex; flex-direction: column; align-items: center; gap: 20px; padding: 30px; flex-shrink: 0; }
+  .export-modal-pages .proposal-page { flex-shrink: 0; }
 </style>
 </head>
 <body>
@@ -256,17 +271,19 @@
   </div>
 
   <div class="bar-section" style="margin-left: auto;">
-    <button class="btn btn-primary" onclick="showExportPreview()">Preview &amp; Export PDF</button>
-    <button class="btn btn-primary" onclick="showExportPreviewWord()">Preview &amp; Export Word</button>
+    <button class="btn btn-primary" onclick="showExportPreview()">Final Edit</button>
     <button class="btn btn-secondary" onclick="window.print()">Print</button>
     <button class="btn btn-danger" onclick="resetToDefault()">Reset</button>
   </div>
 </div>
 
 <div class="main-content">
-<div class="preview-panel">
-  <div class="preview-scroll" id="previewContainer"></div>
-</div>
+  <div class="editor-panel">
+    <div class="editor-scroll" id="previewContainer"></div>
+  </div>
+  <div class="preview-panel">
+    <div class="preview-scroll" id="livePreview"></div>
+  </div>
 </div>
 
 <script>
@@ -734,14 +751,11 @@ function getSectionWarnings() {
   if (!s.projectName.trim() || !s.projectCity.trim() || !s.projectState.trim() || !s.systemDisplayName.trim()) w['project-info'] = true;
   // Recipient: companyName required, contactName for GC
   if (!s.companyName.trim() || (s.clientType === 'gc' && !s.contactName.trim())) w['recipient'] = true;
-  // Scope: at least one scope with desc and qty
-  if (s.scopeSections.some(sec => !sec.name.trim() || sec.scopes.some(sc => !sc.desc.trim() || !sc.qty.trim()))) w['scope'] = true;
-  // Products: at least one product with text
-  if (s.products.length === 0 || s.products.some(p => !p.text.trim())) w['products'] = true;
-  // Procedures: at least one step
-  if (s.procedureSections.some(sec => sec.steps.length === 0 || sec.steps.some(st => !st.text.trim()))) w['procedures'] = true;
-  // Cost: value required
-  if (s.costSections.some(cs => !cs.value.trim())) w['cost'] = true;
+  // Work section: scope, products, procedures, cost
+  if (s.scopeSections.some(sec => !sec.name.trim() || sec.scopes.some(sc => !sc.desc.trim() || !sc.qty.trim()))
+    || s.products.length === 0 || s.products.some(p => !p.text.trim())
+    || s.procedureSections.some(sec => sec.steps.length === 0 || sec.steps.some(st => !st.text.trim()))
+    || s.costSections.some(cs => !cs.value.trim())) w['work'] = true;
   // Sign-off: pmName required
   if (!s.pmName.trim() || !s.pmCell.trim() || !s.pmEmail.trim()) w['signoff'] = true;
   return w;
@@ -1517,7 +1531,7 @@ function addScope(sec) { state.scopeSections[sec].scopes.push({ desc: '', qty: '
 function moveScope(sec, i, dir) { swap(state.scopeSections[sec].scopes, i, dir); render(); }
 function addScopeSection() { state.scopeSections.push({ name: 'New Scope Section', scopes: [{ desc: '', qty: '', unit: 'Square Feet' }] }); render(); }
 function removeScopeSection(sec) { state.scopeSections.splice(sec, 1); render(); }
-function syncScopeSection(sec, val) { if (state.scopeSections[sec]) state.scopeSections[sec].name = val; }
+function syncScopeSection(sec, val) { if (state.scopeSections[sec]) state.scopeSections[sec].name = val; schedulePreviewUpdate(); }
 function addQty2(sec, i) { if (state.scopeSections[sec] && state.scopeSections[sec].scopes[i]) { state.scopeSections[sec].scopes[i].qty2 = ''; state.scopeSections[sec].scopes[i].unit2 = 'LF of Cove'; render(); } }
 function removeProduct(i) { state.products.splice(i, 1); render(); }
 function addProduct() { state.products.push({ text: '' }); render(); }
@@ -1526,8 +1540,8 @@ function removeProcedureStep(sec, i) { state.procedureSections[sec].steps.splice
 function addProcedureStep(sec) { state.procedureSections[sec].steps.push({ text: '' }); render(); }
 function addProcedureSection() { state.procedureSections.push({ header: '', steps: [] }); render(); }
 function removeProcedureSection(sec) { state.procedureSections.splice(sec, 1); render(); }
-function syncProcedureSectionHeader(sec, val) { if (state.procedureSections[sec]) state.procedureSections[sec].header = val; }
-function syncCostField(sec, field, val) { if (state.costSections[sec]) state.costSections[sec][field] = val; }
+function syncProcedureSectionHeader(sec, val) { if (state.procedureSections[sec]) state.procedureSections[sec].header = val; schedulePreviewUpdate(); }
+function syncCostField(sec, field, val) { if (state.costSections[sec]) state.costSections[sec][field] = val; schedulePreviewUpdate(); }
 function addCostSection() { state.costSections.push({ description: '', value: '' }); render(); }
 function removeCostSection(sec) { state.costSections.splice(sec, 1); render(); }
 function removeAddOption(i) { state.addOptions.splice(i, 1); render(); }
@@ -1541,11 +1555,14 @@ function swap(arr, i, dir) {
   [arr[i], arr[j]] = [arr[j], arr[i]];
 }
 
-function syncField(field, val) { state[field] = val; }
-function syncScope(sec, i, key, val) { if (state.scopeSections[sec] && state.scopeSections[sec].scopes[i]) state.scopeSections[sec].scopes[i][key] = val; }
-function syncProduct(i, val) { if (state.products[i]) state.products[i].text = val; }
-function syncProcedure(sec, i, val) { if (state.procedureSections[sec] && state.procedureSections[sec].steps[i]) state.procedureSections[sec].steps[i].text = val; }
-function syncAddOption(i, val) { if (state.addOptions[i]) state.addOptions[i].text = val; }
+let _previewTimer = null;
+function schedulePreviewUpdate() { clearTimeout(_previewTimer); _previewTimer = setTimeout(updateLivePreview, 150); }
+
+function syncField(field, val) { state[field] = val; schedulePreviewUpdate(); }
+function syncScope(sec, i, key, val) { if (state.scopeSections[sec] && state.scopeSections[sec].scopes[i]) state.scopeSections[sec].scopes[i][key] = val; schedulePreviewUpdate(); }
+function syncProduct(i, val) { if (state.products[i]) state.products[i].text = val; schedulePreviewUpdate(); }
+function syncProcedure(sec, i, val) { if (state.procedureSections[sec] && state.procedureSections[sec].steps[i]) state.procedureSections[sec].steps[i].text = val; schedulePreviewUpdate(); }
+function syncAddOption(i, val) { if (state.addOptions[i]) state.addOptions[i].text = val; schedulePreviewUpdate(); }
 
 // ============================================================
 // RENDER (Form Layout in right panel)
@@ -1586,21 +1603,15 @@ function render() {
           <option value="union" ${s.laborType==='union'?'selected':''}>Union Labor</option>
         </select>
       </div>
-      <div class="form-row" style="flex:0 0 60px;"><label>Mobs</label><input value="${esc(s.numMobilizations)}" onblur="syncField('numMobilizations',this.value)" placeholder="1" style="text-align:center;"></div>
-      <div class="form-row" style="flex:0 0 70px;"><label>Phases</label><input value="${esc(s.numPhases)}" onblur="syncField('numPhases',this.value)" placeholder="-" style="text-align:center;"></div>
     </div>
   </div></div>`;
 
   // RECIPIENT
   h += `<div class="form-card">${cardHeader("recipient","Recipient")}`;
-  if (ct === 'gc') {
-    h += `<div class="form-row-inline">
-      <div class="form-row"><label>Contact Name</label><input value="${esc(s.contactName)}" onblur="syncField('contactName',this.value)" placeholder="Person's Name"></div>
-      <div class="form-row"><label>Title</label><input value="${esc(s.contactTitle)}" onblur="syncField('contactTitle',this.value)" placeholder="Title (optional)"></div>
-    </div>`;
-  } else {
-    h += `<div class="form-row"><label>Contact Name</label><input value="${esc(s.contactName)}" onblur="syncField('contactName',this.value)" placeholder="Contact Name"></div>`;
-  }
+  h += `<div class="form-row-inline">
+    <div class="form-row"><label>Contact Name</label><input value="${esc(s.contactName)}" onblur="syncField('contactName',this.value)" placeholder="Person's Name"></div>
+    <div class="form-row"><label>Title</label><input value="${esc(s.contactTitle)}" onblur="syncField('contactTitle',this.value)" placeholder="Title (optional)"></div>
+  </div>`;
   h += `<div class="form-row"><label>Company Name</label><input value="${esc(s.companyName)}" onblur="syncField('companyName',this.value)" placeholder="${ct==='gc'?'GC Name':'Customer Name'}"></div>
     <div class="form-row"><label>Address</label><input value="${esc(s.address)}" onblur="syncField('address',this.value)" placeholder="Street Address"></div>
     <div class="form-row-inline">
@@ -1610,8 +1621,16 @@ function render() {
     </div>
   </div></div>`;
 
-  // SCOPE OF WORK
-  h += `<div class="form-card">${cardHeader("scope","Scope of Work")}`;
+  // SCOPE, PRODUCTS, PROCEDURES & COST (merged)
+  h += `<div class="form-card">${cardHeader("work","Scope, Products, Procedures &amp; Cost")}
+    <div class="form-row-inline" style="margin-bottom:10px;">
+      <div class="form-row" style="flex:0 0 60px;"><label>Mobs</label><input value="${esc(s.numMobilizations)}" onblur="syncField('numMobilizations',this.value)" placeholder="1" style="text-align:center;"></div>
+      <div class="form-row" style="flex:0 0 70px;"><label>Phases</label><input value="${esc(s.numPhases)}" onblur="syncField('numPhases',this.value)" placeholder="-" style="text-align:center;"></div>
+      <div class="form-row"></div>
+    </div>`;
+
+  // -- Scope subsection
+  h += `<label class="subsection-label">Scope of Work</label>`;
   s.scopeSections.forEach((sec, si) => {
     h += `<div class="scope-section-block">
       <div class="form-row-inline" style="margin-bottom:6px;">
@@ -1634,19 +1653,19 @@ function render() {
     });
     h += `<button class="btn btn-secondary btn-sm" onclick="addScope(${si})" style="margin-top:4px;">+ Add Scope Line</button></div>`;
   });
-  h += `<button class="btn btn-primary btn-sm" onclick="addScopeSection()" style="margin-top:6px;">+ Add Scope Section</button></div></div>`;
+  h += `<button class="btn btn-primary btn-sm" onclick="addScopeSection()" style="margin-top:6px;">+ Add Scope Section</button>`;
 
-  // PRODUCTS
-  h += `<div class="form-card">${cardHeader("products","Products")}`;
+  // -- Products subsection
+  h += `<label class="subsection-label">Products</label>`;
   s.products.forEach((p, i) => {
     h += `<div class="repeater-row">
       <div class="form-row"><input value="${esc(p.text)}" onblur="syncProduct(${i},this.value)" placeholder="Product name"></div>
       <button class="btn-remove" onclick="removeProduct(${i})">&times;</button></div>`;
   });
-  h += `<button class="btn btn-secondary btn-sm" onclick="addProduct()" style="margin-top:4px;">+ Add Product</button></div></div>`;
+  h += `<button class="btn btn-secondary btn-sm" onclick="addProduct()" style="margin-top:4px;">+ Add Product</button>`;
 
-  // PROCEDURES
-  h += `<div class="form-card">${cardHeader("procedures","Procedures")}
+  // -- Procedures subsection
+  h += `<label class="subsection-label">Procedures</label>
     <div class="form-row"><label>Existing Site Conditions</label><textarea style="min-height:60px;" onblur="syncField('existingConditions',this.value)" placeholder="Describe existing site conditions (optional)">${escH(s.existingConditions)}</textarea></div>
     <p style="font-size:10px; color:#888; margin-bottom:8px;">Type {value} for mil values, e.g. {30} mils WFT</p>`;
   s.procedureSections.forEach((sec, pi) => {
@@ -1663,11 +1682,10 @@ function render() {
     });
     h += `<button class="btn btn-secondary btn-sm" onclick="addProcedureStep(${pi})" style="margin-top:4px;">+ Add Step</button></div>`;
   });
-  h += `<button class="btn btn-primary btn-sm" onclick="addProcedureSection()" style="margin-top:6px;">+ Add Procedure Section</button></div></div>`;
+  h += `<button class="btn btn-primary btn-sm" onclick="addProcedureSection()" style="margin-top:6px;">+ Add Procedure Section</button>`;
 
-  // COST & ADDITIONAL OPTIONS (merged)
-  h += `<div class="form-card">${cardHeader("cost","Cost &amp; Additional Options")}
-    <label style="font-size:11px; color:#aaa; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px; display:block;">Cost Sections</label>`;
+  // -- Cost & Add Options subsection
+  h += `<label class="subsection-label">Cost &amp; Additional Options</label>`;
   s.costSections.forEach((cs, ci) => {
     h += `<div class="repeater-row" style="flex-wrap:wrap;">
       <div class="form-row"><label>Description</label><input value="${esc(cs.description)}" onblur="syncCostField(${ci},'description',this.value)" placeholder="Cost description"></div>
@@ -1676,16 +1694,16 @@ function render() {
     </div>`;
   });
   h += `<button class="btn btn-secondary btn-sm" onclick="addCostSection()" style="margin-top:4px;">+ Add Cost Section</button>
-    <label style="font-size:11px; color:#aaa; text-transform:uppercase; letter-spacing:0.5px; margin-top:14px; margin-bottom:6px; display:block; border-top:1px solid #333; padding-top:10px;">Additional Options</label>`;
+    <div style="margin-top:10px;">`;
   s.addOptions.forEach((a, i) => {
     h += `<div class="repeater-row">
       <div class="form-row"><input value="${esc(a.text)}" onblur="syncAddOption(${i},this.value)" placeholder="Option text"></div>
       <button class="btn-remove" onclick="removeAddOption(${i})">&times;</button></div>`;
   });
-  h += `<button class="btn btn-secondary btn-sm" onclick="addAddOption()" style="margin-top:4px;">+ Add Option</button>
+  h += `<button class="btn btn-secondary btn-sm" onclick="addAddOption()" style="margin-top:4px;">+ Add Option</button></div>
     <div class="form-row" style="margin-top:12px; border-top:1px solid #333; padding-top:10px;">
       <label>Tax Note</label>
-      <select onchange="state.taxNote=this.value;">
+      <select onchange="state.taxNote=this.value; schedulePreviewUpdate();">
         ${Object.entries(taxTexts).map(([k,v]) => `<option value="${k}" ${s.taxNote===k?'selected':''}>${v}</option>`).join('')}
       </select>
     </div>
@@ -1703,7 +1721,7 @@ function render() {
         <option value="custom" ${wType==='custom'?'selected':''}>Custom (edit below)</option>
       </select>
     </div>
-    <div class="form-row"><label>Warranty Text</label><textarea rows="4" onblur="syncField('warrantyText',this.value)">${escH(s.warrantyText)}</textarea></div>
+    <div class="form-row"><label>Warranty Text</label><textarea class="auto-expand" onblur="syncField('warrantyText',this.value)" style="overflow:hidden;resize:none;">${escH(s.warrantyText)}</textarea></div>
     <label style="font-size:11px; color:#aaa; text-transform:uppercase; letter-spacing:0.5px; margin-top:10px; margin-bottom:6px; display:block; border-top:1px solid #333; padding-top:10px;">Inclusions &amp; Exclusions</label>
     <div id="inclusionChecksForm"></div>
     <div style="margin-top:6px; display:flex; gap:6px;">
@@ -1737,8 +1755,8 @@ function render() {
   document.getElementById('previewContainer').innerHTML = h;
   renderInclusionChecks();
 
-  // Auto-expand procedure textareas to fit content
-  document.querySelectorAll('.procedure-step-row textarea').forEach(ta => {
+  // Auto-expand all textareas that need it
+  document.querySelectorAll('.procedure-step-row textarea, textarea.auto-expand').forEach(ta => {
     ta.style.height = 'auto';
     ta.style.height = ta.scrollHeight + 'px';
     ta.addEventListener('input', function() { this.style.height = 'auto'; this.style.height = this.scrollHeight + 'px'; });
@@ -1752,7 +1770,64 @@ function render() {
       tagEl.innerHTML = `<span class="sys-selected-tag">${escH(meta.label)}<button class="tag-x" onclick="clearSystem()">&times;</button></span>`;
     }
   }
+
+  // Update live preview
+  updateLivePreview();
 }
+
+function updateLivePreview() {
+  const previewEl = document.getElementById('livePreview');
+  if (!previewEl) return;
+
+  const { hdr, sections, footC, footF } = buildExportSections();
+
+  // Measure footer height
+  const footMeasurer = document.createElement('div');
+  footMeasurer.className = 'proposal-page export-page';
+  footMeasurer.style.cssText = 'position:absolute;left:-9999px;top:0;';
+  footMeasurer.innerHTML = footC;
+  document.body.appendChild(footMeasurer);
+  const footerEl = footMeasurer.querySelector('.page-footer');
+  const FOOTER_H = footerEl ? footerEl.offsetHeight : 60;
+  document.body.removeChild(footMeasurer);
+  _exportUsable = 1056 - 10 - FOOTER_H - 20;
+
+  // Measure header height - use existing preview if available, else offscreen
+  const existingHdr = previewEl.querySelector('.hti-header');
+  if (existingHdr) {
+    _exportHdrH = existingHdr.offsetHeight + 16;
+  } else {
+    const hdrMeasurer = document.createElement('div');
+    hdrMeasurer.className = 'proposal-page';
+    hdrMeasurer.style.cssText = 'position:absolute;left:-9999px;top:0;width:816px;padding:0 60px;overflow:visible;';
+    hdrMeasurer.innerHTML = hdr;
+    document.body.appendChild(hdrMeasurer);
+    _exportHdrH = hdrMeasurer.scrollHeight + 16;
+    document.body.removeChild(hdrMeasurer);
+  }
+  // Ensure minimum header height (image may not be loaded yet)
+  if (_exportHdrH < 100) _exportHdrH = 250;
+
+  const pagesHTML = smartPaginate(hdr, sections, footC, footF);
+  previewEl.innerHTML = pagesHTML;
+}
+
+// Enter key: update preview and jump to next field
+document.addEventListener('keydown', function(e) {
+  if (e.key !== 'Enter') return;
+  const el = e.target;
+  if (el.tagName === 'TEXTAREA') return; // allow normal Enter in textareas
+  if (el.tagName !== 'INPUT') return;
+  e.preventDefault();
+  el.blur(); // triggers sync + preview update
+  const container = document.getElementById('previewContainer');
+  if (!container) return;
+  const fields = Array.from(container.querySelectorAll('input, textarea, select'));
+  const idx = fields.indexOf(el);
+  if (idx === -1) return;
+  const next = fields[(idx + 1) % fields.length];
+  next.focus();
+});
 
 // ============================================================
 // BUILD PROPOSAL HTML (static document for export)
@@ -1790,6 +1865,8 @@ function buildProposalHTML(s) {
     recip = `<div class="recipient">${lines.join('<br>')}</div>`;
   } else {
     let lines = [];
+    if (s.contactName) lines.push(`<strong>${escH(s.contactName)}</strong>`);
+    if (s.contactTitle) lines.push(escH(s.contactTitle));
     if (s.companyName) lines.push(`<strong style="text-decoration:underline;">${escH(s.companyName)}</strong>`);
     if (s.address) lines.push(escH(s.address));
     let csz = [];
@@ -1822,7 +1899,7 @@ function buildProposalHTML(s) {
 
   // PRODUCTS
   const prodItems = s.products.map(p => `<li>${escH(p.text)}</li>`).join('');
-  const productsHTML = s.products.length ? `<div class="section-label-nb">Products:</div><ul class="products-list">${prodItems}</ul>` : '';
+  const productsHTML = s.products.length ? `<div class="products-block"><div class="section-label-nb">Products:</div><ul class="products-list">${prodItems}</ul></div>` : '';
 
   // EXISTING CONDITIONS
   let existHTML = '';
@@ -1857,15 +1934,16 @@ function buildProposalHTML(s) {
         <strong>$${escH(cs.value) || '(Value)'}.00</strong>.
         ${taxTexts[s.taxNote] || ''}
       </div>
+    </div>
     </div>`;
   }).join('');
 
   // ADD OPTIONS
   const aoItems = s.addOptions.map(a => `<li>${escH(a.text)}</li>`).join('');
-  const addOptHTML = s.addOptions.length ? `<div class="section-label-nb">Add Options:</div><div class="add-options-section"><ol>${aoItems}</ol></div>` : '';
+  const addOptHTML = s.addOptions.length ? `<div class="add-options-block"><div class="section-label-nb">Add Options:</div><div class="add-options-section"><ol>${aoItems}</ol></div></div>` : '';
 
   // WARRANTY
-  const warHTML = `<div class="section-label-nb">Warranty:</div><div class="warranty-section">${escH(s.warrantyText)}</div>`;
+  const warHTML = `<div class="warranty-block"><div class="section-label-nb">Warranty:</div><div class="warranty-section">${escH(s.warrantyText)}</div></div>`;
 
   // INCLUSIONS
   const incItems = INCLUSIONS_MASTER.filter(inc => s.inclusions[inc.id]).map(inc => `<li>${getIncText(inc)}</li>`).join('');
@@ -1875,10 +1953,10 @@ function buildProposalHTML(s) {
   let payHTML;
   if (ct === 'gc') {
     const payText = s.paymentTerms || 'Payment draws are due on the 10th of the month, the second month following the month of the draw invoice. For example: January draws are due on the 10th of March. Any payments delinquent 30 days or more will be subject to work stoppage or a 1.5% interest charge until the account is current.';
-    payHTML = `<div class="payment-block"><div class="section-label-nb">General Contractor Payment Draw Terms:</div><div class="payment-section"><strong>${escH(payText)}</strong></div>`;
+    payHTML = `<div class="payment-block"><div class="section-label-nb">General Contractor Payment Draw Terms:</div><div class="payment-section"><strong>${escH(payText)}</strong></div></div>`;
   } else {
     const payText = s.paymentTerms || "Terms of acceptance and pricing are based upon NET 30 from the completion date. Material invoicing will be sent in the month material is landed on the customer\u2019s site, due NET 30. Progress billing will be sent monthly for % of work completed through the end of that calendar month.";
-    payHTML = `<div class="payment-block"><div class="section-label-nb">Standard HTI Customer Payment Terms</div><div class="payment-section">${escH(payText)}</div>`;
+    payHTML = `<div class="payment-block"><div class="section-label-nb">Standard HTI Customer Payment Terms</div><div class="payment-section">${escH(payText)}</div></div>`;
   }
 
   // MOBILIZATION
@@ -1886,10 +1964,10 @@ function buildProposalHTML(s) {
     ? `<strong>${escH(s.numMobilizations || '1')}</strong> mobilizations (and/or <strong>${escH(s.numPhases)}</strong> phases)`
     : `<strong>${escH(s.numMobilizations || '1')}</strong> mobilization(s)`;
   const mobHTML = `<div class="mobilization-block"><div class="section-label-nb">Extra mobilizations and non-sequential work exclusion:</div>
-  <div class="mobilization-section">This proposal is based on ${mobText}, with each mobilization (or phase) area being <strong>ready for installation prior to HTI\u2019s arrival</strong>. If areas are not ready, HTI reserves the right to submit a <strong>change order</strong> for any cost impacts related to <strong>remobilization, loss of efficiency, or non-sequential work</strong>. The change order value will be determined <strong>case by case</strong>, with supporting documentation provided.</div>`;
+  <div class="mobilization-section">This proposal is based on ${mobText}, with each mobilization (or phase) area being <strong>ready for installation prior to HTI\u2019s arrival</strong>. If areas are not ready, HTI reserves the right to submit a <strong>change order</strong> for any cost impacts related to <strong>remobilization, loss of efficiency, or non-sequential work</strong>. The change order value will be determined <strong>case by case</strong>, with supporting documentation provided.</div></div>`;
 
   // SIGNOFF
-  const signHTML = `<div class="signoff">
+  const signHTML = `<div class="signoff-block"><div class="signoff">
     <p>Best regards,</p><br><br>
     <p class="pm-name">${escH(s.pmName) || '(Project Manager)'}</p>
     ${s.pmCell ? `<p>${escH(s.pmCell)}</p>` : ''}
@@ -1899,7 +1977,7 @@ function buildProposalHTML(s) {
   <div class="acceptance-line">
     <p>ACCEPTED BY: <span class="line"></span> DATE: <span class="line-sm"></span></p>
     <p>PO#: <span class="line-sm"></span></p>
-  </div>`;
+  </div></div>`;
 
   return `<div class="proposal-page">
     ${hdr}${recip}${greeting}${intro}
@@ -1943,7 +2021,7 @@ function buildExportSections() {
       type = 'splittable';
       const hdrSpan = child.querySelector('.section-label-nb');
       splitLabel = hdrSpan ? `Procedures (Continued): ${hdrSpan.textContent.replace('Procedures: ','')}` : 'Procedures (Continued):';
-    } else if (child.querySelector && child.querySelector('.products-list')) {
+    } else if (child.classList.contains('products-block')) {
       type = 'splittable';
       splitLabel = 'Products (Continued):';
     } else if (child.classList.contains('inclusions-block')) {
@@ -1960,8 +2038,8 @@ function buildExportSections() {
 
   document.body.removeChild(tempDiv);
 
-  const footC = `<div class="page-footer"><div class="continued">Continued on Next Page</div>${licFoot}<br><div class="confidential">CONFIDENTIAL</div>`;
-  const footF = `<div class="page-footer">${licFoot}<br><div class="confidential">CONFIDENTIAL</div>`;
+  const footC = `<div class="page-footer"><div class="continued">Continued on Next Page</div>${licFoot}<br><div class="confidential">CONFIDENTIAL</div></div>`;
+  const footF = `<div class="page-footer">${licFoot}<br><div class="confidential">CONFIDENTIAL</div></div>`;
 
   return { hdr, sections, footC, footF };
 }
@@ -1974,13 +2052,13 @@ function smartPaginate(hdr, sections, footC, footF) {
   const hdrH = _exportHdrH;
 
   const measurer = document.createElement('div');
-  measurer.className = 'proposal-page export-page';
-  measurer.style.cssText = 'position:absolute;left:-9999px;top:0;height:auto;overflow:visible;';
+  measurer.className = 'proposal-page';
+  measurer.style.cssText = 'position:absolute;left:-9999px;top:0;width:816px;padding:0 60px;overflow:visible;';
   document.body.appendChild(measurer);
 
   const measured = sections.map(sec => {
     measurer.innerHTML = sec.html;
-    const h = measurer.firstElementChild ? measurer.firstElementChild.offsetHeight : 0;
+    const h = measurer.scrollHeight;
     let items = null;
     if (sec.type === 'splittable') {
       const listEl = measurer.querySelector('ul, ol');
@@ -1999,19 +2077,52 @@ function smartPaginate(hdr, sections, footC, footF) {
 
   document.body.removeChild(measurer);
 
+  // Helper to extract list structure from a section's HTML
+  function extractListInfo(html) {
+    const tmp = document.createElement('div');
+    tmp.innerHTML = html;
+    const headerEl = tmp.querySelector('.section-label-nb, .section-label');
+    const headerHTML = headerEl ? headerEl.outerHTML : '';
+    const listEl = tmp.querySelector('ul, ol');
+    const listTag = tmp.querySelector('ul') ? 'ul' : 'ol';
+    const listClass = listEl ? listEl.className : '';
+    const isUnderlined = html.includes('section-label"');
+    return { headerHTML, listTag, listClass, isUnderlined };
+  }
+
+  // Helper to measure HTML height
+  function measureHTML(html) {
+    const m = document.createElement('div');
+    m.className = 'proposal-page';
+    m.style.cssText = 'position:absolute;left:-9999px;top:0;width:816px;padding:0 60px;overflow:visible;';
+    m.innerHTML = html;
+    document.body.appendChild(m);
+    const h = m.scrollHeight;
+    document.body.removeChild(m);
+    return h;
+  }
+
   const pages = [];
   let curSections = [];
   let curH = hdrH;
 
-  for (let i = 0; i < measured.length; i++) {
-    const sec = measured[i];
+  // Queue of items to process (allows re-queuing remainders)
+  const queue = [...measured];
+
+  while (queue.length > 0) {
+    const sec = queue.shift();
+
+    // Fits on current page
     if (curH + sec.height <= USABLE) {
       curSections.push(sec.html);
       curH += sec.height;
-    } else if (sec.type === 'splittable' && sec.items && sec.items.length > 2) {
+      continue;
+    }
+
+    // Doesn't fit — try to split if splittable
+    if (sec.type === 'splittable' && sec.items && sec.items.length > 2) {
       const headerItem = sec.items[0];
       const listItems = sec.items.slice(1);
-      const totalItems = listItems.length;
       let fitCount = 0;
       let runH = curH + headerItem.height;
       for (let j = 0; j < listItems.length; j++) {
@@ -2019,50 +2130,63 @@ function smartPaginate(hdr, sections, footC, footF) {
         fitCount++;
         runH += listItems[j].height;
       }
-      const pctDone = fitCount / totalItems;
-      if (pctDone >= 0.2 && fitCount > 0) {
+
+      if (fitCount > 0 && fitCount / listItems.length >= 0.2) {
+        // Split: put what fits on current page
+        const { headerHTML, listTag, listClass, isUnderlined } = extractListInfo(sec.html);
         const firstItems = listItems.slice(0, fitCount).map(it => it.html).join('');
-        const remainItems = listItems.slice(fitCount).map(it => it.html).join('');
-        const tmp = document.createElement('div');
-        tmp.innerHTML = sec.html;
-        const headerEl = tmp.querySelector('.section-label-nb, .section-label');
-        const headerHTML = headerEl ? headerEl.outerHTML : '';
-        const listTag = tmp.querySelector('ul') ? 'ul' : 'ol';
-        const listClass = tmp.querySelector('ul, ol')?.className || '';
         curSections.push(`${headerHTML}<${listTag} class="${listClass}">${firstItems}</${listTag}>`);
-        pages.push(curSections);
-        curSections = [];
-        curH = hdrH;
-        const isUnderlined = sec.html.includes('section-label"');
-        const contClass = isUnderlined ? 'section-label' : 'section-label-nb';
-        const contHeader = `<div class="${contClass}" style="font-weight:700;">${sec.splitLabel}</div>`;
-        const contHTML = `${contHeader}<${listTag} class="${listClass}">${remainItems}</${listTag}>`;
-        curSections.push(contHTML);
-        const m2 = document.createElement('div');
-        m2.className = 'proposal-page export-page';
-        m2.style.cssText = 'position:absolute;left:-9999px;top:0;height:auto;overflow:visible;';
-        m2.innerHTML = contHTML;
-        document.body.appendChild(m2);
-        curH += m2.offsetHeight;
-        document.body.removeChild(m2);
-      } else {
-        if (curSections.length > 0) { pages.push(curSections); curSections = []; curH = hdrH; }
-        curSections.push(sec.html);
-        curH += sec.height;
+
+        // Only create remainder if there are items left
+        const remainListItems = listItems.slice(fitCount);
+        if (remainListItems.length > 0) {
+          pages.push(curSections);
+          curSections = [];
+          curH = hdrH;
+          const contClass = isUnderlined ? 'section-label' : 'section-label-nb';
+          const contHeader = `<div class="${contClass}" style="font-weight:700;">${sec.splitLabel}</div>`;
+          const remainHTML = `${contHeader}<${listTag} class="${listClass}">${remainListItems.map(it => it.html).join('')}</${listTag}>`;
+          const remainHeight = measureHTML(remainHTML);
+          queue.unshift({
+            html: remainHTML,
+            type: 'splittable',
+            splitLabel: sec.splitLabel,
+            items: [{ type: 'header', height: headerItem.height }, ...remainListItems],
+            height: remainHeight
+          });
+        } else {
+          curH = runH;
+        }
+        continue;
       }
-    } else {
-      if (curSections.length > 0) { pages.push(curSections); curSections = []; curH = hdrH; }
-      curSections.push(sec.html);
-      curH += sec.height;
+    }
+
+    // Can't split or doesn't fit — push current page and start new one
+    if (curSections.length > 0) {
+      pages.push(curSections);
+      curSections = [];
+      curH = hdrH;
+    }
+    curSections.push(sec.html);
+    curH += sec.height;
+
+    // If this single section overflows the page, force a page break after it
+    if (curH > USABLE) {
+      pages.push(curSections);
+      curSections = [];
+      curH = hdrH;
     }
   }
   if (curSections.length > 0) pages.push(curSections);
 
   const totalPages = pages.length;
   return pages.map((sections, i) => {
-    const pageNum = i > 0 ? `<div class="page-num">Page ${i + 1} of ${totalPages}:</div>` : '';
+    let pageHdr = hdr;
+    if (i > 0) {
+      pageHdr = hdr.replace(/<\/div>(\s*<\/div>\s*<\/div>\s*)$/, `<div class="hti-page-num">Page ${i + 1} of ${totalPages}</div></div>$1`);
+    }
     const foot = i < totalPages - 1 ? footC : footF;
-    return `<div class="proposal-page export-page">${hdr}${pageNum}<div class="export-content" contenteditable="true">${sections.join('')}</div>${foot}</div>`;
+    return `<div class="proposal-page export-page">${pageHdr}<div class="export-content" contenteditable="true">${sections.join('')}</div>${foot}</div>`;
   }).join('');
 }
 
@@ -2083,16 +2207,16 @@ function showExportPreview() {
   footMeasurer.innerHTML = footC;
   document.body.appendChild(footMeasurer);
   const footerEl = footMeasurer.querySelector('.page-footer');
-  const FOOTER_H = footerEl ? footerEl.offsetHeight + 50 : 110;
+  const FOOTER_H = footerEl ? footerEl.offsetHeight : 60;
   document.body.removeChild(footMeasurer);
-  _exportUsable = 956 - FOOTER_H;
+  _exportUsable = 1056 - 10 - FOOTER_H - 20;
 
   const hdrMeasurer = document.createElement('div');
   hdrMeasurer.className = 'proposal-page export-page';
   hdrMeasurer.style.cssText = 'position:absolute;left:-9999px;top:0;height:auto;overflow:visible;';
   hdrMeasurer.innerHTML = hdr;
   document.body.appendChild(hdrMeasurer);
-  _exportHdrH = hdrMeasurer.firstElementChild ? hdrMeasurer.firstElementChild.offsetHeight + 16 : 150;
+  _exportHdrH = Math.max(hdrMeasurer.scrollHeight + 16, 250);
   document.body.removeChild(hdrMeasurer);
 
   const pagesHTML = smartPaginate(hdr, sections, footC, footF);
@@ -2105,7 +2229,14 @@ function attachReflowListeners() {
   const previewEl = document.getElementById('exportPreviewPages');
   previewEl.addEventListener('input', () => {
     clearTimeout(_reflowTimer);
-    _reflowTimer = setTimeout(reflowExportPages, 400);
+    _reflowTimer = setTimeout(reflowExportPages, 300);
+  });
+  // Tab key inserts a tab like Word
+  previewEl.addEventListener('keydown', (e) => {
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      document.execCommand('insertText', false, '\t');
+    }
   });
 }
 
@@ -2140,51 +2271,136 @@ function restoreCursorPosition(globalOffset) {
       const sel = window.getSelection();
       sel.removeAllRanges();
       sel.addRange(range);
-      const page = node.parentElement.closest('.proposal-page');
-      if (page) page.scrollIntoView({ block: 'nearest' });
+      // Don't scroll — keep user's scroll position
       return;
     }
     charCount += len;
   }
 }
 
+function getOrCreateNextPage(previewEl, exportPages) {
+  let pageHdr = _exportHdr.replace(/<\/div>(\s*<\/div>\s*<\/div>\s*)$/, `<div class="hti-page-num">...</div></div>$1`);
+  const html = `<div class="proposal-page export-page">${pageHdr}<div class="export-content" contenteditable="true"></div>${_exportFootF}</div>`;
+  const tmp = document.createElement('div');
+  tmp.innerHTML = html;
+  const newPage = tmp.firstElementChild;
+  previewEl.appendChild(newPage);
+  exportPages.push(newPage);
+  return newPage;
+}
+
+function getContentLimit(ec) {
+  // The max bottom position for content within an export-content div
+  // relative to the page. We measure from the ec's top.
+  return _exportUsable - _exportHdrH;
+}
+
 function reflowExportPages() {
   const previewEl = document.getElementById('exportPreviewPages');
+  const scrollParent = previewEl.closest('.export-modal-body') || previewEl;
+  const scrollTop = scrollParent.scrollTop;
   const cursorPos = saveCursorPosition();
-  const allChildren = [];
-  previewEl.querySelectorAll('.export-content').forEach(ec => {
-    Array.from(ec.children).forEach(child => allChildren.push(child.outerHTML));
-  });
+  let exportPages = Array.from(previewEl.querySelectorAll('.proposal-page'));
+  if (!exportPages.length) return;
 
-  const measurer = document.createElement('div');
-  measurer.className = 'proposal-page export-page';
-  measurer.style.cssText = 'position:absolute;left:-9999px;top:0;height:auto;overflow:visible;';
-  document.body.appendChild(measurer);
-  const measured = allChildren.map(html => {
-    measurer.innerHTML = html;
-    return { html, height: measurer.firstElementChild ? measurer.firstElementChild.offsetHeight : 0 };
-  });
-  document.body.removeChild(measurer);
+  const contentLimit = getContentLimit();
 
-  const pages = [];
-  let curPage = [];
-  let curH = _exportHdrH;
-  measured.forEach(sec => {
-    if (curH + sec.height > _exportUsable && curPage.length > 0) {
-      pages.push(curPage); curPage = []; curH = _exportHdrH;
+  // Make all pages auto-height so we can measure real content
+  exportPages.forEach(p => { p.style.height = 'auto'; p.style.overflow = 'visible'; });
+
+  // PUSH DOWN: For each page, push overflowing children to next page
+  let changed = true;
+  let safety = 0;
+  while (changed && safety++ < 50) {
+    changed = false;
+    exportPages = Array.from(previewEl.querySelectorAll('.proposal-page'));
+    for (let pi = 0; pi < exportPages.length; pi++) {
+      const ec = exportPages[pi].querySelector('.export-content');
+      if (!ec || !ec.children.length) continue;
+
+      const ecTop = ec.getBoundingClientRect().top;
+      const maxBottom = ecTop + contentLimit;
+
+      // Find the first child whose bottom exceeds the limit
+      const children = Array.from(ec.children);
+      for (let ci = children.length - 1; ci >= 1; ci--) {
+        if (children[ci].getBoundingClientRect().bottom > maxBottom) {
+          // Move this child to next page
+          let nextPage = exportPages[pi + 1];
+          if (!nextPage) nextPage = getOrCreateNextPage(previewEl, exportPages);
+          const nextEc = nextPage.querySelector('.export-content');
+          nextEc.insertBefore(children[ci], nextEc.firstChild);
+          changed = true;
+        }
+      }
     }
-    curPage.push(sec.html); curH += sec.height;
-  });
-  if (curPage.length > 0) pages.push(curPage);
+  }
 
-  const totalPages = pages.length;
-  previewEl.innerHTML = pages.map((sections, i) => {
-    const pageNum = i > 0 ? `<div class="page-num">Page ${i + 1} of ${totalPages}:</div>` : '';
-    const foot = i < totalPages - 1 ? _exportFootC : _exportFootF;
-    return `<div class="proposal-page export-page">${_exportHdr}${pageNum}<div class="export-content" contenteditable="true">${sections.join('')}</div>${foot}</div>`;
-  }).join('');
+  // PULL UP: For each page, pull children from next page if they fit
+  changed = true;
+  safety = 0;
+  while (changed && safety++ < 50) {
+    changed = false;
+    exportPages = Array.from(previewEl.querySelectorAll('.proposal-page'));
+    for (let pi = 0; pi < exportPages.length - 1; pi++) {
+      const ec = exportPages[pi].querySelector('.export-content');
+      const nextEc = exportPages[pi + 1].querySelector('.export-content');
+      if (!ec || !nextEc || !nextEc.firstElementChild) continue;
+
+      const ecTop = ec.getBoundingClientRect().top;
+      const maxBottom = ecTop + contentLimit;
+      const curBottom = ec.lastElementChild ? ec.lastElementChild.getBoundingClientRect().bottom : ecTop;
+      const candidate = nextEc.firstElementChild;
+      const candidateH = candidate.getBoundingClientRect().height;
+
+      if (curBottom + candidateH <= maxBottom) {
+        ec.appendChild(candidate);
+        changed = true;
+      }
+    }
+  }
+
+  // Remove empty trailing pages
+  exportPages = Array.from(previewEl.querySelectorAll('.proposal-page'));
+  for (let pi = exportPages.length - 1; pi > 0; pi--) {
+    const ec = exportPages[pi].querySelector('.export-content');
+    if (ec && !ec.children.length && !ec.textContent.trim()) {
+      exportPages[pi].remove();
+      exportPages.splice(pi, 1);
+    } else {
+      break;
+    }
+  }
+
+  // Restore fixed height and update page numbers/footers
+  const totalPages = exportPages.length;
+  exportPages.forEach((page, i) => {
+    page.style.height = '1056px';
+    page.style.overflow = 'hidden';
+
+    const footer = page.querySelector('.page-footer');
+    if (footer) footer.outerHTML = i < totalPages - 1 ? _exportFootC : _exportFootF;
+
+    const existingNum = page.querySelector('.hti-page-num');
+    if (i > 0) {
+      if (existingNum) {
+        existingNum.textContent = `Page ${i + 1} of ${totalPages}`;
+      } else {
+        const overlay = page.querySelector('.hti-header-overlay');
+        if (overlay) {
+          const numDiv = document.createElement('div');
+          numDiv.className = 'hti-page-num';
+          numDiv.textContent = `Page ${i + 1} of ${totalPages}`;
+          overlay.appendChild(numDiv);
+        }
+      }
+    } else if (existingNum) {
+      existingNum.remove();
+    }
+  });
 
   restoreCursorPosition(cursorPos);
+  scrollParent.scrollTop = scrollTop;
 }
 
 function closeExportPreview() {
@@ -2210,41 +2426,8 @@ function confirmExportPDF() {
 }
 
 // WORD EXPORT
-function showExportPreviewWord() {
-  const { hdr, sections, footC, footF } = buildExportSections();
-  _exportHdr = hdr; _exportFootC = footC; _exportFootF = footF;
-
-  const footMeasurer = document.createElement('div');
-  footMeasurer.className = 'proposal-page export-page';
-  footMeasurer.style.cssText = 'position:absolute;left:-9999px;top:0;';
-  footMeasurer.innerHTML = footC;
-  document.body.appendChild(footMeasurer);
-  const footerEl = footMeasurer.querySelector('.page-footer');
-  const FOOTER_H = footerEl ? footerEl.offsetHeight + 50 : 110;
-  document.body.removeChild(footMeasurer);
-  _exportUsable = 956 - FOOTER_H;
-
-  const hdrMeasurer = document.createElement('div');
-  hdrMeasurer.className = 'proposal-page export-page';
-  hdrMeasurer.style.cssText = 'position:absolute;left:-9999px;top:0;height:auto;overflow:visible;';
-  hdrMeasurer.innerHTML = hdr;
-  document.body.appendChild(hdrMeasurer);
-  _exportHdrH = hdrMeasurer.firstElementChild ? hdrMeasurer.firstElementChild.offsetHeight + 16 : 150;
-  document.body.removeChild(hdrMeasurer);
-
-  const pagesHTML = smartPaginate(hdr, sections, footC, footF);
-  const previewEl = document.getElementById('exportPreviewPagesWord');
-  previewEl.innerHTML = pagesHTML;
-  previewEl.querySelectorAll('.export-content').forEach(ec => ec.setAttribute('contenteditable', 'true'));
-  document.getElementById('exportModalWord').classList.add('active');
-}
-
-function closeExportPreviewWord() {
-  document.getElementById('exportModalWord').classList.remove('active');
-}
-
 function confirmExportWord() {
-  const previewPages = document.getElementById('exportPreviewPagesWord');
+  const previewPages = document.getElementById('exportPreviewPages');
   const container = previewPages.cloneNode(true);
   container.querySelectorAll('[contenteditable]').forEach(el => el.removeAttribute('contenteditable'));
   container.querySelectorAll('.proposal-page').forEach(p => { p.style.boxShadow = 'none'; p.style.marginBottom = '0'; });
@@ -2259,7 +2442,7 @@ body { margin: 0; padding: 0; }
   const projectName = state.projectName || 'Draft';
   const filename = `HTI_Proposal_${projectName.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().split('T')[0]}.docx`;
   saveAs(converted, filename);
-  closeExportPreviewWord();
+  closeExportPreview();
 }
 
 // INIT
@@ -2267,30 +2450,22 @@ init();
 
 </script>
 
-<!-- Export Preview Modal -->
+<!-- Final Edit / Export Modal -->
 <div class="export-modal-overlay" id="exportModal">
-  <div class="export-modal">
-    <div class="export-modal-header">
-      <h2>Export Preview</h2>
-      <div class="export-modal-actions">
-        <button class="btn btn-secondary" onclick="closeExportPreview()">Back to Editor</button>
-        <button class="btn btn-primary" onclick="confirmExportPDF()">Download PDF</button>
+  <div class="export-modal-header">
+    <h2 style="color:#e2a308; margin:0; font-size:18px;">Final Edit</h2>
+    <div class="export-modal-actions">
+      <div class="edit-toolbar">
+        <button class="btn btn-secondary btn-sm" onmousedown="event.preventDefault()" onclick="document.execCommand('bold')" title="Bold (Ctrl+B)"><strong>B</strong></button>
+        <button class="btn btn-secondary btn-sm" onmousedown="event.preventDefault()" onclick="document.execCommand('underline')" title="Underline (Ctrl+U)" style="text-decoration:underline;">U</button>
       </div>
+      <button class="btn btn-secondary" onclick="closeExportPreview()">Back to Editor</button>
+      <button class="btn btn-primary" onclick="confirmExportPDF()">Export PDF</button>
+      <button class="btn btn-primary" onclick="confirmExportWord()">Export Word</button>
     </div>
-    <div class="export-modal-pages" id="exportPreviewPages"></div>
   </div>
-</div>
-<!-- Word Export Preview Modal -->
-<div class="export-modal-overlay" id="exportModalWord">
-  <div class="export-modal">
-    <div class="export-modal-header">
-      <h2>Word Export Preview</h2>
-      <div class="export-modal-actions">
-        <button class="btn btn-secondary" onclick="closeExportPreviewWord()">Back to Editor</button>
-        <button class="btn btn-primary" onclick="confirmExportWord()">Download Word</button>
-      </div>
-    </div>
-    <div class="export-modal-pages" id="exportPreviewPagesWord"></div>
+  <div class="export-modal-body">
+    <div class="export-modal-pages" id="exportPreviewPages"></div>
   </div>
 </div>
 </body>
