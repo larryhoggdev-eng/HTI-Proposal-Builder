@@ -1,0 +1,2345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HTI Polymer - Proposal Builder</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<style>
+  /* ============ GLOBAL ============ */
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #1a1a2e; color: #e0e0e0; display: flex; height: 100vh; overflow: hidden; }
+
+  /* ============ LEFT PANEL (FORM) ============ */
+  .form-panel {
+    width: 380px; min-width: 380px; background: #16213e; overflow-y: auto; padding: 16px;
+    border-right: 3px solid #e2a308;
+  }
+  .form-panel h1 { color: #e2a308; font-size: 20px; margin-bottom: 4px; }
+  .form-panel .subtitle { color: #888; font-size: 12px; margin-bottom: 16px; }
+  .form-section { background: #1a1a2e; border-radius: 8px; padding: 12px; margin-bottom: 10px; border: 1px solid #2a2a4a; }
+  .form-section h3 { color: #e2a308; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; border-bottom: 1px solid #333; padding-bottom: 6px; }
+  .form-row { margin-bottom: 8px; }
+  .form-row label { display: block; font-size: 11px; color: #aaa; margin-bottom: 3px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .form-row input, .form-row select, .form-row textarea {
+    width: 100%; padding: 7px 9px; background: #0f3460; border: 1px solid #333; border-radius: 4px;
+    color: #fff; font-size: 13px; font-family: inherit;
+  }
+  .form-row input:focus, .form-row select:focus, .form-row textarea:focus { border-color: #e2a308; outline: none; }
+  .form-row textarea { resize: vertical; min-height: 50px; }
+  .form-row select { cursor: pointer; }
+  .form-row-inline { display: flex; gap: 8px; }
+  .form-row-inline .form-row { flex: 1; }
+
+  .btn { padding: 8px 14px; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 600; }
+  .btn-primary { background: #e2a308; color: #000; }
+  .btn-primary:hover { background: #f0b429; }
+  .btn-secondary { background: #2a2a4a; color: #ccc; border: 1px solid #444; }
+  .btn-secondary:hover { background: #3a3a5a; }
+  .btn-danger { background: #c0392b; color: #fff; }
+  .btn-danger:hover { background: #e74c3c; }
+  .btn-sm { padding: 4px 8px; font-size: 11px; }
+
+  .export-bar { display: flex; gap: 8px; margin-top: 8px; }
+  .export-bar .btn { flex: 1; padding: 12px; font-size: 14px; }
+
+  .inclusion-check { display: flex; align-items: flex-start; gap: 6px; margin-bottom: 4px; font-size: 12px; }
+  .inclusion-check input[type="checkbox"] { margin-top: 2px; accent-color: #e2a308; }
+  .inclusion-check label { color: #ccc; cursor: pointer; line-height: 1.3; }
+
+  /* ============ SEARCHABLE SYSTEM DROPDOWN ============ */
+  .sys-search-wrap { position: relative; }
+  .sys-search-input {
+    width: 100%; padding: 8px 10px; background: #0f3460; border: 1px solid #333; border-radius: 4px;
+    color: #fff; font-size: 13px; font-family: inherit;
+  }
+  .sys-search-input:focus { border-color: #e2a308; outline: none; }
+  .sys-search-input::placeholder { color: #667; }
+  .sys-dropdown {
+    display: none; position: absolute; top: 100%; left: 0; right: 0; z-index: 100;
+    background: #0f3460; border: 1px solid #e2a308; border-top: none; border-radius: 0 0 6px 6px;
+    max-height: 340px; overflow-y: auto; box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  }
+  .sys-dropdown.open { display: block; }
+  .sys-dropdown-item {
+    padding: 8px 12px; cursor: pointer; border-bottom: 1px solid #1a1a3a; transition: background 0.1s;
+  }
+  .sys-dropdown-item:hover, .sys-dropdown-item.highlighted { background: #1a2a5a; }
+  .sys-dropdown-item:last-child { border-bottom: none; }
+  .sys-dropdown-name { color: #fff; font-size: 13px; font-weight: 600; }
+  .sys-dropdown-tags { color: #e2a308; font-size: 10px; margin-top: 2px; line-height: 1.3; }
+  .sys-dropdown-match { color: #888; font-size: 10px; font-style: italic; margin-top: 1px; }
+  .sys-dropdown-empty { padding: 12px; color: #666; font-size: 12px; text-align: center; }
+  .sys-selected-tag {
+    display: inline-flex; align-items: center; gap: 6px; background: #e2a308; color: #000;
+    padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: 600;
+  }
+  .sys-selected-tag .tag-x {
+    background: none; border: none; color: #000; font-size: 14px; cursor: pointer; font-weight: 700;
+    padding: 0 0 0 4px; line-height: 1;
+  }
+  .sys-selected-tag .tag-x:hover { color: #c0392b; }
+
+  /* ============ RIGHT PANEL (PREVIEW) ============ */
+  .preview-panel { flex: 1; overflow-y: auto; background: #2d2d2d; padding: 30px; display: flex; justify-content: center; }
+  .preview-scroll { width: 850px; }
+
+  /* ============ PROPOSAL DOCUMENT STYLES ============ */
+  .proposal-page {
+    background: #fff; color: #000; font-family: 'Calibri', 'Segoe UI', sans-serif; font-size: 11pt;
+    width: 816px; padding: 20px 60px 40px 60px;
+    margin-bottom: 20px; position: relative; line-height: 1.4; box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    box-sizing: border-box;
+  }
+  /* Export pages are fixed letter-size */
+  .proposal-page.export-page {
+    height: 1056px; overflow: hidden; padding-top: 10px; padding-bottom: 80px;
+  }
+  .proposal-page * { color: #000; }
+
+  .hti-header { position: relative; margin-bottom: 0; }
+  .hti-logo-img { width: 100%; display: block; }
+  .hti-header-overlay { position: absolute; bottom: 30px; right: 0; text-align: right; padding: 6px 0; }
+  .hti-header-title { position: absolute; top: calc(50% + 8px); left: 176px; transform: translateY(-50%); text-align: left; line-height: 0.85; }
+  .hti-header-title-main { font-size: 48pt; font-weight: 700; color: #000; font-family: Georgia, serif; }
+  .hti-header-title-sub { font-size: 18pt; font-weight: 700; color: #000; font-family: Georgia, serif; }
+  .hti-address { font-size: 11pt; color: #000; white-space: nowrap; }
+  .hti-date { font-size: 10pt; color: #000; margin-top: 4px; }
+
+  .page-num { font-size: 10pt; text-align: right; margin-bottom: 10px; color: #555; }
+
+  .recipient { margin-bottom: 16px; font-size: 10.5pt; }
+  .recipient strong { font-weight: 700; }
+
+  .greeting { margin-bottom: 4px; }
+  .intro-para { margin-bottom: 16px; }
+
+  .section-label { font-weight: 700; text-decoration: underline; margin-top: 14px; margin-bottom: 6px; font-size: 11pt; }
+  .section-label-nb { font-weight: 700; margin-top: 14px; margin-bottom: 6px; font-size: 11pt; }
+
+  .scope-table { width: 100%; margin-bottom: 6px; border-collapse: collapse; }
+  .scope-table td { padding: 2px 4px; vertical-align: top; font-size: 10.5pt; }
+  .scope-table td:last-child { text-align: right; white-space: nowrap; }
+
+  .products-list { margin-left: 20px; margin-bottom: 6px; }
+  .products-list li { font-size: 10.5pt; margin-bottom: 2px; position: relative; }
+
+  .procedures-doc-list { margin-left: 20px; margin-bottom: 6px; }
+  .procedures-doc-list li { font-size: 10.5pt; margin-bottom: 4px; position: relative; }
+
+  .cost-section { margin-bottom: 12px; }
+  .cost-line { font-size: 10.5pt; margin-bottom: 4px; }
+
+  .add-options-section { margin-bottom: 6px; }
+  .add-options-section ol { margin-left: 24px; }
+  .add-options-section li { font-size: 10.5pt; margin-bottom: 3px; position: relative; }
+
+  .warranty-section { margin-bottom: 12px; font-size: 10.5pt; }
+
+  .inclusions-list { margin-left: 20px; margin-bottom: 12px; padding-left: 0; }
+  .inclusions-list li { font-size: 9.5pt; margin-bottom: 0; padding: 0; position: relative; line-height: 1.2; }
+  .inclusions-list li .doc-x {
+    position: absolute; right: -26px; top: 50%; transform: translateY(-50%);
+  }
+
+  .payment-section { margin-bottom: 16px; font-size: 10.5pt; }
+  .payment-section strong { font-weight: 700; }
+
+  .mobilization-section { margin-bottom: 20px; font-size: 10.5pt; }
+  .mobilization-section strong { font-weight: 700; }
+
+  .signoff { margin-top: 30px; font-size: 10.5pt; }
+  .signoff .pm-name { font-weight: 600; }
+
+  .acceptance-line { margin-top: 40px; font-size: 10.5pt; }
+  .acceptance-line .line { display: inline-block; width: 250px; border-bottom: 1px solid #000; }
+  .acceptance-line .line-sm { display: inline-block; width: 150px; border-bottom: 1px solid #000; }
+
+  .page-footer {
+    position: absolute; bottom: 20px; left: 60px; right: 60px; text-align: center;
+    font-size: 7pt; color: #555; line-height: 1.3;
+  }
+  .page-footer .continued { font-weight: 700; font-size: 9pt; color: #000; margin-bottom: 8px; }
+  .page-footer .confidential { font-weight: 700; font-size: 8pt; color: #000; margin-top: 4px; }
+
+  .existing-conditions { margin-bottom: 12px; font-size: 10.5pt; }
+  .existing-conditions strong { font-weight: 700; }
+
+  /* ============ INLINE DOC CONTROLS ============ */
+  .doc-row { position: relative; }
+  .doc-row:hover .doc-x, .doc-row:hover .doc-arrow { opacity: 1; }
+  .doc-controls {
+    position: absolute; right: -24px; top: 50%; transform: translateY(-50%);
+    display: flex; align-items: center; gap: 2px; z-index: 10;
+  }
+  .doc-arrow {
+    width: 18px; height: 18px; background: #3498db; color: #fff !important; border: none; border-radius: 50%;
+    font-size: 11px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    opacity: 0; transition: opacity 0.15s; line-height: 1; padding: 0;
+  }
+  .doc-arrow:hover { background: #2980b9; transform: scale(1.15); }
+  .doc-arrow.disabled { cursor: default; pointer-events: none; }
+  .doc-row:hover .doc-arrow.disabled { opacity: 0.25; }
+  .doc-x {
+    width: 18px; height: 18px; background: #e74c3c; color: #fff !important; border: none; border-radius: 50%;
+    font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    opacity: 0; transition: opacity 0.15s; line-height: 1; padding: 0;
+  }
+  .doc-x:hover { background: #c0392b; transform: scale(1.15); }
+
+  .doc-add {
+    display: inline-flex; align-items: center; gap: 4px; margin-top: 4px; margin-bottom: 6px;
+    background: none; border: 1.5px dashed #3498db; color: #3498db !important; border-radius: 4px;
+    padding: 3px 10px; font-size: 9pt; cursor: pointer; font-weight: 600; transition: all 0.15s;
+  }
+  .doc-add:hover { background: #ebf5fb; border-color: #2980b9; color: #2980b9 !important; }
+  .doc-add .plus { font-size: 14px; font-weight: 700; line-height: 1; }
+
+  /* editable highlights in preview */
+  .proposal-page [contenteditable="true"]:hover { outline: 2px dashed #e2a308; outline-offset: 1px; cursor: text; }
+  .proposal-page [contenteditable="true"]:focus { outline: 2px solid #e2a308; outline-offset: 1px; background: #fffde7; }
+
+  /* Inline editable inputs on the doc */
+  .doc-input {
+    border: none; border-bottom: 1.5px solid #ccc; background: transparent; font-family: inherit;
+    font-size: inherit; color: #000; padding: 1px 4px; outline: none; min-width: 60px;
+  }
+  .doc-input:hover { border-bottom-color: #e2a308; background: #fffde7; }
+  .doc-input:focus { border-bottom-color: #e2a308; background: #fffde7; }
+  .doc-input-sm { width: 50px; text-align: center; font-weight: bold; }
+  .doc-input-med { width: 120px; }
+  .doc-input-lg { width: 240px; }
+  .doc-input-xl { width: 100%; }
+  .doc-input-cost { width: 100px; font-weight: bold; }
+
+  /* mil rate boxes */
+  .mil-box {
+    display: inline-block; width: 38px; padding: 1px 3px; border: 1.5px solid #e2a308; border-radius: 3px;
+    font-size: 10pt; text-align: center; background: #fffde7; font-weight: bold; color: #000;
+    font-family: inherit; outline: none;
+  }
+  .mil-box:focus { background: #fff9c4; border-color: #f0b429; }
+
+  /* scope row special styling */
+  .scope-row { display: flex; align-items: center; padding: 0; margin: 0; line-height: 1.1; }
+  .scope-row:hover .doc-x { opacity: 1; }
+  .scope-desc { flex: 1; }
+  .scope-dash { padding: 0 8px; color: #999; }
+  .scope-qty { text-align: right; white-space: nowrap; }
+  .scope-semi { padding: 0 2px; color: #999; }
+  .scope-add-qty2 {
+    display: inline-block; width: 16px; height: 16px; background: #3498db; color: #fff; border: none;
+    border-radius: 50%; font-size: 12px; font-weight: 700; cursor: pointer; text-align: center; line-height: 16px;
+    opacity: 0; transition: opacity 0.15s; vertical-align: middle; margin-left: 8px; padding: 0;
+  }
+  .scope-row:hover .scope-add-qty2 { opacity: 0.7; }
+  .scope-add-qty2:hover { opacity: 1 !important; }
+
+  /* hide controls on print */
+  @media print {
+    .doc-x, .doc-add, .doc-arrow, .doc-controls, .scope-add-qty2 { display: none !important; }
+    .doc-input { border-bottom: none; }
+    .mil-box { border: none; background: transparent; }
+    .doc-input:hover, .mil-box:hover { background: transparent; }
+  }
+
+  /* ============ PRINT STYLES ============ */
+  @media print {
+    body { background: #fff; }
+    .form-panel { display: none !important; }
+    .preview-panel { padding: 0; overflow: visible; background: #fff; }
+    .preview-scroll { width: 100%; }
+    .proposal-page { box-shadow: none; margin: 0; page-break-after: always; min-height: auto; padding: 40px 50px 70px 50px; }
+    .proposal-page:last-child { page-break-after: auto; }
+    .proposal-page [contenteditable="true"]:hover { outline: none; }
+  }
+
+  /* scrollbar styling */
+  ::-webkit-scrollbar { width: 8px; }
+  ::-webkit-scrollbar-track { background: #1a1a2e; }
+  ::-webkit-scrollbar-thumb { background: #e2a308; border-radius: 4px; }
+
+  /* ============ EXPORT PREVIEW MODAL ============ */
+  .export-modal-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 9999;
+    justify-content: center; align-items: flex-start; padding: 30px; overflow-y: auto;
+  }
+  .export-modal-overlay.active { display: flex; }
+  .export-modal {
+    background: #1e1e2e; border-radius: 12px; padding: 24px; max-width: 900px; width: 100%;
+  }
+  .export-modal-header {
+    display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;
+  }
+  .export-modal-header h2 { color: #e2a308; margin: 0; font-size: 18px; }
+  .export-modal-actions { display: flex; gap: 8px; }
+  .export-modal-actions .btn { padding: 10px 24px; }
+  .export-modal-pages { display: flex; flex-direction: column; align-items: center; gap: 20px; }
+  .export-content { outline: none; cursor: text; margin-top: -40px; position: relative; z-index: 1; }
+  .export-content:focus { outline: none; }
+</style>
+</head>
+<body>
+
+<!-- ==================== LEFT FORM PANEL ==================== -->
+<div class="form-panel">
+  <h1>HTI Proposal Builder</h1>
+  <p class="subtitle">Fill fields here or edit directly on the document &rarr;</p>
+
+  <!-- PROPOSAL TYPE -->
+  <div class="form-section">
+    <h3>Proposal Type</h3>
+    <div class="form-row">
+      <label>Client Type</label>
+      <select id="clientType" onchange="render()">
+        <option value="gc">General Contractor (GC)</option>
+        <option value="direct">Direct Customer</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <label>Labor Type</label>
+      <select id="laborType" onchange="render()">
+        <option value="open-shop">Open Shop (Non-union, Non-prevailing)</option>
+        <option value="prevailing">Prevailing Wage</option>
+        <option value="union">Union Labor</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- COPY FROM PREVIOUS PROJECT -->
+  <div class="form-section" style="border-color:#e2a308;">
+    <h3>Copy From Previous Project</h3>
+    <div class="form-row">
+      <label>Load a sample proposal</label>
+      <select id="prevProjectSelect" onchange="loadPreviousProject(this.value); this.value='';" style="border-color:#e2a308;">
+        <option value="">-- Select a Past Project --</option>
+        <option value="continental-place">Continental Place - Loading Dock HTS (B+E, Feb 2026)</option>
+        <option value="google-westlake">Google Westlake Ph2 - Polished Concrete (LCL, Aug 2025)</option>
+        <option value="grant-courthouse">Grant County Courthouse - SGC Deck Traffic (Jan 2026)</option>
+        <option value="grant-coroner">Grant County Coroner - Kitchen UC Resurfacing (Dec 2025)</option>
+        <option value="kp-bellingham">King &amp; Prince - Bellingham Production (Feb 2026)</option>
+        <option value="kp-line1">King &amp; Prince - Line 1 Patching (Nov 2025)</option>
+        <option value="lineage-lynden">Lineage - Lynden Cranberry Dock MMA Sealer (Jan 2026)</option>
+        <option value="mente-hangar">MENTE Hangar - Boeing Field Repairs (Jan 2026)</option>
+        <option value="raedwood">Raedwood Cabinet Co. - HTS Flooring (Dec 2025)</option>
+        <option value="safran-paintbooth">Safran Group - Paint Booth Anti-Graffiti (Mar 2026)</option>
+        <option value="signature-slc">Signature Aviation - SLC Hangars 8 &amp; 12 (Jan 2026)</option>
+        <option value="slim-chickens">Slim Chickens - Pasco Mac-Guard MMA (Feb 2026)</option>
+        <option value="super1-kalispell">Super1 Foods - Kalispell UC Kitchen (Dec 2025)</option>
+        <option value="uw-blakely">UW Blakely - Storage Grind &amp; Seal (Feb 2026)</option>
+      </select>
+    </div>
+    <p style="font-size:10px; color:#e2a308; margin-top:4px;">Fills ALL fields from a past proposal. You can then edit anything.</p>
+  </div>
+
+  <!-- SYSTEM SELECTOR -->
+  <div class="form-section">
+    <h3>Flooring System Template</h3>
+    <div class="form-row">
+      <label>Select System</label>
+      <div class="sys-search-wrap" id="sysSearchWrap">
+        <input type="text" id="sysSearchInput" class="sys-search-input" placeholder="Search systems, products, or past projects..." onclick="openSysDropdown()" oninput="filterSystems()">
+        <div class="sys-dropdown" id="sysDropdown"></div>
+      </div>
+    </div>
+    <div id="sysSelectedTag" style="margin-top:4px;"></div>
+    <p style="font-size:10px; color:#666; margin-top:4px;">Search by system name, product, or a past project name. Everything is editable on the doc.</p>
+  </div>
+
+  <!-- WARRANTY -->
+  <div class="form-section">
+    <h3>Warranty Template</h3>
+    <div class="form-row">
+      <select id="warrantyType" onchange="applyWarrantyTemplate(); render();">
+        <option value="standard-1yr">Standard 1-Year (Materials & Workmanship)</option>
+        <option value="standard-1yr-2yr-bond">1-Year Workmanship + 2-Year Bond</option>
+        <option value="standard-1yr-moisture">1-Year w/ Moisture Exclusion</option>
+        <option value="hangar">Hangar (w/ Particulate Disclaimer)</option>
+        <option value="exterior">Exterior (w/ Environmental Exclusion)</option>
+        <option value="custom">Custom (edit on doc)</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- INCLUSIONS & EXCLUSIONS -->
+  <div class="form-section">
+    <h3>Inclusions & Exclusions</h3>
+    <div style="max-height: 280px; overflow-y:auto; padding-right: 4px;">
+      <div id="inclusionChecks"></div>
+    </div>
+    <div style="margin-top:6px; display:flex; gap:6px;">
+      <button class="btn btn-secondary btn-sm" onclick="checkAllInclusions()">Select All</button>
+      <button class="btn btn-secondary btn-sm" onclick="uncheckAllInclusions()">Deselect All</button>
+    </div>
+  </div>
+
+  <!-- EXPORT -->
+  <div class="form-section">
+    <h3>Export</h3>
+    <div class="export-bar">
+      <button class="btn btn-primary" onclick="showExportPreview()">Preview & Export PDF</button>
+      <button class="btn btn-secondary" onclick="window.print()">Print</button>
+    </div>
+    <button class="btn btn-danger" onclick="resetToDefault()" style="width:100%; margin-top:8px; padding:10px;">Return to Default</button>
+    <p style="font-size:10px; color:#666; margin-top:6px;">Tip: Red X removes items. Blue + adds new ones. Click any text on the doc to edit.</p>
+  </div>
+</div>
+
+<!-- ==================== RIGHT PREVIEW PANEL ==================== -->
+<div class="preview-panel">
+  <div class="preview-scroll" id="previewContainer">
+  </div>
+</div>
+
+<script>
+// ============================================================
+// SYSTEM TEMPLATES DATABASE
+// ============================================================
+const SYSTEMS = {
+  "performance-hts": {
+    displayName: "Performance HTS Flooring System",
+    scopeHeader: "Installation of Performance HTS System",
+    proceduresHeader: "Sherwin Williams High-Performance HTS-100 Urethane Flooring System",
+    products: [
+      "Sherwin Williams MPE Multi-Purpose Epoxy",
+      "Sherwin Williams HTS 100 Urethane Sealer w/ Wear Additive",
+      "Sherwin Williams 3513 Epoxy Mastic Scratch Coating (pre-fill holes/divots)"
+    ],
+    procedures: [
+      "HTI will prepare substrate by mechanically grinding the surface of the existing concrete to create a mechanical profile of ICRI CSP 2-3 for the new material to bond properly.",
+      "HTI will then scratch coat the surface with GP-3513 to fill voids and holes that would hold debris and translate through the coating system when complete.",
+      "Once the surface is fully prepared, the floor will be vacuumed and tack wiped to prepare for installation.",
+      "HTI will install {30} mils WFT of Sherwin Williams MPE Epoxy resin in a pigmented color (TBD) as a body coat, to provide a smooth, high-strength base for the topcoat.",
+      "Once dry, HTI will install an application of the Sherwin Williams HTS 100 Urethane Sealer in a matching color to the body coat @ {4} mils WFT. An additional 2oz of Aluminum Oxide high-wear additive will be added into the sealer for added slip and abrasion resistance."
+    ],
+    defaultScopes: [{ desc: "(Flooring Scope)", qty: "", unit: "Square Feet" }],
+    warranty: "standard-1yr"
+  },
+  "performance-hts-moisture": {
+    displayName: "Performance HTS Flooring System w/ Moisture Primer",
+    scopeHeader: "Removal of Existing Coatings & Installation of Performance HTS System w/ Moisture Primer",
+    proceduresHeader: "Sherwin Williams High-Performance HTS-100 Urethane Flooring System",
+    products: [
+      "Sherwin Williams MVB Moisture Vapor Epoxy Primer",
+      "Sherwin Williams MPE Multi-Purpose Epoxy",
+      "Sherwin Williams HTS 100 Urethane Sealer w/ Wear Additive",
+      "Sherwin Williams 3513 Epoxy Mastic Scratch Coating (pre-fill holes/divots)"
+    ],
+    procedures: [
+      "HTI will prepare substrate by mechanically grinding the surface of the existing concrete to fully remove existing coatings and to create a mechanical profile of ICRI CSP 2-3 for the new material to bond properly.",
+      "HTI will then scratch coat the surface with GP-3513 to fill voids and holes that would hold debris and translate through the coating system when complete.",
+      "Once the surface is fully prepared, the floor will be vacuumed and tack wiped to prepare for installation.",
+      "Due to the found concrete moisture content, HTI will begin by installing Sherwin Williams MVB Moisture Primer @ {20} mils WFT to block up to 25 lbs. of MVT and 100% RH in the concrete. This will ensure a proper bond between the concrete and the coating system and prevent blistering from moisture.",
+      "Once cured, the MVB primer will be sanded with swing machines and 100-grit sandpaper to identify any holidays from concrete outgassing and smooth the surface for the body coat.",
+      "HTI will install {30} mils WFT of Sherwin Williams MPE Epoxy resin in a pigmented color (TBD) as a body coat, to provide a smooth, high-strength base for the topcoat.",
+      "Once dry, HTI will install an application of the Sherwin Williams HTS 100 Urethane Sealer in a matching color to the body coat @ {4} mils WFT. An additional 2oz of Aluminum Oxide high-wear additive will be added into the sealer for added slip and abrasion resistance."
+    ],
+    defaultScopes: [
+      { desc: "Existing Floor Coating Removal", qty: "", unit: "Square Feet" },
+      { desc: "Performance HTS System w/ wear additive", qty: "", unit: "Square Feet" }
+    ],
+    warranty: "standard-1yr-2yr-bond"
+  },
+  "urethane-cement-sgc": {
+    displayName: "SGC Crete Urethane Cement Flooring w/ UHW Sealer",
+    scopeHeader: "SGC Crete w/ Urethane Cement Sealer with Non-slip Texture",
+    proceduresHeader: "SGC Crete Flooring with UHW Urethane Sealer",
+    products: [
+      "SGC Crete Urethane Cement Slurry 1/8\"",
+      "SGC Crete TC Urethane Cement Primer",
+      "24-Grit Heavy Non-slip Silica",
+      "SGC UHW High-Wear Aliphatic Urethane Sealer with ALO2 Wear Agg",
+      "Metzger-McGuire Spal-Pro RS-88 Polyurea Joint Filler"
+    ],
+    procedures: [
+      "All termination points not abutting a vertical surface will be saw cut and key-chased for smooth transition.",
+      "HTI will prepare substrate via diamatic grinding to an ICRI CSP 3-4, per product specifications.",
+      "HTI will then install SGC Crete SL Urethane Cement Mortar throughout the area.",
+      "HTI will then broadcast a 24-Grit non-slip aggregate for texture into the mortar while still wet at .5lbs/SF.",
+      "HTI will then return to sweep and vacuum up all loose sand and scrape the floor for sealer preparation.",
+      "The flooring areas will receive a coat of SGC UHW High-wear Urethane @ {15} mils WFT.",
+      "As a final step, HTI will honor, cut and fill all associated expansion and control joints with Metzger-McGuire Spal-Pro RS-88 Polyurea Joint Filler. Joints will be cut to 1/4\" wide at 3/4\" depth max unless otherwise requested."
+    ],
+    defaultScopes: [{ desc: "SGC Crete Urethane Cement Flooring with UHW Urethane Sealer", qty: "", unit: "Square Feet" }],
+    warranty: "standard-1yr"
+  },
+  "urethane-cement-polycrete": {
+    displayName: "Polycrete Urethane Cement w/ Novolac Sealer",
+    scopeHeader: "Production Area Food-grade Flooring Systems",
+    proceduresHeader: "Sherwin Williams FasTop Polycrete Urethane Cement with Novolac CRC Sealer",
+    products: [
+      "Sherwin Williams FasTop Poly-Crete MD Urethane Cement Mortar",
+      "Sherwin Williams FasTop Poly-Crete WR Urethane Cement Cove Mortar",
+      "Sherwin Williams 30-mesh Silica Sand",
+      "Sherwin Williams Resuflor 3741 Novolac CRC Sealer in Steel Gray (x2 coats)",
+      "Sherwin Williams Resuflor 3504 Metal Primer Epoxy",
+      "Metzger McGuire RS-88 Elastomeric Joint Compound"
+    ],
+    procedures: [
+      "All termination points not abutting a vertical surface will be saw cut and key-chased to provide a 1/4\" nominal thickness termination with a strong bond to the concrete.",
+      "The existing epoxy flooring will be ground down to sound concrete using both walk-behind 32\" planetary grinders as well as hand-held diamond grinders so that the new flooring will bond directly to concrete as the manufacturer requires.",
+      "Metal wall panels and boxes will be primed with SW 3504 Metal Primer and broadcast with sand for bond.",
+      "Concrete curbs will be hand-troweled with a 3/4\" radius cove using Polycrete WR Cove Base @ 1/8\" thickness.",
+      "HTI will then install SW FasTop Polycrete Urethane Cement Mortar @ {3/16}\" nominal thickness.",
+      "HTI will then broadcast 30-mesh non-skid silica sand into the wet Polycrete for texture.",
+      "Once cured for a minimum of 12 hours, HTI will return to remove any loose sand and vacuum clean the surface.",
+      "HTI will then apply the first sealer application of SW 3741 Novolac Sealer @ {16} mils WFT in Steel Gray.",
+      "HTI will then apply the second application of SW 3741 Novolac Sealer @ {8} mils WFT in Steel Gray.",
+      "HTI will then sawcut and fill any concrete joints with Metzger-McGuire RS-88 Polyurea in standard gray.",
+      "Area may return to regular service 24 hours after flooring system is installed."
+    ],
+    defaultScopes: [{ desc: "Flooring and Cove", qty: "", unit: "Square Feet" }],
+    warranty: "standard-1yr-2yr-bond"
+  },
+  "urethane-cement-polycrete-quartz": {
+    displayName: "Polycrete Urethane Cement w/ Quartz Broadcast (No Sealer)",
+    scopeHeader: "Polycrete Urethane Cement Flooring with Quartz Finish",
+    proceduresHeader: "Sherwin Williams FasTop Polycrete Urethane Cement with Quartz Broadcast",
+    products: [
+      "Sherwin Williams FasTop Poly-Crete MD Urethane Cement Mortar",
+      "Sherwin Williams FasTop Poly-Crete WR Urethane Cement Cove Mortar",
+      "Sherwin Williams Deco Quartz 40-mesh Solid Color Gray",
+      "Metzger McGuire RS-88 Elastomeric Joint Compound"
+    ],
+    procedures: [
+      "All termination points not abutting a vertical surface will be saw cut and key-chased to provide a 1/4\" nominal thickness termination with a strong bond to the concrete.",
+      "The existing flooring will be ground down to sound concrete using walk-behind 32\" planetary grinders as well as hand-held diamond grinders.",
+      "HTI will then install SW FasTop Polycrete Urethane Cement Mortar @ {1/4}\" nominal thickness.",
+      "HTI will broadcast 40-mesh Gray Deco Quartz Sand at .5lbs/SF into the Polycrete and sweep/broom any loose aggregate as a final floor surface.",
+      "HTI will then sawcut and fill any concrete joints with Metzger-McGuire RS-88 Polyurea in standard gray.",
+      "Area may return to regular service 24 hours after flooring system is installed."
+    ],
+    defaultScopes: [{ desc: "Polycrete with Quartz Broadcast", qty: "", unit: "Square Feet" }],
+    warranty: "standard-1yr"
+  },
+  "polished-concrete": {
+    displayName: "Polished Concrete (Level 2, Low Gloss)",
+    scopeHeader: "Concrete Polishing",
+    proceduresHeader: "Polished Concrete (Minimum 4-Step, Level 2 Low Gloss Polish)",
+    products: [
+      "Prosoco Consolideck LS/CS Densifier",
+      "Prosoco Polish Guard Sealer"
+    ],
+    procedures: [
+      "HTI will begin the process by mechanically preparing the floor with 80-grit metal diamonds to remove loose material down to sound concrete and begin to cut the surface to expose aggregate.",
+      "We will then progress to 100-grit block hybrid / ceramic tooling to finalize the concrete honing and scratch removal.",
+      "We will then progress to a 100-grit SR resin bond diamond polishing pad to start the polishing process.",
+      "The floor will then be densified with Prosoco concrete densifier @ 600 sf/gal to refusal per manufacturer's recommendations to fully seal the pores of the concrete surface.",
+      "The floor will then be polished with a 200-grit, then 400-grit resin-bond diamond polishing pad to complete the Level 2, matte finish, low gloss finish per specifications.",
+      "The concrete will lastly be treated with one coat of Prosoco Polish Guard concrete guard to resist staining and liquid penetration from the surface."
+    ],
+    defaultScopes: [{ desc: "Polished Concrete", qty: "", unit: "Square Feet" }],
+    warranty: "standard-1yr"
+  },
+  "deco-quartz-epoxy": {
+    displayName: "Deco Quartz Double-Broadcast Epoxy System",
+    scopeHeader: "Resinous Flooring (Deco Quartz Epoxy System)",
+    proceduresHeader: "Double-Broadcast Quartz Epoxy High-Build with Polyaspartic Sealer",
+    products: [
+      "Sherwin Williams MPE Multi-Purpose Epoxy",
+      "Sherwin Williams Deco Quartz Q28-35 Color Quartz",
+      "Sherwin Williams Acelera Sealer",
+      "Metzger McGuire RS-88 Joint Material"
+    ],
+    procedures: [
+      "HTI will start by mechanically preparing the concrete to an ICRI CSP-3 level with diamatic grinders or blastrac.",
+      "We will then prime the flooring with Sherwin Williams MPE Epoxy @ {8} mils WFT.",
+      "Epoxy & Quartz Cove Base will be troweled at all vertical walls with 1\" radius and 1/8\" thickness to tape edge.",
+      "Once cured, we will squeegee SW MPE Epoxy @ {10} mils WFT and broadcast Q28-35 Colored Quartz to refusal.",
+      "Once cured, we will remove excess quartz and vacuum clean prior to installing a second layer of SW MPE Epoxy @ {10} mils WFT and broadcast Q28-35 Colored Quartz to refusal.",
+      "After the second broadcast has cured, we will remove all excess sand and scrape the floor to remove any partially adhered quartz and vacuum clean prior to sealer.",
+      "The floor will then be sealed with Sherwin Williams Acelera Sealer @ {16} mils WFT in a single, clear topcoat.",
+      "All concrete control and expansion joints will be honored through the new flooring system and filled with RS-88 elastomeric joint compound."
+    ],
+    defaultScopes: [
+      { desc: "Resinous Flooring w. Integral Cove Base", qty: "", unit: "SF", qty2: "", unit2: "LF of Cove" }
+    ],
+    warranty: "standard-1yr"
+  },
+  "sgc-deck-traffic": {
+    displayName: "SGC Deck Flexible Exterior Traffic Coating System",
+    scopeHeader: "Concrete Repair & Pedestrian Traffic Deck Coating",
+    proceduresHeader: "SGC Deck Flexible Exterior Traffic System",
+    products: [
+      "SGC Flooring \u2013 SGC-Coat EVS Moisture Mitigation Primer",
+      "SGC Flooring \u2013 SGC-Deck B-TUFF 308 Flexible Basecoat Membrane",
+      "SGC Flooring \u2013 SGC-Deck TCA Aliphatic Urethane/Polyurea Sealer",
+      "SGC Pre-Thickened Epoxy Mastic / Scratch Coat (if needed)",
+      "SGC-Flooring \u2013 SGC-Deck RTU Elastomeric Joint / Crack Sealant",
+      "SGC Crete CB \u2013 Urethane Cement Vertical Grade Trowel Mortar"
+    ],
+    procedures: [
+      "As this area is outdoor and exposed to the elements, HTI will require 4 continuous days of mild (55-90\u00B0F) weather with no precipitation or high winds. Dustless, HEPA filtered equipment will be used for the concrete prep process.",
+      "We will first mechanically prepare the substrate with diamatic grinders down to sound concrete to create the proper CSP-3/4 surface profile for bond.",
+      "All minor damage to the concrete will be scratch coated with a high-strength epoxy mastic and/or formed and retroweled with SGC Crete CB mortar to restore form.",
+      "All cracks will be chased with a v-blade tool and filled flush with an elastomeric SGC-Deck RTU joint compound.",
+      "HTI will then prime the area with a moisture tolerant EVS Moisture Mitigation Primer @ {17}-22 mils.",
+      "HTI will then roller-apply {25}-30 mils of SGC-Deck 308 Basecoat flexible membrane on the horizontal surfaces.",
+      "While the SGC-Deck B-Tuff 308 basecoat is still wet, HTI will broadcast a 12/24-mesh texture silica for non-slip properties directly into the basecoat, to refusal.",
+      "Once cured, HTI will return to sweep any loose silica and vacuum the entire area to prep for sealer.",
+      "We will then seal with an application of SGC-Deck TCA Aliphatic Topcoat @ {18}-20 mils WFT in a TBD Color."
+    ],
+    defaultScopes: [{ desc: "Exterior Traffic Coating SGC Deck system w/ Non-slip Texture", qty: "", unit: "Square Feet" }],
+    warranty: "exterior"
+  },
+  "mma-macguard": {
+    displayName: "Res-Tek Mac-Guard SL CQ MMA Flooring System",
+    scopeHeader: "Res-Tek Mac-Guard SL CQ MMA Food Service Spec Flooring System",
+    proceduresHeader: "Mechanical Prep and Mac-Guard Quartz Flooring Installation",
+    products: [
+      "Res-Tek Mac-Guard 701 Primer + RT-R MMA Primer Bonding Additive",
+      "Res-Tek Mac-Guard 200 SL Slurry (1/8\") with Filler (Pigmented)",
+      "Res-Tek Ceramic Baked Color Quartz",
+      "Res-Tek Mac-Guard 925 High-performance Sealer (Two Coats)"
+    ],
+    procedures: [
+      "HTI will begin by mechanically grinding all concrete with diamatic grinders to remove any existing surface laitance, clean, and profile the surface to an ICRI CSP-3+ surface profile to ensure a proper bond.",
+      "We will then trowel Res-Tek Mac-Guard 800 Cove Base Mortar @ 1/8\" thickness, up 6\" on the perimeter vertical surfaces, finished with a 3/4\" radius base and a tapered top edge termination.",
+      "HTI will then prime all applicable areas and cove base backing with Mac-Guard 701 Primer @ {5} mils WFT.",
+      "We will then trowel Res-Tek Mac-Guard 800 SL Slurry Base @ {1/8}\" nominal thickness over the prepared flooring areas. While still wet, HTI will broadcast colored quartz sand to refusal into the wet slurry.",
+      "HTI will then return after cure to scrape and remove all loose and remaining color quartz from the surface.",
+      "HTI will install the first seal coat application of Res-Tek 925 Mac-Guard Sealer in clear @ {16} mils WFT.",
+      "HTI will install the second and final seal coat of Res-Tek 925 Mac-Guard Sealer in clear @ {8} mils WFT."
+    ],
+    defaultScopes: [
+      { desc: "Mac-Guard System Installation", qty: "", unit: "Square Feet", qty2: "", unit2: "LF cove" }
+    ],
+    warranty: "standard-1yr"
+  },
+  "mma-shield-sealer": {
+    displayName: "SGC Shield MMA Textured Concrete Sealer",
+    scopeHeader: "SGC Shield MMA Textured Concrete Sealer",
+    proceduresHeader: "SGC Shield MMA Textured Concrete Sealer System",
+    products: [
+      "SGC Shield MMA Acrylic Primer/Sealer w/ Bonding Additive",
+      "SGC Body Coat Acrylic Yellow Striping (if applicable)",
+      "Shark Grip 220 mesh Non-slip Texture Additive",
+      "White Lightning AL02 Aluminum Oxide 60-Grit (2 oz/Gal)"
+    ],
+    procedures: [
+      "HTI will begin by designating the lines of delineation and snapping or drawing chalk lines to mark out stopping points.",
+      "HTI will prepare the concrete substrate via shot blast to an ICRI surface profile of CSP-3.",
+      "HTI will then vacuum clean any loose concrete or dust and prepare for coating application.",
+      "HTI will then install the SGC Shield MMA acrylic primer and ShieldR Bonding Additive at {15} mils WFT in a clear resin.",
+      "Once Cured, HTI will install a second clear coat SGC Shield MMA acrylic primer at {15} mils WFT with 6oz. of Shark Grip non-slip texture additive per gallon and 2oz per 100 SF of 60-grit ALO2 texture silica.",
+      "SGC Shield MMA material cures fully in 1 hour, so the area can return to service the next day."
+    ],
+    defaultScopes: [{ desc: "Textured Concrete Sealer", qty: "", unit: "Square Feet" }],
+    warranty: "standard-1yr-moisture"
+  },
+  "hangar-spec-hts": {
+    displayName: "Hangar-Spec HTS Urethane Flooring System",
+    scopeHeader: "High-Performance Aviation-Spec Urethane Hangar Floor Coating System",
+    proceduresHeader: "Sherwin Williams Epoxy & HTS-100 High-wear Urethane Hangar Coating System",
+    products: [
+      "Sherwin Williams Resuprime MVB Moisture Vapor Primer",
+      "Sherwin Williams Resuflor MPE 100% Solids Epoxy Body Coat",
+      "Sherwin Williams Resutile HTS-100 Aliphatic Urethane Topcoat with ALO2 High-wear Additive",
+      "SSP JS-600 Aliphatic Elastomeric Joint Compound (UV-Stable) Polyurea"
+    ],
+    procedures: [
+      "HTI will begin by mechanically preparing the concrete with steel shotblasting and/or diamatic grinding to create an ICRI CSP-3 profile for proper bond.",
+      "Once prep is complete, HTI will contain the entry of the hangar with a plastic ante room to limit dust and debris.",
+      "Once fully prepared, HTI will vacuum clean and prepare for polymer coating.",
+      "HTI will patch any major divots and cracking with SW 3500 Mastic as needed.",
+      "HTI will prime the concrete with Sherwin Williams MVB Moisture Primer @ {22} mils WFT in clear.",
+      "Once cured, HTI will lightly sand the entire floor surface to identify off-gassing holes. After sanding, the floor will be scrubbed clean and tack wiped.",
+      "We will then apply a body coat of Sherwin Williams MPE 100% solids Epoxy at {25}-30 mils WFT in pigmented color.",
+      "Once cured, HTI will sand the body coat surface and scrub clean with a ride-on floor scrubber.",
+      "HTI will install the high-wear topcoat of Sherwin Williams Resutile HTS-100 @ {4} mils WFT in TBD color."
+    ],
+    defaultScopes: [{ desc: "Concrete Preparation and Hangar-Spec Flooring Installation", qty: "", unit: "Square Feet" }],
+    warranty: "hangar"
+  },
+  "anti-graffiti": {
+    displayName: "Anti-Graffiti Coating System",
+    scopeHeader: "Removal and Reinstallation of Resinous Flooring w/ Anti-Graffiti Coating",
+    proceduresHeader: "Removal and Install of Water-based Anti-Graffiti Coating for Flooring",
+    products: [
+      "Sherwin Williams Resuflor Aqua 3460 WB Primer",
+      "Sherwin Williams Resuflor Aqua 3460 WB Body Coat",
+      "2K WB Anti-Graffiti Coating (Clear)"
+    ],
+    procedures: [
+      "The existing floor coatings will be mechanically abraded with high-grit sandpaper and/or diamond grinder to clean the surface and open up the concrete to accept the bond of the primer.",
+      "The flooring will then be primed with Sherwin Williams Resuflor Aqua 3460 WB primer @ {16} mils in gray.",
+      "We will then install a body coat of Sherwin Williams Resuflor Aqua 3460 WB body coat @ {20} mils WFT.",
+      "Finally, HTI will seal the flooring with the 2K WB Anti-Graffiti Coating in clear @ {5} mils WFT."
+    ],
+    defaultScopes: [
+      { desc: "Flooring Removal (including buildup)", qty: "", unit: "SF" },
+      { desc: "Flooring Installation w/ Anti-Graffiti Sealer", qty: "", unit: "SF" }
+    ],
+    warranty: "standard-1yr"
+  },
+  "grind-and-seal": {
+    displayName: "Grind and Seal (Concrete Densifier)",
+    scopeHeader: "Crack and Spall Patching, Grind and Seal",
+    proceduresHeader: "Concrete Grind and Seal (Two-Step Grind)",
+    products: [ "Prosoco LS/CS Consolideck Concrete Densifier & Dust-proofer" ],
+    procedures: [
+      "HTI will hand-prepare spalled and damaged areas with 4\" hand grinders and vacuum clean any loose debris.",
+      "Concrete cracks will be routed out and vacuumed clean to receive patching material.",
+      "HTI will mechanically prepare the substrate with planetary diamond grinders using 80-grit metal-bonded diamonds to cut the surface, remove staining, and grind patching flush.",
+      "We will then follow with a 50-grit ceramic hybrid diamond to remove scratches, smooth, and hone the surface.",
+      "We will install one coat of Prosoco LS/CS Consolideck Densifier & Dust-proofer @ 350 SF/gallon per manufacturer's instructions.",
+      "This will produce a low-sheen, clean and guarded concrete surface suitable for the intended use."
+    ],
+    defaultScopes: [{ desc: "Concrete Patching & Two-step Grind and Seal", qty: "", unit: "Square Feet" }],
+    warranty: "standard-1yr"
+  },
+  "custom": {
+    displayName: "", scopeHeader: "", proceduresHeader: "",
+    products: [], procedures: [],
+    defaultScopes: [{ desc: "", qty: "", unit: "Square Feet" }],
+    warranty: "standard-1yr"
+  }
+};
+
+// ============================================================
+// SYSTEM SEARCH METADATA (keywords + past projects for search)
+// ============================================================
+const SYSTEM_SEARCH = {
+  "performance-hts": {
+    label: "Performance HTS Urethane (Epoxy + Urethane Sealer)",
+    tags: ["epoxy", "urethane", "HTS", "HTS-100", "MPE", "Sherwin Williams", "body coat", "sealer", "thin-mil", "coating"],
+    pastProjects: ["Raedwood Cabinet Company", "Everson"]
+  },
+  "performance-hts-moisture": {
+    label: "Performance HTS w/ Moisture Primer",
+    tags: ["epoxy", "urethane", "HTS", "HTS-100", "MVB", "MPE", "moisture", "primer", "Sherwin Williams", "vapor barrier", "coating"],
+    pastProjects: ["Continental Place", "B+E Consulting", "Seattle Loading Dock", "Raedwood"]
+  },
+  "urethane-cement-sgc": {
+    label: "Urethane Cement - SGC Crete (w/ UHW Sealer)",
+    tags: ["urethane cement", "SGC", "crete", "UHW", "cementitious", "non-slip", "texture", "mortar", "chemical resistant"],
+    pastProjects: ["Grant County Coroner", "Kitchen Conversion", "Ephrata"]
+  },
+  "urethane-cement-polycrete": {
+    label: "Urethane Cement - Polycrete (w/ Novolac Sealer)",
+    tags: ["urethane cement", "polycrete", "novolac", "FasTop", "Sherwin Williams", "food-grade", "food service", "production", "cove base", "chemical resistant", "CRC"],
+    pastProjects: ["King and Prince", "K&P Seafood", "Bellingham", "Redmond"]
+  },
+  "urethane-cement-polycrete-quartz": {
+    label: "Urethane Cement - Polycrete (Quartz Broadcast, No Sealer)",
+    tags: ["urethane cement", "polycrete", "quartz", "deco quartz", "FasTop", "Sherwin Williams", "broadcast", "no sealer", "food-grade"],
+    pastProjects: ["King and Prince", "K&P Seafood", "Bellingham", "Redmond"]
+  },
+  "polished-concrete": {
+    label: "Polished Concrete (4-Step, Level 2)",
+    tags: ["polished", "concrete", "grinding", "densifier", "Prosoco", "burnish", "hone", "aggregate", "polish guard", "level 2", "low gloss"],
+    pastProjects: ["Google Westlake", "Lease Crutcher Lewis", "Seattle"]
+  },
+  "deco-quartz-epoxy": {
+    label: "Deco Quartz Double-Broadcast Epoxy",
+    tags: ["deco quartz", "epoxy", "broadcast", "Acelera", "polyaspartic", "quartz", "Sherwin Williams", "high-build", "cafe", "resinous"],
+    pastProjects: ["Google Westlake", "Lease Crutcher Lewis", "Cafe", "Seattle"]
+  },
+  "sgc-deck-traffic": {
+    label: "SGC Deck Flexible Traffic Coating",
+    tags: ["SGC", "deck", "traffic", "exterior", "flexible", "membrane", "TCA", "outdoor", "stairs", "pedestrian", "non-slip", "crack repair"],
+    pastProjects: ["Grant County Courthouse", "Ephrata"]
+  },
+  "mma-macguard": {
+    label: "MMA Mac-Guard SL CQ (Food Service)",
+    tags: ["MMA", "Mac-Guard", "Res-Tek", "food service", "kitchen", "restaurant", "quartz", "fast cure", "cove base", "slurry"],
+    pastProjects: ["Slim Chickens", "Pasco", "Kaizen Construction"]
+  },
+  "mma-shield-sealer": {
+    label: "MMA Shield Textured Concrete Sealer",
+    tags: ["MMA", "Shield", "SGC", "sealer", "shotblast", "texture", "non-slip", "clear coat", "shark grip", "cold temperature", "loading dock", "warehouse"],
+    pastProjects: ["Lineage", "Lynden", "Cranberry Dock"]
+  },
+  "hangar-spec-hts": {
+    label: "Hangar-Spec HTS Urethane (Aviation)",
+    tags: ["hangar", "aviation", "HTS", "urethane", "epoxy", "MVB", "Sherwin Williams", "large format", "shotblast", "Signature Aviation"],
+    pastProjects: ["Signature Aviation", "SLC", "MENTE", "Boeing Field", "Span Construction"]
+  },
+  "anti-graffiti": {
+    label: "Anti-Graffiti Coating System",
+    tags: ["anti-graffiti", "paint booth", "Resuflor Aqua", "water-based", "Sherwin Williams", "removal", "recoat"],
+    pastProjects: ["Safran Group", "Zodiac", "IDD", "Redmond", "Paint Booth"]
+  },
+  "grind-and-seal": {
+    label: "Grind and Seal (Densifier)",
+    tags: ["grind", "seal", "densifier", "Prosoco", "Consolideck", "dust-proof", "storage", "utilitarian", "patching", "low-sheen"],
+    pastProjects: ["UW Blakely", "Greystar", "Seattle"]
+  },
+  "custom": {
+    label: "Custom / Blank",
+    tags: ["blank", "custom", "new", "empty", "start from scratch"],
+    pastProjects: []
+  }
+};
+
+// ============================================================
+// WARRANTY TEMPLATES
+// ============================================================
+const WARRANTIES = {
+  "standard-1yr": "HTI Polymer, Inc. guarantees the installed system against defects in materials and workmanship for one (1) year from the date of installation completion. Damage(s) due to misuse or abuse is excluded. Warranty liabilities shall be limited to the repair of the affected area only. Blushing, fading, or dulling of the surface from traffic, UV, or moisture is aesthetic and not covered under warranty\u2014failure due to moisture vapor transmission of 3 lbs. / 1,000 SF / 24 hours or ASR is excluded.",
+  "standard-1yr-2yr-bond": "HTI Polymer, Inc. warrants the installed flooring system to be free from defect in materials and workmanship for a period of one (1) year from the date of completion of the installation. HTI further warrants the bond of the material to the substrate for 2 years. Normal wear and tear or damage through misuse, excessive abrasion, or abuse is excluded. Cracking of the concrete substrate that translates through to the surface of the flooring system cannot be prevented, and therefore is not covered under warranty. The Warranty liabilities shall be limited only to the repair of the defective portion of the floor only.",
+  "standard-1yr-moisture": "HTI Polymer, Inc. warrants the installed flooring system to be free from defect in materials and workmanship for a period of one (1) year from the date of completion of the installation. Normal wear and tear or damage through misuse is excluded. Failure due to moisture vapor transmission at or above 10 lbs. per 1,000 SF over 24 hrs. is excluded. The Warranty liabilities shall be limited only to the repair of the defective portion of the floor.",
+  "hangar": "HTI Polymer, Inc. warrants the installed flooring system to be free from defects in materials and workmanship for a period of one (1) year from the date of completion of the installation. Particulates and debris are commonly found in the finished topcoat of large-format urethane installations as a product of the material being in an open space for an extended cure time. Surface particulates and debris should be expected and are not a warrantable defect. Any aesthetic roller lines, color shadowing, joints cracking, concrete profile imperfections or translucent areas of the coating are not warrantable based on the thin nature of hangar flooring systems. Normal wear and tear or damage through misuse or impact is excluded. Warranty liabilities shall be limited to the repair of the defective portion of the floor only.",
+  "exterior": "HTI Polymer, Inc. warrants the flooring installation against defect in materials and workmanship for a period of one (1) year from the date of completion. Damage due to misuse or abuse is excluded. Discoloration through chemical contact is aesthetic and excluded. Exposure to detrimental environmental conditions outside the product specification is excluded. Warranty liabilities are limited to the repair of the defective portion of the floor.",
+  "custom": ""
+};
+
+// ============================================================
+// INCLUSIONS/EXCLUSIONS MASTER LIST
+// ============================================================
+const INCLUSIONS_MASTER = [
+  { id: "work-schedule", text: "Work to be performed both on workdays and weekends with the possibility of extended hours.", default: true },
+  { id: "one-mobilization", text: "Work to be performed in one mobilization. Non-sequential or additional mobilizations may result in extra charge for each occurrence.", default: true },
+  { id: "labor-rate", text: "{{LABOR}}", default: true },
+  { id: "dry-clean", text: "All areas must be dry, clean, and degreased. The substrate temperature must be between 55\u00B0F and 85\u00B0F.", default: true },
+  { id: "sole-access", text: "Pricing assumes HTI Polymer will have sole access to all areas in our scope on the start date. Any delay in crew access to the area will result in a remobilization fee.", default: true },
+  { id: "containment", gcText: "Pricing assumes that the GC will be responsible for area containment from other trades and production areas from fumes and dust due to installing flooring materials or mechanical prep.", directText: "Pricing assumes that the customer will be responsible for area containment from other trades and production areas from fumes and dust due to installing flooring materials or mechanical prep.", default: true },
+  { id: "dry-install", text: "All installed areas must be dry before installation with any leaks stopped before installation. The area must remain dry during the installation of materials to ensure proper curing and bonding.", default: true },
+  { id: "material-storage", gcText: "Pricing assumes that the GC will receive the shipment of materials to be installed before the job start date and will be stored in a safe, dry, and temperature-controlled location until HTI Polymer arrives on site to take possession.", directText: "Pricing assumes that the customer will receive the shipment of materials to be installed before the job start date and will be stored in a safe, dry, and temperature-controlled location until HTI Polymer arrives on site to take possession.", default: true },
+  { id: "equipment-removal", text: "All moveable equipment, tables, sinks, bollards, etc. will need to be removed from the installation area. All metal-embedded items and bolts must be cut flush with the concrete surface or recessed before HTI\u2019s installation.", default: true },
+  { id: "slab-temp", text: "The slab minimum temperature for flooring installation will need to be between 60\u00B0F and 85\u00B0F. Our pricing does not include additional heat sources.", default: true },
+  { id: "480v-power", text: "HTI Polymer will require 480v, 3-phase, 50-amp power within 200 LF of the work area. HTI Polymer will supply a pigtail connector with a lock-out/tag-out breaker for wiring to house power. HTI Polymer can supply a generator at an additional cost if house power is not available.", default: true },
+  { id: "110v-power", text: "Access to 8 independent circuits of 110v power no more than 100 LF from the installation area. If these cannot be provided, an additional cost for a generator rental will be added.", default: true },
+  { id: "floor-protection", gcText: "The GC is responsible for protecting installed flooring after completion. If needed, HTI Polymer will provide flooring protection at an additional cost. Regardless of protection, the GC assumes all liability for any damage to installed flooring.", directText: "The customer is responsible for protecting installed flooring after completion. If needed, HTI Polymer will provide flooring protection at an additional cost. Regardless of protection, the customer assumes all liability for any damage to installed flooring.", default: true },
+  { id: "drain-height", text: "All new drains and slab embed items should be left 1/8\" higher than the finished concrete maximum. Birdbaths or puddling due to improper drain height or inherent low spots in the substrate are not HTI\u2019s responsibility.", default: true },
+  { id: "restrooms", text: "Includes access to restrooms for HTI Polymer installation crews.", default: true },
+  { id: "dumpster", text: "Includes dumpster access for disposal of installation materials. If one cannot be provided, an additional charge will be added for HTI Polymer to rent a dumpster.", default: true },
+  { id: "mixing-area", text: "Includes an area for mixing to be provided, typically 10\u2019x10\u2019.", default: true },
+  { id: "lighting", gcText: "Includes proper lighting provided by the GC in the installation area before the start date. If lighting cannot be provided, an additional charge will be added.", directText: "Includes proper lighting provided by the customer in the installation area before the start date. If lighting cannot be provided, an additional charge will be added.", default: true },
+  { id: "exclude-sloping", text: "Excludes any sloping. The installation will follow existing sloping.", default: true },
+  { id: "exclude-demo", text: "Excludes demolition of existing flooring and removal of any topping or glue.", default: true },
+  { id: "exclude-cracks", text: "Excludes any cracks, substrate damage, and void filling or repairs.", default: true },
+  { id: "pricing-validity", text: "Pricing is valid for 90 Days. Material procurement and equipment rental costs are subject to increases on January 1st of each calendar year, as they are unknown until posted by the vendor.", default: true },
+  { id: "new-concrete-cure", text: "New concrete must be cured 28 days prior to HTI Polymer\u2019s installation.", default: false },
+  { id: "dew-point", text: "Slab temperature must be 5 degrees above dew point. Relative humidity must not exceed 80%.", default: false },
+  { id: "recoat-windows", text: "HTI\u2019s price is based upon a deliberate and systematic installation schedule as it is important that specified re-coat windows on materials are strictly obeyed. Delays or non-sequential phasing may cause additional costs.", default: false },
+  { id: "climate-control", text: "The installation area must be climate controlled and fully encapsulated.", default: false },
+  { id: "mma-odor", text: "MMA material has a strong odor and should not be used near food storage. Customer to provide full plastic containment and exhaust/fresh air return.", default: false },
+  { id: "fire-alarm", text: "HTI recommends the owner disengage any fire alarm or smoke detection equipment in the area to prevent accidental activation during installation.", default: false }
+];
+
+// ============================================================
+// STATE
+// ============================================================
+let state = {
+  clientType: 'gc',
+  contactName: '', contactTitle: '', companyName: '', address: '', city: '', state: '', zip: '',
+  proposalDate: '',
+  projectName: '', projectCity: '', projectState: '',
+  systemDisplayName: '',
+  existingConditions: '',
+  warrantyText: WARRANTIES['standard-1yr'],
+  numMobilizations: '1', numPhases: '',
+  pmName: '', pmCell: '', pmEmail: '',
+  scopeSections: [{ name: 'Installation of (System)', scopes: [{ desc: '(Flooring Scope)', qty: '', unit: 'Square Feet' }] }],
+  products: [],
+  procedureSections: [{ header: '', steps: [] }],
+  costSections: [{ description: '', value: '', taxNote: 'not-included' }],
+  addOptions: [
+    { text: "A 480v 3-phase 50-amp generator can be added for an additional $1,850 per week." },
+    { text: "Additional mobilization cost of $2,500 per mobilization." }
+  ],
+  inclusions: {}
+};
+
+// ============================================================
+// INIT
+// ============================================================
+function init() {
+  INCLUSIONS_MASTER.forEach(inc => { state.inclusions[inc.id] = inc.default; });
+  renderInclusionChecks();
+  render();
+}
+
+function resetToDefault() {
+  if (!confirm('Clear everything and return to the blank template?')) return;
+
+  // Reset form controls
+  document.getElementById('clientType').value = 'gc';
+  document.getElementById('laborType').value = 'open-shop';
+  document.getElementById('warrantyType').value = 'standard-1yr';
+  document.getElementById('sysSearchInput').value = '';
+  document.getElementById('sysSelectedTag').innerHTML = '';
+  document.getElementById('prevProjectSelect').value = '';
+  selectedSystemId = '';
+
+  // Reset all state
+  Object.assign(state, {
+    clientType: 'gc',
+    contactName: '', contactTitle: '', companyName: '', address: '', city: '', state: '', zip: '',
+    projectName: '', projectCity: '', projectState: '',
+    systemDisplayName: '',
+    existingConditions: '',
+    warrantyText: WARRANTIES['standard-1yr'],
+    numMobilizations: '1', numPhases: '',
+    pmName: '', pmCell: '', pmEmail: '',
+    scopeSections: [{ name: 'Installation of (System)', scopes: [{ desc: '(Flooring Scope)', qty: '', unit: 'Square Feet' }] }],
+    products: [],
+    procedureSections: [{ header: '', steps: [] }],
+    costSections: [{ description: '', value: '', taxNote: 'not-included' }],
+    addOptions: [
+      { text: "A 480v 3-phase 50-amp generator can be added for an additional $1,850 per week." },
+      { text: "Additional mobilization cost of $2,500 per mobilization." }
+    ],
+    inclusions: {}
+  });
+
+  INCLUSIONS_MASTER.forEach(inc => { state.inclusions[inc.id] = inc.default; });
+  renderInclusionChecks();
+  render();
+}
+
+// ============================================================
+// LOAD SYSTEM
+// ============================================================
+let selectedSystemId = '';
+
+function loadSystem(sysId) {
+  if (!sysId || !SYSTEMS[sysId]) return;
+  selectedSystemId = sysId;
+  const sys = SYSTEMS[sysId];
+  state.systemDisplayName = sys.displayName;
+  state.products = sys.products.map(p => ({ text: p }));
+  state.procedureSections = [{ header: sys.proceduresHeader, steps: sys.procedures.map(p => ({ text: p })) }];
+  state.costSections = [{ description: '', value: '', taxNote: 'not-included' }];
+  state.scopeSections = [{ name: sys.scopeHeader, scopes: sys.defaultScopes.map(s => ({ ...s })) }];
+  state.addOptions = [
+    { text: "A 480v 3-phase 50-amp generator can be added for an additional $1,850 per week." },
+    { text: "Additional mobilization cost of $2,500 per mobilization." }
+  ];
+  if (sys.warranty && WARRANTIES[sys.warranty]) {
+    document.getElementById('warrantyType').value = sys.warranty;
+    state.warrantyText = WARRANTIES[sys.warranty];
+  }
+  // Update the selected tag display
+  const meta = SYSTEM_SEARCH[sysId];
+  document.getElementById('sysSelectedTag').innerHTML = meta
+    ? `<span class="sys-selected-tag">${escH(meta.label)}<button class="tag-x" onclick="clearSystem()">&times;</button></span>`
+    : '';
+  document.getElementById('sysSearchInput').value = '';
+  closeSysDropdown();
+  render();
+}
+
+function clearSystem() {
+  selectedSystemId = '';
+  document.getElementById('sysSelectedTag').innerHTML = '';
+  document.getElementById('sysSearchInput').value = '';
+}
+
+// ============================================================
+// SEARCHABLE SYSTEM DROPDOWN
+// ============================================================
+function openSysDropdown() {
+  filterSystems();
+  document.getElementById('sysDropdown').classList.add('open');
+}
+
+function closeSysDropdown() {
+  document.getElementById('sysDropdown').classList.remove('open');
+}
+
+function filterSystems() {
+  const query = document.getElementById('sysSearchInput').value.toLowerCase().trim();
+  const dropdown = document.getElementById('sysDropdown');
+  const keys = Object.keys(SYSTEM_SEARCH);
+  let html = '';
+
+  keys.forEach(sysId => {
+    const meta = SYSTEM_SEARCH[sysId];
+    const sys = SYSTEMS[sysId];
+    if (!meta) return;
+
+    // Build searchable text
+    const searchableChunks = [
+      meta.label,
+      ...meta.tags,
+      ...meta.pastProjects,
+      ...(sys.products || [])
+    ].map(s => s.toLowerCase());
+
+    if (query === '' || searchableChunks.some(chunk => chunk.includes(query))) {
+      // Figure out what matched for display
+      let matchNote = '';
+      if (query) {
+        const projMatch = meta.pastProjects.find(p => p.toLowerCase().includes(query));
+        const tagMatch = meta.tags.find(t => t.toLowerCase().includes(query));
+        const prodMatch = (sys.products || []).find(p => p.toLowerCase().includes(query));
+        if (projMatch) matchNote = `Past project: ${projMatch}`;
+        else if (prodMatch) matchNote = `Product: ${prodMatch}`;
+        else if (tagMatch) matchNote = `Keyword: ${tagMatch}`;
+      }
+
+      html += `<div class="sys-dropdown-item" onclick="loadSystem('${sysId}')">
+        <div class="sys-dropdown-name">${escH(meta.label)}</div>
+        ${meta.pastProjects.length ? `<div class="sys-dropdown-tags">Projects: ${meta.pastProjects.join(', ')}</div>` : ''}
+        ${matchNote ? `<div class="sys-dropdown-match">${escH(matchNote)}</div>` : ''}
+      </div>`;
+    }
+  });
+
+  if (!html) {
+    html = '<div class="sys-dropdown-empty">No systems match your search</div>';
+  }
+
+  dropdown.innerHTML = html;
+  dropdown.classList.add('open');
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', function(e) {
+  const wrap = document.getElementById('sysSearchWrap');
+  if (wrap && !wrap.contains(e.target)) {
+    closeSysDropdown();
+  }
+});
+
+// ============================================================
+// PREVIOUS PROJECTS (full proposal snapshots)
+// ============================================================
+const PREV_PROJECTS = {
+  "continental-place": {
+    clientType: "direct", laborType: "open-shop",
+    contactName: "Matt Rankin", contactTitle: "Sr. Associate", companyName: "B+E Consulting", address: "", city: "Seattle", state: "WA", zip: "",
+    projectName: "Continental Place Loading Dock Elevator Hallway", projectCity: "Seattle", projectState: "WA",
+    systemDisplayName: "Sherwin Williams high-performance HTS Urethane flooring system",
+    scopeHeader: "Removal of Existing Coatings & Installation of Performance HTS System w/ Moisture Primer",
+    proceduresHeader: "Sherwin Williams High-Performance HTS-100 Urethane Flooring System (54 mils)",
+    existingConditions: "The existing Loading Dock Elevator hallway is an original broom-finish concrete substrate (unknown depth) that is covered in a thin-mil epoxy/paint coating that is failing due to heavy foot and light-wheel traffic. HTI has been requested to provide a durable, high-performance coating system direct to the concrete that will resist failure from moisture transmission, but also have significantly improved abrasion resistance and slight non-slip texture for safety.",
+    costValue: "12,332", costDescription: "Continental Place Loading Dock Elevator Hallway (Elevator to Alleyway)", taxNote: "plus-wsst",
+    numMobilizations: "1", numPhases: "",
+    pmName: "Chris Larabee", pmCell: "206-465-1038", pmEmail: "Larabee@HTIPolymer.com",
+    warrantyType: "standard-1yr-2yr-bond",
+    scopes: [
+      { desc: "Hallway Existing Floor Coating and Broom Finish Removal", qty: "432", unit: "Square Feet" },
+      { desc: "Loading Dock Elevator Hall Performance HTS System w/ wear additive", qty: "432", unit: "Square Feet" }
+    ],
+    products: [
+      { text: "Sherwin Williams MVB Moisture Vapor Epoxy Primer" },
+      { text: "Sherwin Williams MPE Multi-Purpose Epoxy" },
+      { text: "Sherwin Williams HTS 100 Urethane Sealer w/ Wear Additive" },
+      { text: "Sherwin Williams 3513 Epoxy Mastic Scratch Coating (pre-fill holes/divots/elevator-side edge)" }
+    ],
+    procedures: [
+      { text: "HTI will prepare substrate by mechanically grinding the surface of the existing concrete to fully remove the existing coatings and to mechanical profile of an ICRI CSP 2-3 for the new material to bond properly." },
+      { text: "HTI will then scratch coat the surface with GP-3513 to fill voids and holes that would hold debris and translate through the coating system when complete." },
+      { text: "Once the surface is fully prepared, the floor will be vacuumed and tack wiped to prepare for installation." },
+      { text: "Due to the found concrete moisture content, HTI will begin by installing Sherwin Williams MVB Moisture Primer @ {20} mils WFT to block up to 25 lbs. of MVT and 100% RH in the concrete. This will ensure a proper bond between the concrete and the coating system and prevent blistering from moisture." },
+      { text: "Once cured, the MVB primer will be sanded with swing machines and 100-grit sandpaper to identify any holidays from concrete outgassing and smooth the surface for the body coat." },
+      { text: "HTI will install {30} mils WFT of Sherwin Williams MPE Epoxy resin in a pigmented color (TBD) as a body coat, to provide a smooth, high-strength base for the topcoat." },
+      { text: "Once dry, HTI will install an application of the Sherwin Williams HTS 100 Urethane Sealer in a matching color to the body coat @ {4} mils WFT. An additional 2oz of Aluminum Oxide high-wear additive will be added into the sealer for added slip and abrasion resistance." },
+      { text: "The process above will require 3.5 - 4 working days to complete, including removal and prep of the surface. Floors will need to be free from foot traffic for a minimum of 24 hours after installation and no water or cleaning may be performed for 48 hours after installation." }
+    ],
+    addOptions: [
+      { text: "If HTI is to supply a rental 56kw generator for 480v grinder power, please add $2,444.00 to the contract." },
+      { text: "If HTI is to supply a rental 10-yard Dumpster for disposal please add $1,145.00 to the contract." }
+    ]
+  },
+  "google-westlake": {
+    clientType: "gc", laborType: "union",
+    contactName: "Kris Dehmollayi", contactTitle: "", companyName: "Lease Crutcher Lewis", address: "2200 Western Ave Suite 500", city: "Seattle", state: "WA", zip: "98121",
+    projectName: "Google Westlake Phase 2", projectCity: "Seattle", projectState: "WA",
+    systemDisplayName: "Concrete Polishing and Burnishing",
+    proceduresHeader: "Polished Concrete CON002 and CON612 (Minimum 4-Step, Level 2 Low Gloss)",
+    existingConditions: "",
+    costValue: "298,648", costDescription: "Scopes 1-4 Combined (see breakdown below)", taxNote: "excludes-wsst",
+    numMobilizations: "2", numPhases: "4",
+    pmName: "Chris Larabee", pmCell: "", pmEmail: "Larabee@HTIPolymer.com",
+    warrantyType: "standard-1yr",
+    scopeSections: [
+      { name: "(Con. 002) Levels 5, and 7-13 New Polished Concrete Areas", scopes: [
+        { desc: "Support Polished Concrete", qty: "7,614", unit: "Square Feet" },
+        { desc: "Amenities Polished Concrete", qty: "1,754", unit: "Square Feet" }
+      ]},
+      { name: "(Con 612) Level 6 Cafe - New Polished Concrete Areas", scopes: [
+        { desc: "Support Polished Concrete", qty: "194", unit: "Square Feet" },
+        { desc: "\"Core\" Polished Concrete", qty: "2,192", unit: "Square Feet" },
+        { desc: "Circulation Polished Concrete", qty: "736", unit: "Square Feet" }
+      ]},
+      { name: "Levels 5, 6, and 7-13 - Burnish New and Existing Polished Concrete (Separate Phase)", scopes: [
+        { desc: "Return at End - Burnish All Polished Concrete", qty: "61,401", unit: "Square Feet" }
+      ]},
+      { name: "Level 6 Resinous Flooring (REF 6.11)", scopes: [
+        { desc: "Cafe Resinous Flooring w. Integral Cove Base", qty: "3,775", unit: "SF", qty2: "926", unit2: "LF of Cove" },
+        { desc: "Add Alt Membrane Installation", qty: "350", unit: "Square Feet" }
+      ]}
+    ],
+    products: [
+      { text: "Prosoco Consolideck LS/CS Densifier" },
+      { text: "Prosoco Polish Guard Sealer" },
+      { text: "Sherwin Williams Deco Quartz Q28-35 System with Acelera Sealer" },
+      { text: "Sherwin Williams Elasto-Coat (3555) Flexible Epoxy Membrane (Add)" },
+      { text: "Metzger McGuire RS-88 Joint Material (add)" }
+    ],
+    procedures: [
+      { text: "HTI will begin the process by mechanically preparing the floor with 80-grit metal diamonds to remove loose material down to sound concrete and begin to cut the surface to expose aggregate." },
+      { text: "We will then progress to 100-grit block hybrid / ceramic tooling to finalize the concrete honing and scratch removal." },
+      { text: "We will then progress to a 100-grit SR resin bond diamond polishing pad to start the polishing process." },
+      { text: "The floor will then be densified with Prosoco concrete densifier @ 600 sf/gal to refusal per manufacturer's recommendations to fully seal the pores of the concrete surface." },
+      { text: "The floor will then be polished with a 200-grit, then 400-grit resin-bond diamond polishing pad to complete the Level 2, matte finish, low gloss finish per specifications." },
+      { text: "The concrete will lastly be treated with one coat of Lithic Protector concrete guard to resist staining and liquid penetration from the surface." }
+    ],
+    addOptions: [
+      { text: "Add Alt Membrane Installation - 350 square feet - $5,589.00" }
+    ]
+  },
+  "grant-courthouse": {
+    clientType: "direct", laborType: "prevailing",
+    contactName: "Kevin Schmidt", contactTitle: "Facilities and Maintenance Manager", companyName: "Grant County, WA Facilities", address: "", city: "Ephrata", state: "WA", zip: "",
+    projectName: "Grant County Courthouse Entry", projectCity: "Ephrata", projectState: "WA",
+    systemDisplayName: "SGC Deck Flexible Exterior Traffic Coating System",
+    scopeHeader: "Courthouse Entryway Stairs and Alcove - Conc. Repair & Traffic Deck Coating",
+    proceduresHeader: "SGC Deck Flexible Exterior Traffic System",
+    existingConditions: "",
+    costValue: "23,962", costDescription: "Courthouse Entryway Stairs and Alcove - Conc. Repair & Traffic Deck Coating", taxNote: "excludes-wsst",
+    numMobilizations: "1", numPhases: "",
+    pmName: "Chris Larabee", pmCell: "", pmEmail: "Larabee@HTIPolymer.com",
+    warrantyType: "exterior",
+    scopes: [
+      { desc: "Exterior Traffic Coating SGC Deck system w/ Non-slip Texture", qty: "265", unit: "Square Feet" },
+      { desc: "Exterior Stairs - Reform / Rebuild Concrete as needed", qty: "8", unit: "Stairs" },
+      { desc: "Crack Treatment - Routing Existing Cracks and Sealant Prefill", qty: "48", unit: "LF" }
+    ],
+    products: [
+      { text: "SGC Flooring - SGC-Coat EVS Moisture Mitigation Primer" },
+      { text: "SGC Flooring - SGC-Deck B-TUFF 308 Flexible Basecoat Membrane" },
+      { text: "SGC Flooring - SGC-Deck TCA Aliphatic Urethane/Polyurea Sealer" },
+      { text: "SGC Pre-Thickened Epoxy Mastic / Scratch Coat (if needed)" },
+      { text: "SGC-Flooring - SGC-Deck RTU Elastomeric Joint / Crack Sealant" },
+      { text: "SGC Crete CB - Urethane Cement Vertical Grade Trowel Mortar" }
+    ],
+    procedures: [
+      { text: "As this area is outdoor and exposed to the elements. HTI will require 4 continuous days of mild (55-90\u00B0F) weather with no precipitation or high winds. Dustless, HEPA filtered equipment will be used for the concrete prep process." },
+      { text: "We will first mechanically prepare the substrate with diamatic grinders down to sound concrete to create the proper CSP-3/4 surface profile for bond." },
+      { text: "All minor damage to the concrete stairs will be scratch coated with a high-strength epoxy mastic and/or formed and retroweled with SGC Crete CB mortar to restore tread shape and form." },
+      { text: "All cracks will be chased with a v-blade tool and filled flush with an elastomeric SGC-Deck RTU joint compound." },
+      { text: "HTI will then prime the area with a moisture tolerant EVS Moisture Mitigation Primer @ {17}-22 mils." },
+      { text: "HTI will then roller-apply {25}-30 mils of SGC-Deck 308 Basecoat flexible membrane on the horizontal surfaces." },
+      { text: "While the SGC-Deck B-Tuff 308 basecoat is still wet, HTI will broadcast a 12/24-mesh texture silica for non-slip properties directly into the basecoat, to refusal." },
+      { text: "Once cured, HTI will return to sweep any loose silica and vacuum the entire area to prep for sealer." },
+      { text: "We will then seal with an application of SGC-Deck TCA Aliphatic Topcoat @ {18}-20 mils WFT in a TBD Color." }
+    ],
+    addOptions: []
+  },
+  "grant-coroner": {
+    clientType: "direct", laborType: "prevailing",
+    contactName: "Kevin Schmidt", contactTitle: "Facilities and Maintenance Manager", companyName: "Grant County, WA", address: "", city: "Ephrata", state: "WA", zip: "",
+    projectName: "Coroner's Office - Kitchen Conversion", projectCity: "Ephrata", projectState: "WA",
+    systemDisplayName: "SGC Crete Urethane Cement Flooring w/ UHW Sealer",
+    scopeHeader: "SGC Crete w/ Urethane Cement Sealer with Non-slip Texture",
+    proceduresHeader: "SGC Crete Flooring with UHW Urethane Sealer",
+    existingConditions: "",
+    costValue: "19,635", costDescription: "Kitchen Resurfacing with UHW Sealer and 24-grit Non-slip Texture", taxNote: "excluding-sales-tax",
+    numMobilizations: "1", numPhases: "",
+    pmName: "Christopher Larabee", pmCell: "", pmEmail: "Larabee@HTIPolymer.com",
+    warrantyType: "standard-1yr",
+    scopes: [
+      { desc: "SGC Crete Urethane Cement Flooring with UHW Urethane Sealer", qty: "730", unit: "Square Feet", qty2: "109", unit2: "LF cove" }
+    ],
+    products: [
+      { text: "SGC Crete Urethane Cement Slurry 1/8\"" },
+      { text: "SGC Crete TC Urethane Cement Primer" },
+      { text: "24-Grit Heavy Non-slip Silica" },
+      { text: "SGC UHW High-Wear Aliphatic Urethane Sealer with ALO2 Wear Agg" },
+      { text: "Metzger-McGuire Spal-Pro RS-88 Polyurea Joint Filler" }
+    ],
+    procedures: [
+      { text: "All termination points not abutting a vertical surface will be saw cut and key-chased for smooth transition." },
+      { text: "HTI will prepare substrate via diamatic grinding to an ICRI CSP 3-4, per product specifications." },
+      { text: "HTI will then install SGC Crete SL Urethane Cement Mortar throughout the area." },
+      { text: "HTI will then broadcast a 24-Grit non-slip aggregate for texture into the mortar while still wet at .5lbs/SF." },
+      { text: "HTI will then return to sweep and vacuum up all loose sand and scrape the floor for sealer preparation." },
+      { text: "The flooring areas will receive a coat of SGC UHW High-wear Urethane @ {15} mils WFT." },
+      { text: "As a final step, HTI will honor, cut and fill all associated expansion and control joints with Metzger-McGuire Spal-Pro RS-88 Polyurea Joint Filler." }
+    ],
+    addOptions: []
+  },
+  "kp-bellingham": {
+    clientType: "direct", laborType: "open-shop",
+    contactName: "Jason Dexter", contactTitle: "", companyName: "King and Prince Seafood", address: "2825 Roeder Ave Dock #2", city: "Bellingham", state: "WA", zip: "98225",
+    projectName: "King and Prince Production Plant - Multiple Rooms", projectCity: "Bellingham", projectState: "WA",
+    systemDisplayName: "Sherwin Williams high-performance food-grade flooring with Novolac Topcoat",
+    scopeHeader: "K&P Production Area Food-grade Flooring Systems - Multiple Rooms",
+    proceduresHeader: "Sherwin Williams FasTop Polycrete Urethane Cement with Novolac CRC Sealer",
+    existingConditions: "",
+    costValue: "303,136", costDescription: "Scopes 1-8 Combined (see individual scope pricing)", taxNote: "plus-wsst",
+    numMobilizations: "1", numPhases: "",
+    pmName: "Chris Larabee", pmCell: "", pmEmail: "",
+    warrantyType: "standard-1yr-2yr-bond",
+    scopes: [
+      { desc: "Scope #1: Smoker Room Flooring and Cove w/ Metal Primer", qty: "960", unit: "SF", qty2: "255", unit2: "LF cove" },
+      { desc: "Scope #2: Play Area Flooring and Cove Base", qty: "940", unit: "SF", qty2: "80", unit2: "LF cove" },
+      { desc: "Scope #3: Layout / Salt Tank Area Flooring and Cove", qty: "900", unit: "SF", qty2: "87", unit2: "LF cove" },
+      { desc: "Scope #4: Thaw Room Flooring and Sloping Corrections", qty: "370", unit: "SF", qty2: "63", unit2: "LF cove" },
+      { desc: "Scope #5: Brine Room Cooler Flooring and Cove", qty: "1,450", unit: "SF", qty2: "168", unit2: "LF cove" },
+      { desc: "Scope #6: Finish Side Gowning/DOFF Flooring and Cove", qty: "235", unit: "SF", qty2: "63", unit2: "LF cove" },
+      { desc: "Scope #7: Boxing Room Grind and Reseal Cant Cove", qty: "68", unit: "LF" },
+      { desc: "Scope #8: Finish Side Flooring and Cove", qty: "2,125", unit: "SF", qty2: "92", unit2: "LF cove" }
+    ],
+    products: [
+      { text: "Sherwin Williams FasTop Poly-Crete MD Urethane Cement Mortar" },
+      { text: "Sherwin Williams FasTop Poly-Crete WR Urethane Cement Cove Mortar" },
+      { text: "Sherwin Williams 30-mesh Silica Sand" },
+      { text: "Sherwin Williams Resuflor 3741 Novolac CRC Sealer in Steel Gray (x2 coats)" },
+      { text: "Sherwin Williams Resuflor 3504 Metal Primer Epoxy" },
+      { text: "Rapid Set CTS Mortar Mix Plus Hydraulic Cement Sloping Grout" },
+      { text: "Metzger McGuire RS-88 Elastomeric Joint Compound" }
+    ],
+    procedures: [
+      { text: "All termination points not abutting a vertical surface will be saw cut and key-chased to provide a 1/4\" nominal thickness termination with a strong bond to the concrete." },
+      { text: "The existing epoxy flooring will be ground down to sound concrete using both walk-behind 32\" planetary grinders as well as hand-held diamond grinders so that the new flooring will bond directly to concrete as the manufacturer requires." },
+      { text: "Metal wall panels and boxes will be primed with SW 3504 Metal Primer and broadcast with sand for bond." },
+      { text: "Concrete curbs will be hand-troweled with a 3/4\" radius cove using Polycrete WR Cove Base @ 1/8\" thickness." },
+      { text: "HTI will then install SW FasTop Polycrete Urethane Cement Mortar @ {3/16}\" nominal thickness." },
+      { text: "HTI will then broadcast 30-mesh non-skid silica sand into the wet Polycrete for texture." },
+      { text: "Once cured for a minimum of 12 hours, HTI will return to remove any loose sand and vacuum clean the surface." },
+      { text: "HTI will then apply the first sealer application of SW 3741 Novolac Sealer @ {16} mils WFT in Steel Gray." },
+      { text: "HTI will then apply the second application of SW 3741 Novolac Sealer @ {8} mils WFT in Steel Gray." },
+      { text: "HTI will then sawcut and fill any concrete joints with Metzger-McGuire RS-88 Polyurea in standard gray." },
+      { text: "Area may return to regular service 24 hours after flooring system is installed." }
+    ],
+    addOptions: [
+      { text: "HTI Polymer-supplied Rental Dumpster (20-yard) is $989.00 plus any applicable WSST per Scope/week as needed." }
+    ]
+  },
+  "kp-line1": {
+    clientType: "direct", laborType: "open-shop",
+    contactName: "Chris Sweat", contactTitle: "", companyName: "King and Prince Seafood", address: "15110 NE 90th St Suite 110", city: "Redmond", state: "WA", zip: "98052",
+    projectName: "King and Prince Production Plant - Line 1", projectCity: "Redmond", projectState: "WA",
+    systemDisplayName: "Sherwin Williams high-performance food-grade flooring",
+    scopeHeader: "Line 1 Production Areas",
+    proceduresHeader: "Sherwin Williams FasTop Polycrete Urethane Cement with Deco Quartz",
+    existingConditions: "",
+    costValue: "27,468", costDescription: "Line 1 Floor Patching Areas", taxNote: "plus-wsst",
+    numMobilizations: "1", numPhases: "",
+    pmName: "Chris Larabee", pmCell: "", pmEmail: "",
+    warrantyType: "standard-1yr",
+    scopes: [
+      { desc: "Line 1 Warehouse Door (Door to Drain) #1", qty: "30", unit: "Square Feet" },
+      { desc: "Line 1 Production Drive Aisle (along drain edge) #2", qty: "400", unit: "Square Feet" },
+      { desc: "Drum Cooler Area (Under Equipment by Hand) #3", qty: "225", unit: "Square Feet" },
+      { desc: "Line 1 Front (Corner, following joint) #4", qty: "660", unit: "SF" }
+    ],
+    products: [
+      { text: "Sherwin Williams FasTop Poly-Crete SF Urethane Cement Mortar" },
+      { text: "Sherwin Williams Deco Quartz 40-mesh Solid Color Gray" },
+      { text: "Metzger McGuire EP-80 Elastomeric Joint Compound" }
+    ],
+    procedures: [
+      { text: "All termination points not abutting a vertical surface will be saw cut and key-chased to provide a 1/4\" nominal thickness termination with a strong bond to the concrete." },
+      { text: "The existing epoxy flooring that is chipped, failing, and/or damaged will be ground down to sound concrete using both walk-behind 32\" planetary grinders as well as hand-held diamond grinders." },
+      { text: "HTI will then install SW FasTop Polycrete Urethane Cement Mortar @ {3/16}\" nominal thickness." },
+      { text: "HTI will then broadcast 40-mesh Colored Deco Quartz Sand at .5lbs/SF in the wet FasTop for a non-slip texture." },
+      { text: "Once cured for a minimum of 12 hours, HTI will return to remove any loose quartz and vacuum clean the surface." },
+      { text: "HTI will then sawcut and fill any concrete joints with Metzger-McGuire EP-80 Polyurea in standard gray." },
+      { text: "Area may return to regular service 24 hours after flooring system is installed." }
+    ],
+    addOptions: [
+      { text: "3-man Working Crew to Patch Misc. Flooring over standard Friday evening to Sunday Weekend Shift (up to 300 SF) - ROM Estimate $14,445.00 plus WSST." }
+    ]
+  },
+  "lineage-lynden": {
+    clientType: "direct", laborType: "open-shop",
+    contactName: "Gary White", contactTitle: "", companyName: "Lineage", address: "2825 Roeder Avenue", city: "Bellingham", state: "WA", zip: "98225",
+    projectName: "Lineage Loading Dock - Cranberry", projectCity: "Lynden", projectState: "WA",
+    systemDisplayName: "SGC Shield MMA Textured Concrete Sealer",
+    scopeHeader: "SGC Shield MMA Textured Concrete Sealer in Clear (2-phases)",
+    proceduresHeader: "SGC Shield MMA Textured Concrete Sealer System",
+    existingConditions: "",
+    costValue: "123,270", costDescription: "Cranberry Loading Dock Textured Concrete Sealer (@ 16,173 SF - approx. $7.62/SF)", taxNote: "excludes-wsst",
+    numMobilizations: "1", numPhases: "2",
+    pmName: "Chris Larabee", pmCell: "206-465-1038", pmEmail: "Larabee@HTIPolymer.com",
+    warrantyType: "standard-1yr-moisture",
+    scopes: [
+      { desc: "Cranberry Loading Dock Textured Concrete Sealer", qty: "15,435", unit: "Square Feet" },
+      { desc: "Integral Yellow Safety Line Striping (Installed Between Coats)", qty: "738", unit: "LF" },
+      { desc: "Concrete Joint Restoration - Mill and Cap and Fill", qty: "25", unit: "LF" }
+    ],
+    products: [
+      { text: "SGC Shield MMA Acrylic Primer/Sealer w/ Bonding Additive" },
+      { text: "SGC Body Coat Acrylic Yellow Striping" },
+      { text: "Shark Grip 220 mesh Non-slip Texture Additive" },
+      { text: "White Lightning AL02 Aluminum Oxide 60-Grit (2 oz/Gal)" }
+    ],
+    procedures: [
+      { text: "HTI will begin by designating the lines of delineation and snapping or drawing chalk lines to mark out stopping points. Termination points and layout will be coordinated with Lineage personnel." },
+      { text: "HTI will prepare the concrete substrate via shot blast to an ICRI surface profile of CSP-3." },
+      { text: "HTI will then vacuum clean any loose concrete or dust and prepare for coating application." },
+      { text: "HTI will then install the SGC Shield MMA acrylic primer and ShieldR Bonding Additive at {15} mils WFT direct to the concrete in a clear resin." },
+      { text: "HTI will then mark out and snap 4\" wide parallel lines for the pedestrian walkway. Once masked, HTI will install 1 to 2 coats of SGC Shield Body Coat in Safety Yellow for the walkway lines." },
+      { text: "Once Cured, HTI will install a second clear coat SGC Shield MMA acrylic primer at {15} mils WFT. HTI will add 6oz. of Shark Grip non-slip texture additive per gallon and 2oz per 100 SF of 60-grit ALO2 texture silica." },
+      { text: "SGC Shield MMA material cures fully in 1 hour, so the area can return to service the next day." }
+    ],
+    addOptions: [
+      { text: "Total lump sum cost for HTI to supply a rental dumpster (20 yard) is $1,460.00 per week as needed." }
+    ]
+  },
+  "mente-hangar": {
+    clientType: "direct", laborType: "open-shop",
+    contactName: "John Brandenfels", contactTitle: "", companyName: "MENTE", address: "8075 Perimeter Road", city: "Seattle", state: "WA", zip: "98108",
+    projectName: "MENTE Hangar, Boeing Field", projectCity: "Seattle", projectState: "WA",
+    systemDisplayName: "Hangar Floor Damage Coating Repair",
+    scopeHeader: "Flooring Repairs as Needed Per Walkthrough",
+    proceduresHeader: "Coating Repair - Primer and Topcoat System",
+    existingConditions: "",
+    costValue: "16,481", costDescription: "Option 1: Flooring Repairs as Needed Per Walkthrough", taxNote: "plus-state-tax",
+    numMobilizations: "1", numPhases: "",
+    pmName: "Chris Larabee", pmCell: "", pmEmail: "",
+    warrantyType: "standard-1yr",
+    scopes: [
+      { desc: "Impact Damage Hangar Coatings Repair (< 1\" Chips)", qty: "34", unit: "Each" },
+      { desc: "Larger Coating Damage Isolated Repairs (6\" x 6\")", qty: "6", unit: "Each" },
+      { desc: "Joint to Joint Square Refinishing (11.5' x 10' Section)", qty: "11", unit: "Each" },
+      { desc: "Texture Perimeter Coating Repairs (6\" x 6\")", qty: "3", unit: "Each" }
+    ],
+    products: [
+      { text: "Sherwin Williams Macropoxy 646 Primer" },
+      { text: "Sherwin Williams Resutile HPS-100 Topcoat" },
+      { text: "SSP JS-600 Aliphatic Joint Sealant" }
+    ],
+    procedures: [
+      { text: "The existing floor coatings will be mechanically abraded with high-grit sandpaper and/or wire wheel. Exposed concrete may also be diamond ground to clean the surface." },
+      { text: "Bare concrete and coatings will then be primed with Sherwin Williams Macropoxy 646 primer @ {7}-10 mils in SW white." },
+      { text: "We will then install a topcoat of Sherwin Williams Resutile HPS-100 Topcoat @ {4} mils WFT. Textured areas will receive AL02 texture silica for non-slip." },
+      { text: "The failed joint will be removed, cut and cleaned, then filled with JS600 Aliphatic Joint Sealant in white color." }
+    ],
+    addOptions: [
+      { text: "Option 2: HTI to Perform a Mockup of Repairs for Visual Approval - $3,978.00 plus applicable WA state sales tax." }
+    ]
+  },
+  "raedwood": {
+    clientType: "direct", laborType: "open-shop",
+    contactName: "Derek Raedeker", contactTitle: "", companyName: "Raedwood Company", address: "803 Everson Rd", city: "Everson", state: "WA", zip: "98247",
+    projectName: "Raedwood Cabinet Company - Finish Area", projectCity: "Everson", projectState: "WA",
+    systemDisplayName: "Performance HTS Epoxy and Urethane Polymer Flooring",
+    scopeHeader: "Performance HTS Installation Options",
+    proceduresHeader: "Performance HTS System Installation (51-mils Total Film Thickness)",
+    existingConditions: "",
+    costValue: "51,556", costDescription: "Option 1: Performance HTS Installation on New Concrete (no significant patching)", taxNote: "plus-state-tax",
+    numMobilizations: "1", numPhases: "",
+    pmName: "Chris Larabee", pmCell: "", pmEmail: "Larabee@HTIPolymer.com",
+    warrantyType: "standard-1yr-2yr-bond",
+    scopes: [
+      { desc: "\"Finish Area\" - Performance HTS System (51 mil) on New Concrete", qty: "3,950", unit: "Square Feet" },
+      { desc: "Concrete Control Joints", qty: "340", unit: "LF" }
+    ],
+    products: [
+      { text: "Sherwin Williams MVB Moisture Mitigating Primer" },
+      { text: "Sherwin Williams MPE 100% solids Epoxy Body Coat" },
+      { text: "Sherwin Williams HTS 100 Aliphatic Urethane Topcoat with Aluminum Oxide Additive" },
+      { text: "SW 3500 Scratch Coat Mastic Patching Compound" }
+    ],
+    procedures: [
+      { text: "HTI will begin by mechanically grinding the floor with planetary/diamatic grinders to remove existing contaminates and prepare the concrete to receive a coating system for proper bond." },
+      { text: "Once fully prepared to an ICRI CSP 3 surface profile, HTI will vacuum clean and prepare for polymer coating." },
+      { text: "The perimeter of the area will be saw cut and ground down to provide a key chase detail at the termination." },
+      { text: "HTI will patch any significant holes and divots with SW 3500 scratch coat." },
+      { text: "HTI will then prime the concrete with Sherwin Williams MVB moisture primer at {22} mils WFT to mitigate potential blistering from high concrete moisture vapor transmission." },
+      { text: "Once cured, HTI will return to sand the primer to remove any surface debris and tack wipe clean." },
+      { text: "We will then apply a body coat of Sherwin Williams MPE 100% solids Epoxy at {25} mils WFT in TBD color." },
+      { text: "Once cured, the floor will be sealed with Sherwin Williams HTS 100 high-wear aliphatic urethane sealer in TBD Color @ {4} mils WFT." },
+      { text: "As a final step, HTI will sawcut and honor all concrete control joints by filling with Spal Pro RS-88 joint compound." }
+    ],
+    addOptions: [
+      { text: "Option 2: Performance HTS on Existing Concrete (with Pre-Patching) - $59,652.00 plus applicable WA State sales tax." },
+      { text: "Option 3: Slab Leveling and Slope Correction with CTS Hydraulic Cement Overlay - $77,885.00 plus applicable WA State sales tax." }
+    ]
+  },
+  "safran-paintbooth": {
+    clientType: "direct", laborType: "open-shop",
+    contactName: "Yibeltal Yimenu", contactTitle: "", companyName: "Safran Group (Form. Zodiac / IDD)", address: "18225 NE 76 ST", city: "Redmond", state: "WA", zip: "98052",
+    projectName: "Safran Group Redmond - Paint Booth Flooring", projectCity: "Redmond", projectState: "WA",
+    systemDisplayName: "Water-based Anti-Graffiti Coating System",
+    scopeHeader: "Paint Booth Flooring Removal and Recoating w/ Anti-Graffiti Coating System",
+    proceduresHeader: "Removal and Install of Water-based Anti-Graffiti Coating for Flooring",
+    existingConditions: "",
+    costValue: "8,892", costDescription: "Removal and Install of new Water-based Anti-Graffiti Coating for Flooring", taxNote: "plus-state-tax",
+    numMobilizations: "1", numPhases: "",
+    pmName: "Chris Larabee", pmCell: "", pmEmail: "",
+    warrantyType: "standard-1yr",
+    scopes: [
+      { desc: "Removal of existing paint, coatings and contaminates", qty: "378", unit: "SF" },
+      { desc: "Installation of 3-coat Primer and Anti-Graffiti Coating", qty: "378", unit: "SF" }
+    ],
+    products: [
+      { text: "Sherwin Williams Resuflor Aqua 3460 WB Primer" },
+      { text: "Sherwin Williams Resuflor Aqua 3460 WB Body Coat" },
+      { text: "2K WB Anti-Graffiti Coating (Clear)" }
+    ],
+    procedures: [
+      { text: "The existing floor coatings will be mechanically abraded with high-grit sandpaper and/or diamond grinder." },
+      { text: "The flooring will then be primed with Sherwin Williams Resuflor Aqua 3460 WB primer @ {16} mils in gray." },
+      { text: "We will then install a body coat of Sherwin Williams Resuflor Aqua 3460 WB body coat @ {20} mils WFT for color hide and to smooth out the surface." },
+      { text: "Finally, HTI will seal the flooring with the 2K WB Anti-Graffiti Coating in clear @ {5} mils WFT." }
+    ],
+    addOptions: []
+  },
+  "signature-slc": {
+    clientType: "gc", laborType: "open-shop",
+    contactName: "Tyler Brandon", contactTitle: "", companyName: "Span Construction & Engineering, Inc.", address: "3353 Yeager Drive", city: "Madera", state: "CA", zip: "93637",
+    projectName: "Signature Aviation Hangars 8 and 12", projectCity: "SLC", projectState: "UT",
+    systemDisplayName: "Sherwin Williams Epoxy / HTS High-wear Urethane Hangar-Spec Polymer Flooring",
+    scopeHeader: "High-Performance Signature Aviation-Spec Urethane Hangar Floor Coating System",
+    proceduresHeader: "Sherwin Williams Epoxy & HTS-100 High-wear Urethane Hangar Coating System",
+    existingConditions: "",
+    costValue: "276,415", costDescription: "Hangar 8 - HTS-100 Urethane Hangar Flooring System w/ Moisture Primer and Single Body Coat (55 mils)", taxNote: "plus-state-tax",
+    numMobilizations: "1", numPhases: "",
+    pmName: "Chris Larabee", pmCell: "206-465-1038", pmEmail: "Larabee@HTIPolymer.com",
+    warrantyType: "hangar",
+    scopes: [
+      { desc: "Hangar 8 - Concrete Preparation and Hangar-Spec Flooring Installation", qty: "33,540", unit: "Square Feet" },
+      { desc: "Hangar 12 - Concrete Preparation and Hangar-Spec Flooring Installation", qty: "19,535", unit: "Square Feet" }
+    ],
+    products: [
+      { text: "Sherwin Williams Resuprime MVB Moisture Vapor Primer" },
+      { text: "Sherwin Williams Resuflor MPE 100% Solids Epoxy Body Coat" },
+      { text: "Sherwin Williams Resutile HTS-100 Aliphatic Urethane Topcoat with ALO2 High-wear Additive" },
+      { text: "SSP JS-600 Aliphatic Elastomeric Joint Compound (UV-Stable) Polyurea" }
+    ],
+    procedures: [
+      { text: "HTI will begin by mechanically preparing the concrete with steel shotblasting and/or diamatic grinding to remove existing contaminates and create an ICRI CSP-3 profile for proper bond." },
+      { text: "Once prep is complete, HTI will contain the entry of the hangar with a plastic ante room to limit dust and debris. Sticky walk-off mats will be installed at the entrance." },
+      { text: "Once fully prepared, HTI will vacuum clean and prepare for polymer coating." },
+      { text: "HTI will provide an option to patch any major divots and cracking with SW 3500 Mastic." },
+      { text: "HTI will prime the concrete with Sherwin Williams MVB Moisture Primer @ {22} mils WFT in clear per manufacturer's recommendations." },
+      { text: "Once cured, HTI will lightly sand the entire floor surface to identify off-gassing holes. After sanding, the floor will be scrubbed clean and tack wiped." },
+      { text: "We will then apply a body coat of Sherwin Williams MPE 100% solids Epoxy at {25}-30 mils WFT in pigmented color." },
+      { text: "Once cured, HTI will sand the body coat surface and scrub clean with a ride-on floor scrubber." },
+      { text: "HTI will then install the high-wear topcoat of Sherwin Williams Resutile HTS-100 aliphatic urethane sealer @ {4} mils WFT in TBD color." }
+    ],
+    addOptions: [
+      { text: "Option: Added Body Coat for white color - Hangar 8: $71,560.00 / Hangar 12: $44,419.00" },
+      { text: "Option: Honor Concrete Joints with JS600 - Hangar 8: $18,210.00 / Hangar 12: $14,954.00" },
+      { text: "If customer would like HTI Polymer to supply 480v, 3-phase power via mobile generator, please add $2,247.00 per mobilization." },
+      { text: "If customer would like HTI Polymer to supply a garbage dumpster, please add $895.00 per week as needed." }
+    ]
+  },
+  "slim-chickens": {
+    clientType: "gc", laborType: "open-shop",
+    contactName: "Bobby Guzman", contactTitle: "", companyName: "Kaizen Construction and Development", address: "472 Keene Rd", city: "Richland", state: "WA", zip: "99352",
+    projectName: "Slim Chickens - Pasco", projectCity: "Pasco", projectState: "WA",
+    systemDisplayName: "Res-Tek Mac-Guard SL CQ MMA Food Service Flooring",
+    scopeHeader: "Res-Tek Mac-Guard SL CQ MMA Food Service Spec Flooring System",
+    proceduresHeader: "Mechanical Prep and Mac-Guard Quartz Flooring Installation",
+    existingConditions: "The existing flooring installation area is assumed to be clean, bare concrete. Concrete must be 3,500+ psi compressive strength, free from bond inhibiting oils, dynamic cracking or joints, contaminates, glue, mastic or other topping/floor covering.",
+    costValue: "36,825", costDescription: "Res-Tek Mac-Guard SL CQ MMA Flooring System", taxNote: "excludes-wsst",
+    numMobilizations: "1", numPhases: "",
+    pmName: "Chris Larabee", pmCell: "", pmEmail: "Larabee@HTIPolymer.com",
+    warrantyType: "standard-1yr",
+    scopes: [
+      { desc: "Kitchen, Prep, Storage, and DT Mac-Guard System Installation", qty: "1,330", unit: "Square Feet", qty2: "354", unit2: "LF cove" }
+    ],
+    products: [
+      { text: "Res-Tek Mac-Guard 701 Primer + RT-R MMA Primer Bonding Additive" },
+      { text: "Res-Tek Mac-Guard 200 SL Slurry (1/8\") with Filler (Pigmented)" },
+      { text: "Res-Tek Ceramic Baked Color Quartz" },
+      { text: "Res-Tek Mac-Guard 925 High-performance Sealer (Two Coats)" }
+    ],
+    procedures: [
+      { text: "HTI will begin by mechanically grinding all concrete with diamatic grinders to remove any existing surface laitance, clean, and profile the surface to an ICRI CSP-3+ surface profile." },
+      { text: "We will then trowel Res-Tek Mac-Guard 800 Cove Base Mortar @ 1/8\" thickness, up 6\" on the perimeter vertical surfaces, finished with a 3/4\" radius base and a tapered top edge termination." },
+      { text: "HTI will then prime all applicable areas and cove base backing with Mac-Guard 701 Primer @ {5} mils WFT." },
+      { text: "We will then trowel Res-Tek Mac-Guard 800 SL Slurry Base @ {1/8}\" nominal thickness over the prepared flooring areas. While still wet, HTI will broadcast colored quartz sand to refusal." },
+      { text: "HTI will then return after cure to scrape and remove all loose and remaining color quartz from the surface." },
+      { text: "HTI will install the first seal coat of Res-Tek 925 Mac-Guard Sealer in clear @ {16} mils WFT." },
+      { text: "HTI will install the second and final seal coat of Res-Tek 925 Mac-Guard Sealer in clear @ {8} mils WFT." }
+    ],
+    addOptions: []
+  },
+  "super1-kalispell": {
+    clientType: "gc", laborType: "open-shop",
+    contactName: "Dan", contactTitle: "", companyName: "Solid Ground Concrete", address: "", city: "Kalispell", state: "MT", zip: "",
+    projectName: "Super 1 Supermarket - Kitchen", projectCity: "Kalispell", projectState: "MT",
+    systemDisplayName: "Urethane Cement Resinous Flooring with Ramps and Cove",
+    scopeHeader: "Super 1 Kitchen Areas with Ramp Sloping at Tile Removed Locations",
+    proceduresHeader: "Urethane Cement Flooring with Non-slip Texture",
+    existingConditions: "The existing kitchen area has 5/8\" thick tile installed throughout, with a sloped concrete substrate underneath. HTI assumes GC will be removing all existing tile once the equipment is removed and providing a sound, smooth concrete substrate with a proper slope to drain.",
+    costValue: "93,274", costDescription: "Super 1 Kitchen Areas with Ramp Sloping at Tile Removed Locations", taxNote: "plus-state-tax",
+    numMobilizations: "1", numPhases: "",
+    pmName: "Chris Larabee", pmCell: "", pmEmail: "",
+    warrantyType: "standard-1yr",
+    scopes: [
+      { desc: "Kitchen Area with Cove", qty: "4,620", unit: "Square Feet" }
+    ],
+    products: [
+      { text: "Urethane Cement TC Primer (as needed)" },
+      { text: "Urethane Cement Flooring Mortar @ 1/4\"" },
+      { text: "Urethane Cement Sealer @ 18 mils WFT" }
+    ],
+    procedures: [
+      { text: "Once the tile is removed, HTI will mechanically grind the concrete substrate with diamatic grinders to the manufacturer-approved ICRI CSP-4+ profile and vacuum clean in preparation for primer." },
+      { text: "At the designated entry areas into the kitchen, HTI will install a ramp down from the surrounding concrete from 1/2\" down to 0\", extending 4' into the kitchen to ramp down to grade." },
+      { text: "Install Urethane Mortar at 1/4\" and broadcast 30-mesh aggregate for non-slip properties." },
+      { text: "HTI will then seal the floor with a single application of UC Sealer @ {16}-18 mils WFT." },
+      { text: "HTI will then cut and honor joints in all areas and fill with Metzger McGuire RS88 polyurea joint sealant." }
+    ],
+    addOptions: [
+      { text: "If 480 3-phase power is not provided, HTI will provide generator at $2,925.00 per week." }
+    ]
+  },
+  "uw-blakely": {
+    clientType: "gc", laborType: "prevailing",
+    contactName: "Nick Holton", contactTitle: "", companyName: "Greystar Development & Construction, LP", address: "1700 7th Ave | Suite 1100", city: "Seattle", state: "WA", zip: "98101",
+    projectName: "Blakeley Project - SEAL Storage Areas", projectCity: "Seattle", projectState: "WA",
+    systemDisplayName: "Grind and Seal with Patching",
+    scopeHeader: "SEAL Areas - Crack and Spall Patching, Grind and Seal",
+    proceduresHeader: "Storage Area Concrete Grind and Seal (Two-Step Grind)",
+    existingConditions: "",
+    costValue: "12,966", costDescription: "Scope 1: Building D Level 2 - Storage Area Concrete Patching & Two-step Grind and Seal", taxNote: "excludes-wsst",
+    numMobilizations: "1", numPhases: "",
+    pmName: "Chris Larabee", pmCell: "", pmEmail: "",
+    warrantyType: "standard-1yr",
+    scopes: [
+      { desc: "Building D Level 2 - Storage Area Concrete Patching & Two-step Grind and Seal", qty: "1,182", unit: "Square Feet" },
+      { desc: "Building A Level 1 - Storage Areas Concrete Patching & Two-step Grind and Seal", qty: "1,188", unit: "Square Feet" }
+    ],
+    products: [
+      { text: "Prosoco LS/CS Consolideck Concrete Densifier & Dust-proofer" }
+    ],
+    procedures: [
+      { text: "HTI will hand-prepare spalled and damaged areas with 4\" hand grinders and vacuuming clean any loose debris or concrete." },
+      { text: "Concrete cracks will be routed out and vacuumed clean to receive patching material." },
+      { text: "HTI will then mechanically prepare the substrate with planetary diamond grinders using 80-grit metal-bonded diamonds to cut the surface, remove surface staining, grind patching flush, and cut the surface open to receive sealer." },
+      { text: "We will then follow with a 50-grit ceramic hybrid diamond to remove 80-grit scratches, smooth the concrete, and hone the surface so it can receive sealer." },
+      { text: "We will then install one coat of Prosoco LS/CS Consolideck Concrete Densifier & Dust-proofer @ 350 SF/gallon per manufacturer's instructions and allowed to dry." },
+      { text: "This will produce a low-sheen, clean and guarded concrete surface suitable for storage and utilitarian purposes." }
+    ],
+    addOptions: [
+      { text: "Scope 2: Building A Level 1 - $9,655.00 utilizing Prevailing Wage Labor." },
+      { text: "Storage Area Concrete Dynamic Joint Cutting / Filling (If needed) - $2,932.00 utilizing Prevailing Wage Labor." }
+    ]
+  }
+};
+
+function loadPreviousProject(projectId) {
+  if (!projectId || !PREV_PROJECTS[projectId]) return;
+  const p = PREV_PROJECTS[projectId];
+
+  // Set form controls
+  document.getElementById('clientType').value = p.clientType || 'gc';
+  document.getElementById('laborType').value = p.laborType || 'open-shop';
+  if (p.warrantyType) document.getElementById('warrantyType').value = p.warrantyType;
+
+  // Copy all state
+  Object.assign(state, {
+    clientType: p.clientType || 'gc',
+    contactName: p.contactName || '',
+    contactTitle: p.contactTitle || '',
+    companyName: p.companyName || '',
+    address: p.address || '',
+    city: p.city || '',
+    state: p.state || '',
+    zip: p.zip || '',
+    projectName: p.projectName || '',
+    projectCity: p.projectCity || '',
+    projectState: p.projectState || '',
+    systemDisplayName: p.systemDisplayName || '',
+    existingConditions: p.existingConditions || '',
+    warrantyText: (p.warrantyType && WARRANTIES[p.warrantyType]) ? WARRANTIES[p.warrantyType] : state.warrantyText,
+    numMobilizations: p.numMobilizations || '1',
+    numPhases: p.numPhases || '',
+    pmName: p.pmName || '',
+    pmCell: p.pmCell || '',
+    pmEmail: p.pmEmail || '',
+    scopeSections: p.scopeSections
+      ? p.scopeSections.map(sec => ({ name: sec.name, scopes: sec.scopes.map(s => ({...s})) }))
+      : [{ name: p.scopeHeader || '', scopes: (p.scopes || []).map(s => ({...s})) }],
+    products: (p.products || []).map(pr => ({...pr})),
+    procedureSections: p.procedureSections
+      ? p.procedureSections.map(sec => ({ header: sec.header, steps: sec.steps.map(s => ({...s})) }))
+      : [{ header: p.proceduresHeader || '', steps: (p.procedures || []).map(pr => ({...pr})) }],
+    costSections: p.costSections
+      ? p.costSections.map(sec => ({...sec}))
+      : [{ description: p.costDescription || '', value: p.costValue || '', taxNote: p.taxNote || 'not-included' }],
+    addOptions: (p.addOptions || []).map(a => ({...a}))
+  });
+
+  // Update selected tag
+  const sel = document.getElementById('prevProjectSelect');
+  const label = sel.options[sel.selectedIndex]?.text || projectId;
+  document.getElementById('sysSelectedTag').innerHTML =
+    `<span class="sys-selected-tag">Loaded: ${escH(p.projectName || label)}<button class="tag-x" onclick="this.parentElement.remove()">&times;</button></span>`;
+
+  renderInclusionChecks();
+  render();
+}
+
+function applyWarrantyTemplate() {
+  const wt = document.getElementById('warrantyType').value;
+  if (WARRANTIES[wt] !== undefined) { state.warrantyText = WARRANTIES[wt]; render(); }
+}
+
+// ============================================================
+// INCLUSIONS
+// ============================================================
+function renderInclusionChecks() {
+  const container = document.getElementById('inclusionChecks');
+  container.innerHTML = INCLUSIONS_MASTER.map(inc => {
+    const dt = getIncText(inc);
+    return `<div class="inclusion-check">
+      <input type="checkbox" id="inc-${inc.id}" ${state.inclusions[inc.id] ? 'checked' : ''}
+        onchange="state.inclusions['${inc.id}']=this.checked; render();">
+      <label for="inc-${inc.id}">${dt.substring(0, 80)}${dt.length > 80 ? '...' : ''}</label>
+    </div>`;
+  }).join('');
+}
+function checkAllInclusions() { INCLUSIONS_MASTER.forEach(i => state.inclusions[i.id] = true); renderInclusionChecks(); render(); }
+function uncheckAllInclusions() { INCLUSIONS_MASTER.forEach(i => state.inclusions[i.id] = false); renderInclusionChecks(); render(); }
+
+function getIncText(inc) {
+  if (inc.id === 'labor-rate') {
+    const lt = document.getElementById('laborType').value;
+    if (lt === 'open-shop') return "Pricing is not based on union or prevailing wage labor rates.";
+    if (lt === 'prevailing') return "Work to be performed utilizing Prevailing Wage labor rates.";
+    return "Work to be performed utilizing Union labor rates. Overtime, weekend, and holiday hours may result in increased labor rates.";
+  }
+  const ct = document.getElementById('clientType').value;
+  if (ct === 'direct' && inc.directText) return inc.directText;
+  if (ct === 'gc' && inc.gcText) return inc.gcText;
+  return inc.text || inc.gcText || inc.directText || '';
+}
+
+// ============================================================
+// DOCUMENT ACTION FUNCTIONS (called from within the preview)
+// ============================================================
+function removeScope(sec, i) { state.scopeSections[sec].scopes.splice(i, 1); render(); }
+function addScope(sec) { state.scopeSections[sec].scopes.push({ desc: '', qty: '', unit: 'Square Feet' }); render(); }
+function moveScope(sec, i, dir) { swap(state.scopeSections[sec].scopes, i, dir); render(); }
+function addScopeSection() { state.scopeSections.push({ name: 'New Scope Section', scopes: [{ desc: '', qty: '', unit: 'Square Feet' }] }); render(); }
+function removeScopeSection(sec) { state.scopeSections.splice(sec, 1); render(); }
+function syncScopeSection(sec, val) { if (state.scopeSections[sec]) state.scopeSections[sec].name = val; }
+function addQty2(sec, i) { if (state.scopeSections[sec] && state.scopeSections[sec].scopes[i]) { state.scopeSections[sec].scopes[i].qty2 = ''; state.scopeSections[sec].scopes[i].unit2 = 'LF of Cove'; render(); } }
+function removeProduct(i) { state.products.splice(i, 1); render(); }
+function addProduct() { state.products.push({ text: '' }); render(); }
+function moveProduct(i, dir) { swap(state.products, i, dir); render(); }
+function removeProcedureStep(sec, i) { state.procedureSections[sec].steps.splice(i, 1); render(); }
+function addProcedureStep(sec) { state.procedureSections[sec].steps.push({ text: '' }); render(); }
+function addProcedureSection() { state.procedureSections.push({ header: '', steps: [] }); render(); }
+function removeProcedureSection(sec) { state.procedureSections.splice(sec, 1); render(); }
+function syncProcedureSectionHeader(sec, val) { if (state.procedureSections[sec]) state.procedureSections[sec].header = val; }
+function syncCostField(sec, field, val) { if (state.costSections[sec]) state.costSections[sec][field] = val; }
+function addCostSection() { state.costSections.push({ description: '', value: '', taxNote: 'not-included' }); render(); }
+function removeCostSection(sec) { state.costSections.splice(sec, 1); render(); }
+function removeAddOption(i) { state.addOptions.splice(i, 1); render(); }
+function addAddOption() { state.addOptions.push({ text: '' }); render(); }
+function moveAddOption(i, dir) { swap(state.addOptions, i, dir); render(); }
+function removeInclusion(id) { state.inclusions[id] = false; renderInclusionChecks(); render(); }
+
+// Generic swap helper
+function swap(arr, i, dir) {
+  const j = i + dir;
+  if (j < 0 || j >= arr.length) return;
+  [arr[i], arr[j]] = [arr[j], arr[i]];
+}
+
+// Build the controls cluster (up/down/x) for a doc-row
+function ctrlsHTML(type, i, len) {
+  const upCls = i === 0 ? ' disabled' : '';
+  const dnCls = i === len - 1 ? ' disabled' : '';
+  return `<div class="doc-controls">
+    <button class="doc-x" onclick="remove${type}(${i})" title="Remove">\u00D7</button>
+  </div>`;
+}
+
+function scopeCtrlsHTML(sec, i, len) {
+  return `<div class="doc-controls">
+    <button class="doc-x" onclick="removeScope(${sec},${i})" title="Remove">\u00D7</button>
+  </div>`;
+}
+
+// Sync editable fields back to state on blur
+function syncField(field, val) { state[field] = val; }
+function syncScope(sec, i, key, val) { if (state.scopeSections[sec] && state.scopeSections[sec].scopes[i]) state.scopeSections[sec].scopes[i][key] = val; }
+function syncProduct(i, val) { if (state.products[i]) state.products[i].text = val; }
+function syncProcedure(sec, i, val) { if (state.procedureSections[sec] && state.procedureSections[sec].steps[i]) state.procedureSections[sec].steps[i].text = val; }
+function syncAddOption(i, val) { if (state.addOptions[i]) state.addOptions[i].text = val; }
+
+// ============================================================
+// RENDER
+// ============================================================
+function render() {
+  const s = state;
+  const ct = document.getElementById('clientType').value;
+  s.clientType = ct;
+
+  const fmtDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+
+  const licFoot = `AL S-42420 AK 32754 AZ ROC227555 CA 890321 DE 2012605084 FL (BROWARD COUNTY 12-P-17960-R; COLLIER COUNTY LCC20120000690; LEE COUNTY DC06-02074; LEON COUNTY 700534; MIAMI-DADE COUNTY 07BS00786; PALM BEACH COUNTY U-21759; PINELLAS COUNTY C-10799) HI CT-27647 ID RCE-20351 IA C113968 LA 55913 MN 321780 MS 21070-SC MT 155135 NE 032-010025308 NV 0067690 ND 44528 OR CCB#173410 SC G113153 TN 67605 UT 6434140-5501 VA 2705 142224 WA HTIPOPI949RH`;
+
+  const hdr = `<div class="hti-header">
+    <img class="hti-logo-img" src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAUDBAQEAwUEBAQFBQUGBwwIBwcHBw8LCwkMEQ8SEhEPERETFhwXExQaFRERGCEYGh0dHx8fExciJCIeJBweHx7/2wBDAQUFBQcGBw4ICA4eFBEUHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh7/wAARCAD6AyADASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD7LooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiuJ8cfFf4eeCdYTSPFXimy0u+eFZ1hmDljGxIDfKpGMqfyrR8BePPCPju0ubrwlrltq0NrII53hDAIxGQDuA7UAdLRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUVR1vVLTR7E3t6XEQYL8i7jk9OKAL1Fcp/wAJ/wCHv+el1/34NH/Cf+Hv+el1/wB+DQB1dFcp/wAJ/wCHv+el1/34NH/Cf+Hv+el1/wB+DQB1dFcp/wAJ/wCHv+el1/34NH/Cf+Hv+el1/wB+DQB1dFcp/wAJ/wCHv+el1/34NH/Cf+Hv+el1/wB+DQB1dFcp/wAJ/wCHv+el1/34NaOgeJtL1u5kt7Fpi8ab23xlRjOKAPhP/goiSPjpY4J/5AFv/wCjp69U/wCCbRJ8E+K8n/mJQ/8AoqvKv+CiP/JdbH/sAW//AKOnr1X/AIJs/wDIk+K/+wlD/wCiqAPrKiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigArlPir/AMim/wD13j/nXV1ynxV/5FN/+u8f86APJKKKKACiiigAooooAKKKKACu2+D/APyHLz/r2/8AZxXE123wf/5Dl5/17f8As4oA+SP+CiP/ACXWx/7AFv8A+jp69V/4Js/8iT4r/wCwlD/6Kryr/goj/wAl1sf+wBb/APo6evVf+CbP/Ik+K/8AsJQ/+iqAPrKiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigArlPir/yKb/8AXeP+ddXXKfFX/kU3/wCu8f8AOgDySiiigAooooAKKKKACiiigArtvg//AMhy8/69v/ZxXE123wf/AOQ5ef8AXt/7OKAPkj/goj/yXWx/7AFv/wCjp69V/wCCbP8AyJPiv/sJQ/8AoqvKv+CiP/JdbH/sAW//AKOnr1X/AIJs/wDIk+K/+wlD/wCiqAPrKiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigArlPir/AMim/wD13j/nXV1ynxV/5FN/+u8f86APJKKKKACiiigAooooAKKKKACu2+D/APyHLz/r2/8AZxXE123wf/5Dl5/17f8As4oA+SP+CiP/ACXWx/7AFv8A+jp69V/4Js/8iT4r/wCwlD/6Kryr/goj/wAl1sf+wBb/APo6evVf+CbP/Ik+K/8AsJQ/+iqAPrKiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKK84+Mfxn8G/Cq50238UnUQ+opI8H2W280YQqGzyMfeFAHo9FfPP8Aw2D8If73iD/wXD/4uj/hsH4Q/wB7xB/4Lh/8XQB9DVynxV/5FN/+u8f868k/4bB+EP8Ae8Qf+C4f/F1h+N/2rPhVrGhNZWr66JTIjDdp4AwD/v0AblFeT/8ADQPw9/v6x/4BD/4uj/hoH4e/39Y/8Ah/8XQB6xRXk/8Aw0D8Pf7+sf8AgEP/AIutzwR8WPCXjDXV0XRm1A3bRvKPOtti7VGTzuNAHeUUUUAFFFFABXbfB/8A5Dl5/wBe3/s4ria7b4P/APIcvP8Ar2/9nFAHyR/wUR/5LrY/9gC3/wDR09eq/wDBNn/kSfFf/YSh/wDRVeVf8FEf+S62P/YAt/8A0dPXqv8AwTZ/5EnxX/2Eof8A0VQB9ZUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABXxN/wAFLP8AkOeCf+va8/8AQ4q+2a+Jv+Cln/Ic8E/9e15/6HFQB8gUUUUAFFFFABRRRQAV61+yirN8W4Qoz/oNz/6CK8lr1/8AZI/5K7H/ANeFx/IVwZpi5YPB1cRBXcYtq+2iN8LSVatGm9m0j628mX+4aPJl/uGr1Ffln/ERsf8A8+of+Tf/ACR9X/q3h/5n+H+RR8mX+4aPJl/uGr1FH/ERsf8A8+of+Tf/ACQf6t4f+Z/h/kUfJl/uGur+Gd7a6Zq11NfzLbxvBtVm7ncDjisKij/iI2P/AOfUP/Jv8w/1bw/8z/D/ACPmX/goDfWmofG6xns51mjGhQKWX182bj9a9P8A+Cderadp3gvxSt7dxwM+owlQ2ef3VeH/ALYv/JVLX/sEQ/8AoyWu+/Yt/wCRV8Qf9f0X/os19pi+IK9HIo5kornai7a21du9/wATxKWX05454Zt2V/U+2v8AhKNA/wCgnD+v+FH/AAlGgf8AQTh/X/CvI6K+K/4iNj/+fUPx/wAz2/8AVzD/AMz/AA/yPXP+Eo0D/oJw/r/hTofEmhzTJDHqMLO7BVAzyTwB0ryGrmhf8huw/wCvmP8A9CFa0PELH1KsYOnDVpdf8yanD2HjByUnp6f5HtFFFFfrx8eFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAV8Tf8ABSz/AJDngn/r2vP/AEOKvtmvib/gpZ/yHPBP/Xtef+hxUAfIFFFFABRRRQAUUUUAFev/ALJH/JXY/wDrwuP5CvIK9f8A2SP+Sux/9eFx/IV43EP/ACKsR/gl+R2Zf/vVP1X5n2JRRRX85n6OFFFFABRRRQB8ifti/wDJVLX/ALBEP/oyWu+/Yt/5FXxB/wBf0X/os1wP7Yv/ACVS1/7BEP8A6Mlrvv2Lf+RV8Qf9f0X/AKLNfrOZf8kfT9If+lI+Rw3/ACOJer/I99ooor8mPrgq7oX/ACG7D/r5j/8AQhVKruhf8huw/wCvmP8A9CFdOD/3in6r8zOt/Dl6M9oooor+nD8wCiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAK+Jv+Cln/ACHPBP8A17Xn/ocVfbNfE3/BSz/kOeCf+va8/wDQ4qAPkCiiigAooooAKKKKACvX/wBkj/krsf8A14XH8hXkFev/ALJH/JXY/wDrwuP5CvG4h/5FWI/wS/I7Mv8A96p+q/M+xKKKK/nM/RwooooAKKKKAPkT9sX/AJKpa/8AYIh/9GS1337Fv/Iq+IP+v6L/ANFmuB/bF/5Kpa/9giH/ANGS1337Fv8AyKviD/r+i/8ARZr9ZzL/AJI+n6Q/9KR8jhv+RxL1f5HvtFFFfkx9cFXdC/5Ddh/18x/+hCqVXdC/5Ddh/wBfMf8A6EK6cH/vFP1X5mdb+HL0Z7RRRRX9OH5gFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAV8Tf8FLP+Q54J/wCva8/9Dir7Zr40/wCCjOj6tqmteDW03TL29Edtdhzb27yBcvFjO0HHSgD4yorb/wCES8U/9C3rP/gBL/8AE0f8Il4p/wChb1n/AMAJf/iaAMSitv8A4RLxT/0Les/+AEv/AMTR/wAIl4p/6FvWf/ACX/4mgDEorb/4RLxT/wBC3rP/AIAS/wDxNH/CJeKf+hb1n/wAl/8AiaAMSvX/ANkj/krsf/XhcfyFed/8Il4p/wChb1n/AMAJf/ia9V/ZY0HXNO+KsdxqGjajaQ/YZ18ye1kRckDAyQBXjcQ/8irEf4JfkdmX/wC9U/VfmfWdFFFfzmfo4UUUUAFFFFAHyJ+2L/yVS1/7BEP/AKMlrvv2Lf8AkVfEH/X9F/6LNcD+2L/yVS1/7BEP/oyWu+/Yt/5FXxB/1/Rf+izX6zmX/JH0/SH/AKUj5HDf8jiXq/yPfaKKK/Jj64Ku6F/yG7D/AK+Y/wD0IVSq7oX/ACG7D/r5j/8AQhXTg/8AeKfqvzM638OXoz2iiiiv6cPzAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAoIzRRQAmB7/nRge/50tFACYHv+dGB7/nS0UAJge/50YHv+dLRQAmB7/nXO/EUY8Lzdf9ZH3/ANqujrnPiN/yK8v/AF0j/wDQq8fiH/kV4j/BL8jty7/e6fqvzPLaKKK/nI/RgooooAKKKKAPkT9sX/kqlr/2CIf/AEZLXffsW/8AIq+IP+v6L/0Wa4H9sX/kqlr/ANgiH/0ZLXffsW/8ir4g/wCv6L/0Wa/Wcy/5I+n6Q/8ASkfI4b/kcS9X+R77RRRX5MfXBV3Qv+Q3Yf8AXzH/AOhCqVXdC/5Ddh/18x/+hCunB/7xT9V+ZnW/hy9Ge0UUUV/Th+YBRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAfNf9p/th/9C/4F/wC/g/8AjtH9p/th/wDQv+Bf+/g/+O19KUUAfNf9p/th/wDQv+Bf+/g/+O0f2n+2H/0L/gX/AL+D/wCO19KUUAfNf9p/th/9C/4F/wC/g/8AjtH9p/th/wDQv+Bf+/g/+O19KUUAfNf9p/th/wDQv+Bf+/g/+O0f2n+2H/0L/gX/AL+D/wCO19KUUAfNf9p/th/9C/4F/wC/g/8AjtZPivUf2s20aQanoXglLbcu4pIuc54/5a19VVznxG/5FeX/AK6R/wDoVeXndT2WXV52TtF6PZ6dfI6sDHnxMI3tdo+Rvtv7Rv8A0CPCf/fa/wDxyj7b+0b/ANAjwn/32v8A8cr2eivwz+3F/wBAtL/wF/8AyR9z9Qf/AD9l9/8AwDxj7b+0b/0CPCf/AH2v/wAco+2/tG/9Ajwn/wB9r/8AHK9noo/txf8AQLS/8Bf/AMkH1B/8/Zff/wAA8Y+2/tG/9Ajwn/32v/xyj7b+0b/0CPCf/fa//HK9noo/txf9AtL/AMBf/wAkH1B/8/Zff/wD4g+P8vjKXxtA3jm30+DVPsEYRbIgp5W99pOCec7v0rp/2d5/ihDomqjwFZaNcWpuU+0m+YBg+w4xlhximfti/wDJVLX/ALBEP/oyWu+/Yt/5FXxB/wBf0X/os1+k4/GqHDEK/s4vSPute7uul/1PmqFC+ZunzPrr12Nb7b+0b/0CPCf/AH2v/wAco+2/tG/9Ajwn/wB9r/8AHK9nor82/txf9AtL/wABf/yR9L9Qf/P2X3/8A8Y+2/tG/wDQI8J/99r/APHKsabfftJjUbY2+j+ETMJk8sM64LZGM/vPWvX6u6H/AMhux/6+Y/8A0IVvhc7Uq8F9WpLVfZff/EZ1cA1CT9rLbv8A8A5P+0/2w/8AoX/Av/fwf/HaP7T/AGw/+hf8C/8Afwf/AB2vpSiv6APgD5r/ALT/AGw/+hf8C/8Afwf/AB2j+0/2w/8AoX/Av/fwf/Ha+lKKAPmv+0/2w/8AoX/Av/fwf/HaP7T/AGw/+hf8C/8Afwf/AB2vpSigD5r/ALT/AGw/+hf8C/8Afwf/AB2j+0/2w/8AoX/Av/fwf/Ha+lKKAPmv+0/2w/8AoX/Av/fwf/HaP7T/AGw/+hf8C/8Afwf/AB2vpSigD5r/ALT/AGw/+hf8C/8Afwf/AB2j+0/2w/8AoX/Av/fwf/Ha+lKKAPmv+0/2w/8AoX/Av/fwf/HaP7T/AGw/+hf8C/8Afwf/AB2vpSigD5r/ALT/AGw/+hf8C/8Afwf/AB2j+0/2w/8AoX/Av/fwf/Ha+lKKAPmv+0/2w/8AoX/Av/fwf/HaP7T/AGw/+hf8C/8Afwf/AB2vpSigD5r/ALT/AGw/+hf8C/8Afwf/AB2j+0/2w/8AoX/Av/fwf/Ha+lKKAPmv+0/2w/8AoX/Av/fwf/HaP7T/AGw/+hf8C/8Afwf/AB2vpSigD5r/ALT/AGw/+hf8C/8Afwf/AB2j+0/2w/8AoX/Av/fwf/Ha+lKKAPmv+0/2w/8AoX/Av/fwf/HaP7T/AGw/+hf8C/8Afwf/AB2vpSigD5r/ALT/AGw/+hf8C/8Afwf/AB2j+0/2w/8AoX/Av/fwf/Ha+lKKAPmv+0/2w/8AoX/Av/fwf/HaP7T/AGw/+hf8C/8Afwf/AB2vpSigD5r/ALT/AGw/+hf8C/8Afwf/AB2j+0/2w/8AoX/Av/fwf/Ha+lKKAPmv+0/2w/8AoX/Av/fwf/HaP7T/AGw/+hf8C/8Afwf/AB2vpSigD5r/ALT/AGw/+hf8C/8Afwf/AB2j+0/2w/8AoX/Av/fwf/Ha+lKKAPmv+0/2w/8AoX/Av/fwf/HaP7T/AGw/+hf8C/8Afwf/AB2vpSigD5r/ALT/AGw/+hf8C/8Afwf/AB2j+0/2w/8AoX/Av/fwf/Ha+lKKAPmv+0/2w/8AoX/Av/fwf/HaP7T/AGw/+hf8C/8Afwf/AB2vpSigD5r/ALT/AGw/+hf8C/8Afwf/AB2j+0/2w/8AoX/Av/fwf/Ha+lKKAPmv+0/2w/8AoX/Av/fwf/HaP7T/AGw/+hf8C/8Afwf/AB2vpSigD5r/ALT/AGw/+hf8C/8Afwf/AB2j+0/2w/8AoX/Av/fwf/Ha+lKKAPmv+0/2w/8AoX/Av/fwf/HaP7T/AGw/+hf8C/8Afwf/AB2vpSigD5r/ALT/AGw/+hf8C/8Afwf/AB2j+0/2w/8AoX/Av/fwf/Ha+lKKAPmv+0/2w/8AoX/Av/fwf/HaP7T/AGw/+hf8C/8Afwf/AB2vpSigD5r/ALT/AGw/+hf8C/8Afwf/AB2j+0/2w/8AoX/Av/fwf/Ha+lKKAPmv+0/2w/8AoX/Av/fwf/HaP7T/AGw/+hf8C/8Afwf/AB2vpSigD5r/ALT/AGw/+hf8C/8Afwf/AB2j+0/2w/8AoX/Av/fwf/Ha+lKKAPmv+0/2w/8AoX/Av/fwf/HaP7T/AGw/+hf8C/8Afwf/AB2vpSigD5r/ALT/AGw/+hf8C/8Afwf/AB2j+0/2w/8AoX/Av/fwf/Ha+lKKAPmv+0/2w/8AoX/Av/fwf/HaP7T/AGw/+hf8C/8Afwf/AB2vpSigD5r/ALT/AGw/+hf8C/8Afwf/AB2j+0/2w/8AoX/Av/fwf/Ha+lKKAPmv+0/2w/8AoX/Av/fwf/HaP7T/AGw/+hf8C/8Afwf/AB2vpSigD5r/ALT/AGw/+hf8C/8Afwf/AB2j+0/2w/8AoX/Av/fwf/Ha+lKKAPmv+0/2w/8AoX/Av/fwf/HaP7T/AGw/+hf8C/8Afwf/AB2vpSigD5r/ALT/AGw/+hf8C/8Afwf/AB2j+0/2w/8AoX/Av/fwf/Ha+lKKAPmv+0/2w/8AoX/Av/fwf/HaP7T/AGw/+hf8C/8Afwf/AB2vpSigAooooAKKKKACiiigAooooAK5z4j/APIry/8AXSP/ANCro6bLHHKmyRFdfRhkVxZjhHjMJUw6duZNX9Ub4at7GtGpa9mmeGZHqPzoyPUfnXt32Kz/AOfSD/v2P8KPsVn/AM+kH/fsf4V+a/8AENqn/QQv/Af+CfS/6yw/59/j/wAA8RyPUfnRkeo/OvbvsVn/AM+kH/fsf4UfYrP/AJ9IP+/Y/wAKP+IbVP8AoIX/AID/AMEP9ZYf8+/x/wCAeI5HqPzoyPUfnXt32Kz/AOfSD/v2P8KPsVn/AM+kH/fsf4Uf8Q2qf9BC/wDAf+CH+ssP+ff4/wDAPzW/bE/5Kpa/9giH/wBGS13v7FuP+EV8Qc/8v0X/AKLNZP8AwUNjji+OdisUaIv9gW5wqgD/AF09ep/8E3oIZvBXisywxyY1KHG5Qf8AllX1+K4dlXyaOWe0s0kr27O+1/1PHpZioY14nl3voeg5HqPzoyPUfnXt32Kz/wCfSD/v2P8ACj7FZ/8APpB/37H+FfIf8Q2qf9BC/wDAf+Cex/rLD/n3+P8AwDxHI9R+dXNDI/tux5H/AB8x/wDoQr2L7FZ/8+kH/fsf4ULZ2isGW2hBByCIxxWlHw6qUqkZ+3WjT+Ht8yZ8RxlFx9nv5/8AAJ6KKK/Uz5UKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKAPMfij8Cvh78SPEcev+KbC9uL6O2W1Vor14l8tWZgMLx1c81s/Cf4X+Evhjp97Y+E7W5t4b2VZphNctKSyjAwW6cV2tFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFAH//Z" alt="HTI Polymer, Inc.">
+    <div class="hti-header-title">
+      <div class="hti-header-title-main">HTI</div>
+      <div class="hti-header-title-sub">Polymer, Inc.</div>
+    </div>
+    <div class="hti-header-overlay">
+      <div class="hti-address">18702 142<sup>nd</sup> Ave NE &bull; Woodinville, WA 98072</div>
+      <div class="hti-date">${fmtDate}</div>
+    </div>
+  </div>`;
+
+  // Recipient
+  let recip;
+  if (ct === 'gc') {
+    recip = `<div class="recipient">
+      <strong><input class="doc-input doc-input-lg" value="${esc(s.contactName)}" placeholder="Person's Name" onblur="syncField('contactName',this.value)"></strong><br>
+      <input class="doc-input doc-input-lg" value="${esc(s.contactTitle)}" placeholder="Title (optional)" onblur="syncField('contactTitle',this.value)" style="font-size:10pt;"><br>
+      <strong><input class="doc-input doc-input-lg" value="${esc(s.companyName)}" placeholder="GC Name" onblur="syncField('companyName',this.value)"></strong><br>
+      <input class="doc-input doc-input-lg" value="${esc(s.address)}" placeholder="Address" onblur="syncField('address',this.value)"><br>
+      <input class="doc-input doc-input-med" value="${esc(s.city)}" placeholder="City" onblur="syncField('city',this.value)">,
+      <input class="doc-input" value="${esc(s.state)}" placeholder="ST" style="width:30px;" onblur="syncField('state',this.value)">
+      <input class="doc-input" value="${esc(s.zip)}" placeholder="ZIP" style="width:55px;" onblur="syncField('zip',this.value)">
+    </div>`;
+  } else {
+    recip = `<div class="recipient">
+      <strong style="text-decoration:underline;"><input class="doc-input doc-input-lg" value="${esc(s.companyName)}" placeholder="CUSTOMER NAME" onblur="syncField('companyName',this.value)" style="text-decoration:underline;font-weight:700;"></strong><br>
+      <input class="doc-input doc-input-lg" value="${esc(s.address)}" placeholder="Address" onblur="syncField('address',this.value)"><br>
+      <input class="doc-input doc-input-med" value="${esc(s.city)}" placeholder="City" onblur="syncField('city',this.value)">,
+      <input class="doc-input" value="${esc(s.state)}" placeholder="ST" style="width:30px;" onblur="syncField('state',this.value)">
+      <input class="doc-input" value="${esc(s.zip)}" placeholder="ZIP" style="width:55px;" onblur="syncField('zip',this.value)">
+    </div>`;
+  }
+
+  const firstName = s.contactName ? s.contactName.split(' ')[0] : (ct === 'gc' ? '(Person)' : '(Customer)');
+  const greeting = `<p class="greeting">Hello <input class="doc-input" value="${esc(firstName)}" style="width:100px;" onblur="/* greeting only */">,</p>`;
+
+  const intro = `<p class="intro-para">Please accept our proposal for the installation of
+    <input class="doc-input doc-input-lg" value="${esc(s.systemDisplayName)}" placeholder="(System)" onblur="syncField('systemDisplayName',this.value)"> at the
+    <input class="doc-input doc-input-lg" value="${esc(s.projectName)}" placeholder="(Project Name)" onblur="syncField('projectName',this.value)"> project in
+    <input class="doc-input doc-input-med" value="${esc(s.projectCity)}" placeholder="(City)" onblur="syncField('projectCity',this.value)">,
+    <input class="doc-input" value="${esc(s.projectState)}" placeholder="(State)" style="width:30px;" onblur="syncField('projectState',this.value)">.
+  </p>`;
+
+  // SCOPE SECTIONS
+  const scopeHTML = s.scopeSections.map((sec, si) => {
+    const rows = sec.scopes.map((sc, i) => {
+      const hasQty2 = sc.qty2 || sc.unit2;
+      const qty2HTML = hasQty2
+        ? `<span class="scope-semi">;</span>
+           <input class="doc-input" value="${esc(sc.qty2||'')}" placeholder="Qty" style="width:50px; text-align:right;" onblur="syncScope(${si},${i},'qty2',this.value)">
+           <input class="doc-input" value="${esc(sc.unit2||'')}" placeholder="Unit" style="width:100px;" onblur="syncScope(${si},${i},'unit2',this.value)">`
+        : `<button class="scope-add-qty2" onclick="addQty2(${si},${i})" title="Add secondary measurement">+</button>`;
+      return `<div class="scope-row doc-row">
+        <span class="scope-desc"><input class="doc-input doc-input-xl" value="${esc(sc.desc)}" placeholder="Scope description" onblur="syncScope(${si},${i},'desc',this.value)"></span>
+        <span class="scope-dash">-</span>
+        <span class="scope-qty">
+          <input class="doc-input" value="${esc(sc.qty)}" placeholder="(Qty)" style="width:60px; text-align:right;" onblur="syncScope(${si},${i},'qty',this.value)">
+          <input class="doc-input" value="${esc(sc.unit)}" style="width:100px;" onblur="syncScope(${si},${i},'unit',this.value)">
+          ${qty2HTML}
+        </span>
+        ${scopeCtrlsHTML(si, i, sec.scopes.length)}
+      </div>`;
+    }).join('');
+
+    const removeBtn = s.scopeSections.length > 1
+      ? `<button class="doc-x" onclick="removeScopeSection(${si})" title="Remove section" style="position:absolute; right:-28px; top:3px; opacity:0.7; width:18px; height:18px; background:#e74c3c; color:#fff; border:none; border-radius:50%; font-size:12px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center;">\u00D7</button>`
+      : '';
+
+    return `<div class="scope-block"><div style="position:relative;" class="doc-row">
+      <div class="section-label">Scope of Work: <input class="doc-input doc-input-xl" value="${esc(sec.name)}" placeholder="Scope section name" onblur="syncScopeSection(${si},this.value)" style="font-weight:700;text-decoration:underline;"></div>
+      ${removeBtn}
+    </div>
+    ${rows}
+    <button class="doc-add" onclick="addScope(${si})" style="margin-bottom:8px;"><span class="plus">+</span> Add Scope Line</button></div>`;
+  }).join('') + `<button class="doc-add" onclick="addScopeSection()" style="border-color:#e2a308; color:#e2a308 !important;"><span class="plus">+</span> Add New Scope Section</button>`;
+
+  // PRODUCTS
+  const prodItems = s.products.map((p, i) => `
+    <li class="doc-row"><input class="doc-input doc-input-xl" value="${esc(p.text)}" placeholder="Product name" onblur="syncProduct(${i},this.value)">${ctrlsHTML('Product', i, s.products.length)}</li>
+  `).join('');
+  const productsHTML = `<div class="section-label-nb">Products:</div>
+  <ul class="products-list">${prodItems}</ul>
+  <button class="doc-add" onclick="addProduct()"><span class="plus">+</span> Add Product</button>`;
+
+  // EXISTING CONDITIONS
+  let existHTML = '';
+  if (s.existingConditions) {
+    existHTML = `<div class="existing-conditions"><strong>Existing Site Conditions:</strong><br>
+    <span contenteditable="true" style="font-weight:700;" onblur="syncField('existingConditions',this.innerText)">${escH(s.existingConditions)}</span></div>`;
+  }
+
+  // PROCEDURES (multi-section)
+  const proceduresHTML = s.procedureSections.map((sec, pi) => {
+    const procItems = sec.steps.map((p, i) => {
+      let t = escH(p.text);
+      t = t.replace(/\{([^}]+)\}/g, (match, val) => `<input class="mil-box" value="${val}" onclick="this.select()" onblur="updateMilInProcedure(${pi}, ${i}, this)">`);
+      return `<li class="doc-row">
+        <span contenteditable="true" onblur="syncProcedureFromDOM(${pi}, ${i}, this)">${t}</span>
+        <div class="doc-controls"><button class="doc-x" onclick="removeProcedureStep(${pi},${i})" title="Remove">\u00D7</button></div>
+      </li>`;
+    }).join('');
+    const removeBtn = s.procedureSections.length > 1
+      ? `<button class="doc-x" onclick="removeProcedureSection(${pi})" title="Remove section" style="position:absolute; right:-28px; top:3px; opacity:0.7; width:18px; height:18px; background:#e74c3c; color:#fff; border:none; border-radius:50%; font-size:12px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center;">\u00D7</button>`
+      : '';
+    return `<div class="procedure-block"><div style="position:relative;" class="doc-row">
+      <div class="section-label-nb">Procedures: <input class="doc-input doc-input-xl" value="${esc(sec.header)}" placeholder="Procedures header" onblur="syncProcedureSectionHeader(${pi},this.value)" style="font-weight:700;"></div>
+      ${removeBtn}
+    </div>
+    <ul class="procedures-doc-list">${procItems}</ul>
+    <button class="doc-add" onclick="addProcedureStep(${pi})"><span class="plus">+</span> Add Procedure Step</button></div>`;
+  }).join('') + `<button class="doc-add" onclick="addProcedureSection()" style="border-color:#e2a308; color:#e2a308 !important;"><span class="plus">+</span> Add New Procedure Section</button>`;
+
+  // COST (multi-section)
+  const taxTexts = {
+    'not-included': 'Any applicable taxes are not included.',
+    'plus-wsst': 'plus any applicable WSST.',
+    'plus-state-tax': 'plus any applicable state sales tax.',
+    'excludes-wsst': 'Price excludes any WSST.',
+    'excluding-sales-tax': 'excluding sales tax.'
+  };
+  const costHTML = s.costSections.map((cs, ci) => {
+    const removeBtn = s.costSections.length > 1
+      ? `<button class="doc-x" onclick="removeCostSection(${ci})" title="Remove section" style="position:absolute; right:-28px; top:3px; opacity:0.7; width:18px; height:18px; background:#e74c3c; color:#fff; border:none; border-radius:50%; font-size:12px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center;">\u00D7</button>`
+      : '';
+    return `<div class="cost-block" style="position:relative;">
+    ${ci === 0 ? '<div class="section-label-nb">Cost:</div>' : ''}
+    ${removeBtn}
+    <div class="cost-section">
+      <div class="cost-line"><input class="doc-input doc-input-xl" value="${esc(cs.description)}" placeholder="Cost description (optional, e.g. project area name)" onblur="syncCostField(${ci},'description',this.value)" style="font-weight:700;"></div>
+      <div class="cost-line">The lump sum cost for the installation of ${escH(s.systemDisplayName) || '(System)'} is
+        <strong>$<input class="doc-input doc-input-cost" value="${esc(cs.value)}" placeholder="(Value)" onblur="syncCostField(${ci},'value',this.value)">.00</strong>.
+        <select style="font-size:10pt; border:1px solid #ccc; border-radius:3px; padding:1px 4px; color:#000; background:#fff;" onchange="syncCostField(${ci},'taxNote',this.value); render();">
+          ${Object.entries(taxTexts).map(([k,v]) => `<option value="${k}" ${cs.taxNote===k?'selected':''}>${v}</option>`).join('')}
+        </select>
+      </div>
+    </div></div>`;
+  }).join('') + `<button class="doc-add" onclick="addCostSection()" style="border-color:#e2a308; color:#e2a308 !important;"><span class="plus">+</span> Add Cost Section</button>`;
+
+  // ADD OPTIONS
+  const aoItems = s.addOptions.map((a, i) => `
+    <li class="doc-row"><input class="doc-input doc-input-xl" value="${esc(a.text)}" onblur="syncAddOption(${i},this.value)">${ctrlsHTML('AddOption', i, s.addOptions.length)}</li>
+  `).join('');
+  const addOptHTML = `<div class="section-label-nb">Add Options:</div>
+  <div class="add-options-section"><ol>${aoItems}</ol></div>
+  <button class="doc-add" onclick="addAddOption()"><span class="plus">+</span> Add Option</button>`;
+
+  // WARRANTY
+  const warHTML = `<div class="section-label-nb">Warranty:</div>
+  <div class="warranty-section" contenteditable="true" onblur="syncField('warrantyText',this.innerText)">${escH(s.warrantyText)}</div>`;
+
+  // PAYMENT TERMS
+  let payHTML;
+  if (ct === 'gc') {
+    payHTML = `<div class="payment-block"><div class="section-label-nb">General Contractor Payment Draw Terms:</div>
+    <div class="payment-section" contenteditable="true"><strong>Payment draws are due on the 10th of the month, the second month following the month of the draw invoice. For example: January draws are due on the 10th of March. Any payments delinquent 30 days or more will be subject to work stoppage or a 1.5% interest charge until the account is current.</strong></div></div>`;
+  } else {
+    payHTML = `<div class="payment-block"><div class="section-label-nb">Standard HTI Customer Payment Terms</div>
+    <div class="payment-section" contenteditable="true">Terms of acceptance and pricing are based upon NET 30 from the completion date. Material invoicing will be sent in the month material is landed on the customer\u2019s site, due NET 30. Progress billing will be sent monthly for % of work completed through the end of that calendar month.</div></div>`;
+  }
+
+  // MOBILIZATION
+  const mobText = s.numPhases
+    ? `<input class="doc-input" value="${esc(s.numMobilizations)}" style="width:30px;text-align:center;font-weight:700;" onblur="syncField('numMobilizations',this.value)"> mobilizations (and/or <input class="doc-input" value="${esc(s.numPhases)}" style="width:30px;text-align:center;font-weight:700;" onblur="syncField('numPhases',this.value)"> phases)`
+    : `<input class="doc-input" value="${esc(s.numMobilizations)}" style="width:30px;text-align:center;font-weight:700;" onblur="syncField('numMobilizations',this.value)"> mobilization(s)`;
+
+  const mobHTML = `<div class="mobilization-block"><div class="section-label-nb">Extra mobilizations and non-sequential work exclusion:</div>
+  <div class="mobilization-section">This proposal is based on <strong>${mobText}</strong>, with each mobilization (or phase) area being <strong>ready for installation prior to HTI\u2019s arrival</strong>. If areas are not ready, HTI reserves the right to submit a <strong>change order</strong> for any cost impacts related to <strong>remobilization, loss of efficiency, or non-sequential work</strong>. The change order value will be determined <strong>case by case</strong>, with supporting documentation provided.</div></div>`;
+
+  // SIGNOFF
+  const signHTML = `<div class="signoff">
+    <p>Best regards,</p><br><br>
+    <p class="pm-name"><input class="doc-input doc-input-lg" value="${esc(s.pmName)}" placeholder="(Project Manager)" onblur="syncField('pmName',this.value)" style="font-weight:600;"></p>
+    <p><input class="doc-input doc-input-med" value="${esc(s.pmCell)}" placeholder="(Cell Number)" onblur="syncField('pmCell',this.value)"></p>
+    <p><input class="doc-input doc-input-lg" value="${esc(s.pmEmail)}" placeholder="(PM Email)" onblur="syncField('pmEmail',this.value)"></p>
+    <p>HTI Polymer, INC.</p>
+  </div>
+  <div class="acceptance-line">
+    <p>ACCEPTED BY: <span class="line"></span> DATE: <span class="line-sm"></span></p>
+    <p>PO#: <span class="line-sm"></span></p>
+  </div>`;
+
+  // Inclusions
+  const incHTML = `<div class="inclusions-block"><div class="section-label">Inclusions & Exclusions:</div><ul class="inclusions-list">${INCLUSIONS_MASTER.filter(inc => state.inclusions[inc.id]).map(inc => `<li class="doc-row"><span contenteditable="true">${getIncText(inc)}</span><button class="doc-x" onclick="removeInclusion('${inc.id}')" title="Remove">&times;</button></li>`).join('')}</ul></div>`;
+
+  // EDITOR: single continuous page
+  const editorHTML = `<div class="proposal-page">
+    ${hdr}${recip}${greeting}${intro}
+    ${scopeHTML}${productsHTML}${existHTML}${proceduresHTML}${costHTML}${addOptHTML}${warHTML}
+    ${incHTML}${payHTML}${mobHTML}${signHTML}
+  </div>`;
+
+  document.getElementById('previewContainer').innerHTML = editorHTML;
+}
+
+// ============================================================
+// PROCEDURE SYNC HELPERS
+// ============================================================
+function syncProcedureFromDOM(sec, i, el) {
+  // Reconstruct the text with {milValue} placeholders from mil-box inputs
+  let text = '';
+  el.childNodes.forEach(node => {
+    if (node.nodeType === 3) { // text node
+      text += node.textContent;
+    } else if (node.tagName === 'INPUT' && node.classList.contains('mil-box')) {
+      text += '{' + node.value + '}';
+    } else {
+      text += node.textContent || '';
+    }
+  });
+  if (state.procedureSections[sec] && state.procedureSections[sec].steps[i]) state.procedureSections[sec].steps[i].text = text;
+}
+
+function updateMilInProcedure(sec, i, inputEl) {
+  // Find parent span and re-sync
+  const span = inputEl.closest('[contenteditable]');
+  if (span) syncProcedureFromDOM(sec, i, span);
+}
+
+// ============================================================
+// HELPERS
+// ============================================================
+function esc(str) { return (str || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+function escH(str) { return (str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+
+// ============================================================
+// PDF EXPORT — Smart Pagination with Preview
+// ============================================================
+
+// Convert a DOM element to static export content (no inputs/controls)
+function makeStatic(el) {
+  const clone = el.cloneNode(true);
+  clone.querySelectorAll('input.doc-input, input.mil-box').forEach(inp => {
+    const span = document.createElement('span');
+    span.textContent = inp.value;
+    span.style.fontWeight = inp.style.fontWeight || 'inherit';
+    span.style.textDecoration = inp.style.textDecoration || 'inherit';
+    inp.parentNode.replaceChild(span, inp);
+  });
+  clone.querySelectorAll('select').forEach(sel => {
+    const span = document.createElement('span');
+    span.textContent = sel.options[sel.selectedIndex].text;
+    sel.parentNode.replaceChild(span, sel);
+  });
+  clone.querySelectorAll('.doc-x, .doc-add, .doc-arrow, .doc-controls, .scope-add-qty2').forEach(el => el.remove());
+  clone.querySelectorAll('[contenteditable]').forEach(el => el.removeAttribute('contenteditable'));
+  return clone.innerHTML;
+}
+
+// Build static export sections from current state
+function buildExportSections() {
+  const s = state;
+  const ct = s.clientType;
+  const fmtDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  const licFoot = `AL S-42420 AK 32754 AZ ROC227555 CA 890321 DE 2012605084 FL (BROWARD COUNTY 12-P-17960-R; COLLIER COUNTY LCC20120000690; LEE COUNTY DC06-02074; LEON COUNTY 700534; MIAMI-DADE COUNTY 07BS00786; PALM BEACH COUNTY U-21759; PINELLAS COUNTY C-10799) HI CT-27647 ID RCE-20351 IA C113968 LA 55913 MN 321780 MS 21070-SC MT 155135 NE 032-010025308 NV 0067690 ND 44528 OR CCB#173410 SC G113153 TN 67605 UT 6434140-5501 VA 2705 142224 WA HTIPOPI949RH`;
+
+  // Grab the rendered editor page and convert to static
+  const editorPage = document.querySelector('.proposal-page');
+  const staticPage = editorPage.cloneNode(true);
+  staticPage.querySelectorAll('input.doc-input, input.mil-box').forEach(inp => {
+    const span = document.createElement('span');
+    span.textContent = inp.value;
+    span.style.fontWeight = inp.style.fontWeight || 'inherit';
+    span.style.textDecoration = inp.style.textDecoration || 'inherit';
+    inp.parentNode.replaceChild(span, inp);
+  });
+  staticPage.querySelectorAll('select').forEach(sel => {
+    const span = document.createElement('span');
+    span.textContent = sel.options[sel.selectedIndex].text;
+    sel.parentNode.replaceChild(span, sel);
+  });
+  staticPage.querySelectorAll('.doc-x, .doc-add, .doc-arrow, .doc-controls, .scope-add-qty2').forEach(el => el.remove());
+  staticPage.querySelectorAll('[contenteditable]').forEach(el => el.removeAttribute('contenteditable'));
+
+  // Remove blank title line from recipient if empty
+  const recipEl = staticPage.querySelector('.recipient');
+  if (recipEl) {
+    // After static conversion, structure is: <strong>Name</strong><br><span>Title</span><br><strong>Company</strong>...
+    // Find empty spans and remove them along with adjacent <br> tags
+    const emptySpans = Array.from(recipEl.querySelectorAll('span')).filter(sp => sp.textContent.trim() === '');
+    emptySpans.forEach(span => {
+      const next = span.nextSibling;
+      const prev = span.previousSibling;
+      // Remove <br> after the empty span
+      if (next && next.nodeName === 'BR' && next.parentNode) next.remove();
+      // Remove <br> before the empty span
+      if (prev && prev.nodeName === 'BR' && prev.parentNode) prev.remove();
+      if (span.parentNode) span.remove();
+    });
+  }
+
+  // Build header
+  const hdrEl = staticPage.querySelector('.hti-header');
+  const hdr = hdrEl ? hdrEl.outerHTML : '';
+
+  // Extract child sections from the static page as individual items
+  // We'll tag each section with a type for smart-split rules
+  const sections = []; // { html, type, splitLabel }
+  const children = Array.from(staticPage.children);
+
+  // Skip the header (first child)
+  let pastHeader = false;
+  children.forEach(child => {
+    if (!pastHeader && child.classList.contains('hti-header')) { pastHeader = true; return; }
+    if (!pastHeader) return;
+
+    // Identify section types
+    let type = 'atomic'; // default: never split
+    let splitLabel = '';
+
+    if (child.classList.contains('scope-block')) {
+      type = 'atomic';
+    } else if (child.classList.contains('procedure-block')) {
+      type = 'splittable';
+      const hdrSpan = child.querySelector('.section-label-nb span');
+      splitLabel = hdrSpan ? `Procedures (Continued): ${hdrSpan.textContent}` : 'Procedures (Continued):';
+    } else if (child.querySelector('.products-list')) {
+      type = 'splittable';
+      splitLabel = 'Products (Continued):';
+    } else if (child.classList.contains('inclusions-block')) {
+      type = 'splittable';
+      splitLabel = 'Inclusions & Exclusions (Continued):';
+    } else if (child.classList.contains('cost-block')) {
+      type = 'atomic';
+    } else if (child.classList.contains('mobilization-block') || child.classList.contains('payment-block')) {
+      type = 'atomic';
+    }
+
+    sections.push({ html: child.outerHTML, type, splitLabel, el: child });
+  });
+
+  const footC = `<div class="page-footer"><div class="continued">Continued on Next Page</div>${licFoot}<br><div class="confidential">CONFIDENTIAL</div></div>`;
+  const footF = `<div class="page-footer">${licFoot}<br><div class="confidential">CONFIDENTIAL</div></div>`;
+
+  return { hdr, sections, footC, footF };
+}
+
+// Smart paginate: measure sections, split procedures/products if >20% done
+function smartPaginate(hdr, sections, footC, footF) {
+  const USABLE = _exportUsable;
+  const hdrH = _exportHdrH;
+
+  // Create measurer page
+  const measurer = document.createElement('div');
+  measurer.className = 'proposal-page export-page';
+  measurer.style.cssText = 'position:absolute;left:-9999px;top:0;height:auto;overflow:visible;';
+  document.body.appendChild(measurer);
+
+  // Measure each section
+  const measured = sections.map(sec => {
+    measurer.innerHTML = sec.html;
+    const h = measurer.firstElementChild ? measurer.firstElementChild.offsetHeight : 0;
+
+    // For splittable sections, measure individual list items
+    let items = null;
+    if (sec.type === 'splittable') {
+      const listEl = measurer.querySelector('ul, ol');
+      if (listEl) {
+        items = [];
+        const headerEl = measurer.querySelector('.section-label-nb, .section-label');
+        const headerH = headerEl ? headerEl.offsetHeight + 6 : 30;
+        items.push({ type: 'header', height: headerH });
+        Array.from(listEl.children).forEach(li => {
+          items.push({ html: li.outerHTML, height: li.offsetHeight });
+        });
+      }
+    }
+
+    return { ...sec, height: h, items };
+  });
+
+  document.body.removeChild(measurer);
+
+  // Paginate
+  const pages = [];
+  let curSections = [];
+  let curH = hdrH;
+
+  for (let i = 0; i < measured.length; i++) {
+    const sec = measured[i];
+
+    if (curH + sec.height <= USABLE) {
+      // Fits on current page
+      curSections.push(sec.html);
+      curH += sec.height;
+    } else if (sec.type === 'splittable' && sec.items && sec.items.length > 2) {
+      // Try splitting: find how many items fit
+      const headerItem = sec.items[0]; // the section header
+      const listItems = sec.items.slice(1);
+      const totalItems = listItems.length;
+      let fitCount = 0;
+      let runH = curH + headerItem.height;
+
+      for (let j = 0; j < listItems.length; j++) {
+        if (runH + listItems[j].height > USABLE) break;
+        fitCount++;
+        runH += listItems[j].height;
+      }
+
+      const pctDone = fitCount / totalItems;
+
+      if (pctDone >= 0.2 && fitCount > 0) {
+        // Split here — put first part on current page
+        const firstItems = listItems.slice(0, fitCount).map(it => it.html).join('');
+        const remainItems = listItems.slice(fitCount).map(it => it.html).join('');
+
+        // Extract the header HTML from original
+        const tmp = document.createElement('div');
+        tmp.innerHTML = sec.html;
+        const headerEl = tmp.querySelector('.section-label-nb, .section-label');
+        const headerHTML = headerEl ? headerEl.outerHTML : '';
+        const listTag = tmp.querySelector('ul') ? 'ul' : 'ol';
+        const listClass = tmp.querySelector('ul, ol')?.className || '';
+
+        curSections.push(`${headerHTML}<${listTag} class="${listClass}">${firstItems}</${listTag}>`);
+        pages.push(curSections);
+        curSections = [];
+        curH = hdrH;
+
+        // Continued section on next page
+        const isUnderlined = sec.html.includes('section-label"');
+        const contClass = isUnderlined ? 'section-label' : 'section-label-nb';
+        const contHeader = `<div class="${contClass}" style="font-weight:700;">${sec.splitLabel}</div>`;
+        const contHTML = `${contHeader}<${listTag} class="${listClass}">${remainItems}</${listTag}>`;
+        curSections.push(contHTML);
+
+        // Re-measure the continued part
+        const m2 = document.createElement('div');
+        m2.className = 'proposal-page export-page';
+        m2.style.cssText = 'position:absolute;left:-9999px;top:0;height:auto;overflow:visible;';
+        m2.innerHTML = contHTML;
+        document.body.appendChild(m2);
+        curH += m2.offsetHeight;
+        document.body.removeChild(m2);
+      } else {
+        // Less than 20% would fit — bump whole section to next page
+        if (curSections.length > 0) {
+          pages.push(curSections);
+          curSections = [];
+          curH = hdrH;
+        }
+        curSections.push(sec.html);
+        curH += sec.height;
+      }
+    } else {
+      // Atomic section — bump to next page
+      if (curSections.length > 0) {
+        pages.push(curSections);
+        curSections = [];
+        curH = hdrH;
+      }
+      curSections.push(sec.html);
+      curH += sec.height;
+    }
+  }
+  if (curSections.length > 0) pages.push(curSections);
+
+  // Build page HTML
+  const totalPages = pages.length;
+  return pages.map((sections, i) => {
+    const pageNum = i > 0 ? `<div class="page-num">Page ${i + 1} of ${totalPages}:</div>` : '';
+    const foot = i < totalPages - 1 ? footC : footF;
+    return `<div class="proposal-page export-page">${hdr}${pageNum}<div class="export-content" contenteditable="true">${sections.join('')}</div>${foot}</div>`;
+  }).join('');
+}
+
+// Export preview state
+let _exportHdr = '';
+let _exportFootC = '';
+let _exportFootF = '';
+let _exportUsable = 800;
+let _exportHdrH = 150;
+let _reflowTimer = null;
+
+function showExportPreview() {
+  const { hdr, sections, footC, footF } = buildExportSections();
+
+  // Cache header/footer for reflows
+  _exportHdr = hdr;
+  _exportFootC = footC;
+  _exportFootF = footF;
+
+  // Measure usable height and header height once
+  const footMeasurer = document.createElement('div');
+  footMeasurer.className = 'proposal-page export-page';
+  footMeasurer.style.cssText = 'position:absolute;left:-9999px;top:0;';
+  footMeasurer.innerHTML = footC;
+  document.body.appendChild(footMeasurer);
+  const footerEl = footMeasurer.querySelector('.page-footer');
+  const FOOTER_H = footerEl ? footerEl.offsetHeight + 50 : 110;
+  document.body.removeChild(footMeasurer);
+  _exportUsable = 956 - FOOTER_H; // 1056 - 20(padTop) - 80(padBot) = 956
+
+  const hdrMeasurer = document.createElement('div');
+  hdrMeasurer.className = 'proposal-page export-page';
+  hdrMeasurer.style.cssText = 'position:absolute;left:-9999px;top:0;height:auto;overflow:visible;';
+  hdrMeasurer.innerHTML = hdr;
+  document.body.appendChild(hdrMeasurer);
+  _exportHdrH = hdrMeasurer.firstElementChild ? hdrMeasurer.firstElementChild.offsetHeight + 16 : 150;
+  document.body.removeChild(hdrMeasurer);
+
+  // Initial paginate
+  const pagesHTML = smartPaginate(hdr, sections, footC, footF);
+  const previewEl = document.getElementById('exportPreviewPages');
+  previewEl.innerHTML = pagesHTML;
+  document.getElementById('exportModal').classList.add('active');
+
+  // Attach reflow listeners
+  attachReflowListeners();
+}
+
+function attachReflowListeners() {
+  const previewEl = document.getElementById('exportPreviewPages');
+  previewEl.addEventListener('input', () => {
+    clearTimeout(_reflowTimer);
+    _reflowTimer = setTimeout(reflowExportPages, 400);
+  });
+}
+
+function saveCursorPosition() {
+  const sel = window.getSelection();
+  if (!sel.rangeCount) return null;
+  const range = sel.getRangeAt(0);
+  const previewEl = document.getElementById('exportPreviewPages');
+  if (!previewEl.contains(range.startContainer)) return null;
+
+  // Walk through all text nodes to find global character offset
+  const walker = document.createTreeWalker(previewEl, NodeFilter.SHOW_TEXT);
+  let charOffset = 0;
+  let node;
+  while (node = walker.nextNode()) {
+    if (node === range.startContainer) {
+      return charOffset + range.startOffset;
+    }
+    charOffset += node.textContent.length;
+  }
+  return null;
+}
+
+function restoreCursorPosition(globalOffset) {
+  if (globalOffset === null) return;
+  const previewEl = document.getElementById('exportPreviewPages');
+  const walker = document.createTreeWalker(previewEl, NodeFilter.SHOW_TEXT);
+  let charCount = 0;
+  let node;
+  while (node = walker.nextNode()) {
+    const len = node.textContent.length;
+    if (charCount + len >= globalOffset) {
+      const range = document.createRange();
+      range.setStart(node, globalOffset - charCount);
+      range.collapse(true);
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+
+      // Scroll the focused page into view
+      const page = node.parentElement.closest('.proposal-page');
+      if (page) page.scrollIntoView({ block: 'nearest' });
+      return;
+    }
+    charCount += len;
+  }
+}
+
+function reflowExportPages() {
+  const previewEl = document.getElementById('exportPreviewPages');
+
+  // Save cursor
+  const cursorPos = saveCursorPosition();
+
+  // Collect all content children from all pages in order
+  const allChildren = [];
+  previewEl.querySelectorAll('.export-content').forEach(ec => {
+    Array.from(ec.children).forEach(child => {
+      allChildren.push(child.outerHTML);
+    });
+  });
+
+  // Measure each child
+  const measurer = document.createElement('div');
+  measurer.className = 'proposal-page export-page';
+  measurer.style.cssText = 'position:absolute;left:-9999px;top:0;height:auto;overflow:visible;';
+  document.body.appendChild(measurer);
+
+  const measured = allChildren.map(html => {
+    measurer.innerHTML = html;
+    const h = measurer.firstElementChild ? measurer.firstElementChild.offsetHeight : 0;
+    return { html, height: h };
+  });
+
+  document.body.removeChild(measurer);
+
+  // Distribute across pages
+  const pages = [];
+  let curPage = [];
+  let curH = _exportHdrH;
+
+  measured.forEach(sec => {
+    if (curH + sec.height > _exportUsable && curPage.length > 0) {
+      pages.push(curPage);
+      curPage = [];
+      curH = _exportHdrH;
+    }
+    curPage.push(sec.html);
+    curH += sec.height;
+  });
+  if (curPage.length > 0) pages.push(curPage);
+
+  // Render pages
+  const totalPages = pages.length;
+  previewEl.innerHTML = pages.map((sections, i) => {
+    const pageNum = i > 0 ? `<div class="page-num">Page ${i + 1} of ${totalPages}:</div>` : '';
+    const foot = i < totalPages - 1 ? _exportFootC : _exportFootF;
+    return `<div class="proposal-page export-page">${_exportHdr}${pageNum}<div class="export-content" contenteditable="true">${sections.join('')}</div>${foot}</div>`;
+  }).join('');
+
+  // Restore cursor
+  restoreCursorPosition(cursorPos);
+}
+
+function closeExportPreview() {
+  document.getElementById('exportModal').classList.remove('active');
+}
+
+function confirmExportPDF() {
+  // Clone the live preview DOM so user edits are captured
+  const previewPages = document.getElementById('exportPreviewPages');
+  const container = previewPages.cloneNode(true);
+
+  // Lock down editability and clean up for export
+  container.querySelectorAll('[contenteditable]').forEach(el => el.removeAttribute('contenteditable'));
+  container.querySelectorAll('.proposal-page').forEach(p => {
+    p.style.boxShadow = 'none';
+    p.style.marginBottom = '0';
+  });
+
+  const projectName = state.projectName || 'Draft';
+  const opt = {
+    margin: 0,
+    filename: `HTI_Proposal_${projectName.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`,
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2, useCORS: true },
+    jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+  };
+  html2pdf().set(opt).from(container).save();
+  closeExportPreview();
+}
+
+// ============================================================
+// CLIENT TYPE SYNC
+// ============================================================
+document.getElementById('clientType').addEventListener('change', function() {
+  state.clientType = this.value;
+  renderInclusionChecks();
+  render();
+});
+document.getElementById('laborType').addEventListener('change', function() { renderInclusionChecks(); render(); });
+
+// INIT
+init();
+</script>
+
+<!-- Export Preview Modal -->
+<div class="export-modal-overlay" id="exportModal">
+  <div class="export-modal">
+    <div class="export-modal-header">
+      <h2>Export Preview</h2>
+      <div class="export-modal-actions">
+        <button class="btn btn-secondary" onclick="closeExportPreview()">Back to Editor</button>
+        <button class="btn btn-primary" onclick="confirmExportPDF()">Download PDF</button>
+      </div>
+    </div>
+    <div class="export-modal-pages" id="exportPreviewPages"></div>
+  </div>
+</div>
+</body>
+</html>
