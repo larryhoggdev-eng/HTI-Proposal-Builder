@@ -145,7 +145,7 @@
   .proposal-page {
     background: #fff; color: #000; font-family: 'Calibri', 'Segoe UI', sans-serif; font-size: 10pt;
     width: 816px; padding: 180px 96px 84px 96px;
-    margin-bottom: 20px; position: relative; line-height: 1.2; box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    margin-bottom: 20px; position: relative; line-height: 1.2; text-wrap: pretty; box-shadow: 0 4px 20px rgba(0,0,0,0.5);
     box-sizing: border-box;
   }
   .proposal-page.export-page { height: 1056px; overflow: hidden; padding-top: 212px; padding-bottom: 84px; }
@@ -1867,7 +1867,11 @@ async function generateWordBlob() {
     if (opts.keepNext) ppr += '<w:keepNext/>';
     if (opts.keepLines) ppr += '<w:keepLines/>';
     ppr += '<w:autoSpaceDE w:val="0"/><w:autoSpaceDN w:val="0"/><w:adjustRightInd w:val="0"/><w:spacing w:before="' + before + '" w:after="0" w:line="240" w:lineRule="auto"/>';
-    if (numId) ppr += '<w:numPr><w:ilvl w:val="' + ilvl + '"/><w:numId w:val="' + numId + '"/></w:numPr>';
+    if (numId) {
+      ppr += '<w:numPr><w:ilvl w:val="' + ilvl + '"/><w:numId w:val="' + numId + '"/></w:numPr>';
+      // Override indent so bulleted text aligns with body text (180 twips = ~12px for bullet, hanging so text wraps to left margin)
+      ppr += '<w:ind w:left="180" w:hanging="180"/>';
+    }
     ppr += '<w:rPr>' + rpr + '</w:rPr></w:pPr>';
     return '<w:p>' + ppr + '<w:r><w:rPr>' + rpr + '</w:rPr><w:t xml:space="preserve">' + escXml(text) + '</w:t></w:r></w:p>';
   }
@@ -2008,6 +2012,38 @@ async function generateWordBlob() {
   // Make page-1 footer match all other footers (template's footer2.xml has extra paragraphs that push it higher)
   var footer1Xml = await zip.file('word/footer1.xml').async('string');
   zip.file('word/footer2.xml', footer1Xml);
+
+  // Strip indents from bullet/number list definitions so bulleted text aligns with body text
+  var numberingXml = await zip.file('word/numbering.xml').async('string');
+  // Replace any <w:ind ... /> inside abstractNum levels with zero indent
+  numberingXml = numberingXml.replace(/<w:ind\s[^/]*\/>/g, '<w:ind w:left="180" w:hanging="180"/>');
+  zip.file('word/numbering.xml', numberingXml);
+
+  // Inject Word compatibility settings to make line wrapping greedier (closer to browser/Chrome behavior)
+  var settingsXml = await zip.file('word/settings.xml').async('string');
+  if (!settingsXml.includes('<w:compat>')) {
+    var compatBlock =
+      '<w:compat>' +
+        '<w:doNotExpandShiftReturn/>' +
+        '<w:doNotUseHTMLParagraphAutoSpacing/>' +
+        '<w:doNotBreakWrappedTables/>' +
+        '<w:doNotUseEastAsianBreakRules/>' +
+        '<w:useFELayout/>' +
+        '<w:noLeading/>' +
+        '<w:spaceForUL/>' +
+        '<w:balanceSingleByteDoubleByteWidth/>' +
+        '<w:doNotLeaveBackslashAlone/>' +
+        '<w:ulTrailSpace/>' +
+        '<w:doNotExpandShiftReturn/>' +
+        '<w:adjustLineHeightInTable/>' +
+        '<w:wpJustification/>' +
+        '<w:lineWrapLikeWord6/>' +
+        '<w:autoSpaceLikeWord95/>' +
+        '<w:compatSetting w:name="compatibilityMode" w:uri="http://schemas.microsoft.com/office/word" w:val="11"/>' +
+      '</w:compat>';
+    settingsXml = settingsXml.replace('</w:settings>', compatBlock + '</w:settings>');
+    zip.file('word/settings.xml', settingsXml);
+  }
 
   var bodyContent = paras.join('') + sectPr;
   zip.file('word/document.xml', docXml.replace(/<w:body>[\s\S]*<\/w:body>/, '<w:body>' + bodyContent + '</w:body>'));
