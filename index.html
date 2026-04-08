@@ -23,7 +23,7 @@
   .top-bar .btn { padding: 8px 16px; font-size: 12px; }
 
   .main-content { display: flex; flex: 1; overflow: hidden; }
-  .editor-panel { flex: 1; overflow-y: auto; background: #2d2d2d; padding: 20px; }
+  .editor-panel { flex: 1; overflow-y: auto; background: #2d2d2d; padding: 20px; min-width: 0; }
   .editor-scroll { max-width: 700px; margin: 0 auto; }
   .form-section { background: #1a1a2e; border-radius: 8px; padding: 12px; margin-bottom: 10px; border: 1px solid #2a2a4a; }
   .form-section h3 { color: #e2a308; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; border-bottom: 1px solid #333; padding-bottom: 6px; }
@@ -87,26 +87,15 @@
   }
   .sys-selected-tag .tag-x:hover { color: #c0392b; }
 
-  .preview-panel { flex: 1; overflow-y: auto; background: #3a3a3a; padding: 20px 20px 20px 50px; display: flex; justify-content: center; border-left: 3px solid #e2a308; }
+  .preview-panel { flex: 1; overflow-y: auto; background: #3a3a3a; padding: 20px; display: flex; justify-content: center; border-left: 3px solid #e2a308; }
   .preview-scroll { width: 850px; transform-origin: top center; }
   .preview-scroll .proposal-page { margin-bottom: 20px; }
-  .preview-scroll .proposal-page.export-page { overflow: visible; }
   .preview-scroll .export-content { cursor: text; }
 
-  .sec-handle-wrap { position: relative; }
-  .sec-handle {
-    position: absolute; left: -48px; top: 0; width: 20px; height: 20px;
-    background: #e2a308; border-radius: 3px; cursor: ns-resize; opacity: 0.3;
-    transition: opacity 0.15s; display: flex; align-items: center; justify-content: center;
-    font-size: 10px; color: #000; font-weight: 700; z-index: 5; user-select: none;
-  }
-  .sec-handle::after { content: '⋮⋮'; font-size: 9px; letter-spacing: 1px; }
-  .sec-handle-wrap:hover .sec-handle { opacity: 0.7; }
-  .sec-handle:hover { opacity: 1 !important; }
-  .sec-handle.dragging { opacity: 1 !important; background: #f0b429; }
 
   /* Field-linked text in preview */
-  .field-link { cursor: pointer; border-bottom: 1px dashed transparent; transition: all 0.15s; }
+  .field-link { cursor: pointer; border-bottom: 1px dashed transparent; transition: all 0.15s; text-decoration: inherit; }
+  .section-label .field-link { text-decoration: underline; }
   .field-link:hover { border-bottom-color: #e2a308; background: #fffde7; }
   .field-link:focus { outline: 2px solid #e2a308; outline-offset: 1px; background: #fffde7; }
   .field-highlight { animation: field-pulse 1.5s ease; }
@@ -154,69 +143,71 @@
   .scope-section-block { background: #12122a; border-radius: 6px; padding: 10px 12px; margin-bottom: 8px; border: 1px solid #2a2a4a; }
 
   .proposal-page {
-    background: #fff; color: #000; font-family: 'Calibri', 'Segoe UI', sans-serif; font-size: 11pt;
-    width: 816px; padding: 20px 60px 40px 60px;
-    margin-bottom: 20px; position: relative; line-height: 1.15; box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    background: #fff; color: #000; font-family: 'Calibri', 'Segoe UI', sans-serif; font-size: 10pt;
+    width: 816px; padding: 180px 96px 84px 96px;
+    margin-bottom: 20px; position: relative; line-height: 1.2; box-shadow: 0 4px 20px rgba(0,0,0,0.5);
     box-sizing: border-box;
   }
-  .proposal-page.export-page { height: 1056px; overflow: hidden; padding-top: 10px; padding-bottom: 10px; }
+  .proposal-page.export-page { height: 1056px; overflow: hidden; padding-top: 212px; padding-bottom: 84px; }
   .proposal-page * { color: #000; }
   .export-content { tab-size: 4; -moz-tab-size: 4; }
-  .hti-header { position: relative; margin-bottom: 20px; }
-  .hti-logo-img { width: 100%; display: block; }
-  .hti-header-overlay { position: absolute; bottom: 12px; right: 0; text-align: right; padding: 6px 0; }
-  .proposal-page:first-child .hti-header-overlay { bottom: 30px; }
-  .hti-header-title { position: absolute; top: calc(50% + 8px); left: 176px; transform: translateY(-50%); text-align: left; line-height: 0.85; }
+  .hti-header { position: absolute; top: 0; left: 0; right: 0; height: 200px; margin: 0; overflow: hidden; z-index: 0; }
+  .hti-logo-img { width: 80%; display: block; margin: 0 auto; }
+  .hti-header-overlay { position: absolute; bottom: 16px; right: 96px; text-align: right; padding: 6px 0; }
+  .proposal-page:first-child .hti-header-overlay { bottom: 34px; }
+  .hti-header-title { position: absolute; top: calc(50% + 4px); left: 176px; transform: translateY(-50%); text-align: left; line-height: 0.85; }
   .hti-header-title-main { font-size: 48pt; font-weight: 700; color: #000; font-family: Georgia, serif; }
   .hti-header-title-sub { font-size: 18pt; font-weight: 700; color: #000; font-family: Georgia, serif; }
   .hti-address { font-size: 11pt; color: #000; white-space: nowrap; }
   .hti-date { font-size: 10pt; color: #000; margin-top: 4px; }
   .hti-page-num { font-size: 9pt; color: #555; margin-top: 2px; }
   .page-num { display: none; }
-  .recipient { margin-bottom: 8px; font-size: 10.5pt; }
+  .recipient { margin-bottom: 16px; font-size: 10pt; }
   .recipient strong { font-weight: 700; }
-  .greeting { margin-bottom: 2px; }
-  .intro-para { margin-bottom: 8px; }
-  .section-label { font-weight: 700; text-decoration: underline; margin-top: 6px; margin-bottom: 2px; font-size: 11pt; }
-  .section-label-nb { font-weight: 700; margin-top: 6px; margin-bottom: 2px; font-size: 11pt; }
-  .scope-table { width: 100%; margin-bottom: 6px; border-collapse: collapse; }
-  .scope-table td { padding: 2px 4px; vertical-align: top; font-size: 10.5pt; }
+  .greeting { margin-bottom: 0; }
+  .intro-para { margin-bottom: 16px; }
+  .section-label { font-weight: 700; text-decoration: underline; margin-top: 16px; margin-bottom: 0; font-size: 10pt; }
+  .section-label-nb { font-weight: 700; margin-top: 16px; margin-bottom: 0; font-size: 10pt; }
+  .scope-table { width: 100%; margin-bottom: 0; border-collapse: collapse; }
+  .scope-table td { padding: 0 4px; vertical-align: top; font-size: 10pt; }
   .scope-table td:last-child { text-align: right; white-space: nowrap; }
-  .products-list { margin-left: 20px; margin-bottom: 2px; }
-  .products-list li { font-size: 10.5pt; margin-bottom: 0; position: relative; }
-  .procedures-doc-list { margin-left: 20px; margin-bottom: 2px; }
-  .procedures-doc-list li { font-size: 10.5pt; margin-bottom: 1px; position: relative; }
-  .cost-section { margin-bottom: 4px; }
-  .cost-line { font-size: 10.5pt; margin-bottom: 4px; }
-  .add-options-section { margin-bottom: 2px; }
+  .products-list { margin-left: 20px; margin-bottom: 0; }
+  .products-list li { font-size: 10pt; margin-bottom: 0; position: relative; }
+  .procedures-doc-list { margin-left: 20px; margin-bottom: 0; }
+  .procedures-doc-list li { font-size: 10pt; margin-bottom: 0; position: relative; }
+  .cost-section { margin-bottom: 0; }
+  .cost-line { font-size: 10pt; margin-bottom: 0; }
+  .add-options-section { margin-bottom: 0; }
   .add-options-section ol { margin-left: 24px; }
-  .add-options-section li { font-size: 10.5pt; margin-bottom: 0; position: relative; }
-  .warranty-section { margin-bottom: 4px; font-size: 10.5pt; }
-  .inclusions-list { margin-left: 20px; margin-bottom: 12px; padding-left: 0; }
-  .inclusions-list li { font-size: 9.5pt; margin-bottom: 0; padding: 0; position: relative; line-height: 1.2; }
-  .payment-section { margin-bottom: 6px; font-size: 10.5pt; }
+  .add-options-section li { font-size: 10pt; margin-bottom: 0; position: relative; }
+  .warranty-section { margin-bottom: 0; font-size: 10pt; }
+  .inclusions-list { margin-left: 20px; margin-bottom: 0; padding-left: 0; }
+  .inclusions-list li { font-size: 10pt; margin-bottom: 0; padding: 0; position: relative; }
+  .payment-section { margin-bottom: 0; font-size: 10pt; }
   .payment-section strong { font-weight: 700; }
-  .mobilization-section { margin-bottom: 6px; font-size: 10.5pt; }
+  .mobilization-section { margin-bottom: 0; font-size: 10pt; }
   .mobilization-section strong { font-weight: 700; }
-  .signoff { margin-top: 10px; font-size: 10.5pt; }
+  .signoff { margin-top: 10px; font-size: 10pt; }
   .signoff .pm-name { font-weight: 600; }
-  .acceptance-line { margin-top: 16px; font-size: 10.5pt; }
+  .signoff-line { font-size: 10pt; margin: 0; }
+  .signoff-line.pm-name { font-weight: 600; }
+  .acceptance-line { margin-top: 16px; font-size: 10pt; }
   .acceptance-line .line { display: inline-block; width: 250px; border-bottom: 1px solid #000; }
   .acceptance-line .line-sm { display: inline-block; width: 150px; border-bottom: 1px solid #000; }
   .page-footer {
-    position: absolute; bottom: 20px; left: 60px; right: 60px; text-align: center;
-    font-size: 7pt; color: #555; line-height: 1.3;
+    position: absolute; bottom: 48px; left: 96px; right: 96px; text-align: center;
+    font-size: 8pt; color: #555; line-height: 1.3;
   }
-  .page-footer .continued { font-weight: 700; font-size: 9pt; color: #000; margin-bottom: 8px; }
-  .page-footer .confidential { font-weight: 700; font-size: 8pt; color: #000; margin-top: 4px; }
-  .existing-conditions { margin-bottom: 4px; font-size: 10.5pt; }
+  .page-footer .continued { font-weight: 700; font-size: 9pt; color: #000; margin-bottom: 4px; }
+  .page-footer .confidential { font-weight: 700; font-size: 8pt; color: #000; margin-top: 2px; }
+  .existing-conditions { margin-bottom: 4px; font-size: 10pt; }
   .existing-conditions strong { font-weight: 700; }
   .scope-row { display: flex; align-items: center; padding: 0; margin: 0; line-height: 1.1; }
   .scope-desc { flex: 1; }
   .scope-dash { padding: 0 8px; color: #999; }
   .scope-qty { text-align: right; white-space: nowrap; }
   .scope-semi { padding: 0 2px; color: #999; }
-  .export-content { outline: none; cursor: text; margin-top: -40px; position: relative; z-index: 1; }
+  .export-content { outline: none; cursor: text; position: relative; z-index: 1; }
   .export-content:focus { outline: none; }
 
   @media print {
@@ -232,25 +223,6 @@
   ::-webkit-scrollbar-track { background: #1a1a2e; }
   ::-webkit-scrollbar-thumb { background: #e2a308; border-radius: 4px; }
 
-  .export-modal-overlay {
-    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 9999;
-    flex-direction: column; overflow: hidden;
-  }
-  .export-modal-overlay.active { display: flex; }
-  .export-modal-header {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 12px 24px; background: #1e1e2e; border-bottom: 2px solid #e2a308; flex-shrink: 0;
-  }
-  .export-modal-body {
-    flex: 1; overflow-y: auto; display: flex; justify-content: center;
-  }
-  .export-modal-header h2 { color: #e2a308; margin: 0; font-size: 18px; }
-  .export-modal-actions { display: flex; gap: 8px; align-items: center; }
-  .export-modal-actions .btn { padding: 10px 24px; }
-  .edit-toolbar { display: flex; gap: 4px; margin-right: 8px; padding-right: 12px; border-right: 1px solid #444; }
-  .edit-toolbar .btn { padding: 6px 10px; font-size: 14px; min-width: 32px; text-align: center; user-select: none; }
-  .export-modal-pages { display: flex; flex-direction: column; align-items: center; gap: 20px; padding: 30px; flex-shrink: 0; }
-  .export-modal-pages .proposal-page { flex-shrink: 0; }
 </style>
 </head>
 <body>
@@ -290,7 +262,11 @@
   </div>
 
   <div class="bar-section" style="margin-left: auto;">
-    <button class="btn btn-primary" onclick="showExportPreview()">Final Edit</button>
+    <button class="btn btn-secondary btn-sm" onmousedown="event.preventDefault()" onclick="document.execCommand('bold')" title="Bold (Ctrl+B)"><strong>B</strong></button>
+    <button class="btn btn-secondary btn-sm" onmousedown="event.preventDefault()" onclick="document.execCommand('underline')" title="Underline (Ctrl+U)" style="text-decoration:underline;">U</button>
+    <span style="border-left:1px solid #444; height:20px; margin:0 4px;"></span>
+    <button class="btn btn-primary" onclick="confirmExportPDF()">Export PDF</button>
+    <button class="btn btn-primary" onclick="confirmExportWord()">Export Word</button>
     <button class="btn btn-secondary" onclick="window.print()">Print</button>
     <button class="btn btn-danger" onclick="resetToDefault()">Reset</button>
   </div>
@@ -738,7 +714,7 @@ let state = {
   warrantyText: WARRANTIES['standard-1yr'],
   numMobilizations: '1', numPhases: '',
   pmName: '', pmCell: '', pmEmail: '',
-  sectionSpacing: {},
+
   scopeSections: [{ name: 'Installation of (System)', scopes: [{ desc: '(Flooring Scope)', qty: '', unit: 'Square Feet' }] }],
   products: [],
   procedureSections: [{ header: '', steps: [] }],
@@ -1348,7 +1324,7 @@ function resetToDefault() {
     warrantyText: WARRANTIES['standard-1yr'],
     numMobilizations: '1', numPhases: '',
     pmName: '', pmCell: '', pmEmail: '',
-    sectionSpacing: {},
+  
     paymentTerms: '',
     scopeSections: [{ name: 'Installation of (System)', scopes: [{ desc: '(Flooring Scope)', qty: '', unit: 'Square Feet' }] }],
     products: [],
@@ -1499,7 +1475,7 @@ function loadPreviousProject(projectId) {
     pmName: p.pmName || '',
     pmCell: p.pmCell || '',
     pmEmail: p.pmEmail || '',
-    sectionSpacing: {},
+  
     paymentTerms: '',
     scopeSections: p.scopeSections
       ? p.scopeSections.map(sec => ({ name: sec.name, scopes: sec.scopes.map(s => ({...s})) }))
@@ -1815,82 +1791,227 @@ function updateLivePreview() {
   const footerEl = footMeasurer.querySelector('.page-footer');
   const FOOTER_H = footerEl ? footerEl.offsetHeight : 60;
   document.body.removeChild(footMeasurer);
-  _exportUsable = 1056 - 10 - FOOTER_H - 20;
+  // Hard cap at 42 lines × 16px per line = 672px (matches Word's per-page line capacity)
+  _exportUsable = 42 * 16;
 
-  // Measure header height - use existing preview if available, else offscreen
-  const existingHdr = previewEl.querySelector('.hti-header');
-  if (existingHdr) {
-    _exportHdrH = existingHdr.offsetHeight + 16;
-  } else {
-    const hdrMeasurer = document.createElement('div');
-    hdrMeasurer.className = 'proposal-page';
-    hdrMeasurer.style.cssText = 'position:absolute;left:-9999px;top:0;width:816px;padding:0 60px;overflow:visible;';
-    hdrMeasurer.innerHTML = hdr;
-    document.body.appendChild(hdrMeasurer);
-    _exportHdrH = hdrMeasurer.scrollHeight + 16;
-    document.body.removeChild(hdrMeasurer);
-  }
-  // Ensure minimum header height (image may not be loaded yet)
-  if (_exportHdrH < 100) _exportHdrH = 250;
+  // Header is absolutely positioned now — doesn't take body flow space
+  _exportHdrH = 0;
 
   const pagesHTML = smartPaginate(hdr, sections, footC, footF);
   previewEl.innerHTML = pagesHTML;
-  attachSectionHandles();
   attachPreviewFieldHandlers();
   if (scrollParent) scrollParent.scrollTop = savedScroll;
 }
 
-function attachSectionHandles() {
-  const previewEl = document.getElementById('livePreview');
-  if (!previewEl) return;
+// ============================================================
+// WORD DOCUMENT PREVIEW
+// ============================================================
+// Generate word blob for export
+async function generateWordBlob() {
+  const s = state;
+  const ct = s.clientType;
 
-  // Find all section wrappers with data-sec-idx inside export-content divs
-  previewEl.querySelectorAll('[data-sec-idx]').forEach(secEl => {
-    const idx = parseInt(secEl.getAttribute('data-sec-idx'));
-    secEl.classList.add('sec-handle-wrap');
+  function escXml(t) { return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
-    const handle = document.createElement('div');
-    handle.className = 'sec-handle';
-    handle.setAttribute('draggable', 'false');
-    secEl.appendChild(handle);
+  // Detect continuation breaks from the HTML preview pagination
+  // Each break point: { firstItemText: '...', contLabel: 'X (Continued):' }
+  const breakPoints = [];
+  const livePreview = document.getElementById('livePreview');
+  if (livePreview) {
+    const exportPages = Array.from(livePreview.querySelectorAll('.proposal-page'));
+    for (let pi = 1; pi < exportPages.length; pi++) {
+      const ec = exportPages[pi].querySelector('.export-content');
+      if (!ec) continue;
+      const firstChild = ec.firstElementChild;
+      if (!firstChild) continue;
+      const firstChildText = firstChild.textContent.trim();
+      // Continuation header detected
+      if (/\(Continued\)/.test(firstChildText)) {
+        const list = firstChild.nextElementSibling;
+        if (list) {
+          const firstItem = list.querySelector('li');
+          if (firstItem) {
+            breakPoints.push({
+              contLabel: firstChildText,
+              firstItemText: firstItem.textContent.trim().replace(/\s+/g, ' ')
+            });
+          }
+        }
+      }
+    }
+  }
+  // Helper: check if this item text matches a break point. Returns continuation label or null.
+  function checkBreak(itemText) {
+    const normalized = itemText.replace(/\s+/g, ' ').trim();
+    for (let i = 0; i < breakPoints.length; i++) {
+      // Use prefix match to handle minor whitespace/formatting differences
+      const target = breakPoints[i].firstItemText;
+      if (normalized === target || normalized.indexOf(target.substring(0, Math.min(50, target.length))) === 0 || target.indexOf(normalized.substring(0, Math.min(50, normalized.length))) === 0) {
+        const label = breakPoints[i].contLabel;
+        breakPoints.splice(i, 1);
+        return label;
+      }
+    }
+    return null;
+  }
 
-    let startY = 0;
-    let startMargin = 0;
-    let dragging = false;
+  function wp(text, opts) {
+    opts = opts || {};
+    const bold = opts.bold, underline = opts.underline, sz = opts.sz || 20, numId = opts.numId, ilvl = opts.ilvl || 0;
+    const before = opts.before || 0;
+    let rpr = '<w:sz w:val="' + sz + '"/><w:szCs w:val="' + sz + '"/>';
+    if (bold) rpr += '<w:b/><w:bCs/>';
+    if (underline) rpr += '<w:u w:val="single"/>';
+    let ppr = '<w:pPr>';
+    if (opts.pageBreakBefore) ppr += '<w:pageBreakBefore/>';
+    if (opts.keepNext) ppr += '<w:keepNext/>';
+    if (opts.keepLines) ppr += '<w:keepLines/>';
+    ppr += '<w:autoSpaceDE w:val="0"/><w:autoSpaceDN w:val="0"/><w:adjustRightInd w:val="0"/><w:spacing w:before="' + before + '" w:after="0" w:line="240" w:lineRule="auto"/>';
+    if (numId) ppr += '<w:numPr><w:ilvl w:val="' + ilvl + '"/><w:numId w:val="' + numId + '"/></w:numPr>';
+    ppr += '<w:rPr>' + rpr + '</w:rPr></w:pPr>';
+    return '<w:p>' + ppr + '<w:r><w:rPr>' + rpr + '</w:rPr><w:t xml:space="preserve">' + escXml(text) + '</w:t></w:r></w:p>';
+  }
+  function emptyP() {
+    return '<w:p><w:pPr><w:autoSpaceDE w:val="0"/><w:autoSpaceDN w:val="0"/><w:adjustRightInd w:val="0"/><w:spacing w:before="0" w:after="0" w:line="240" w:lineRule="auto"/><w:rPr><w:sz w:val="20"/><w:szCs w:val="20"/></w:rPr></w:pPr></w:p>';
+  }
+  // Paragraph with left text and right-aligned text via tab stop
+  function wpTab(leftText, rightText, opts) {
+    opts = opts || {};
+    const bold = opts.bold, sz = opts.sz || 20;
+    const before = opts.before || 0;
+    let rpr = '<w:sz w:val="' + sz + '"/><w:szCs w:val="' + sz + '"/>';
+    if (bold) rpr += '<w:b/><w:bCs/>';
+    let ppr = '<w:pPr><w:tabs><w:tab w:val="right" w:pos="9360"/></w:tabs><w:autoSpaceDE w:val="0"/><w:autoSpaceDN w:val="0"/><w:adjustRightInd w:val="0"/><w:spacing w:before="' + before + '" w:after="0" w:line="240" w:lineRule="auto"/><w:rPr>' + rpr + '</w:rPr></w:pPr>';
+    return '<w:p>' + ppr +
+      '<w:r><w:rPr>' + rpr + '</w:rPr><w:t xml:space="preserve">' + escXml(leftText) + '</w:t></w:r>' +
+      '<w:r><w:rPr>' + rpr + '</w:rPr><w:tab/><w:t xml:space="preserve">' + escXml(rightText) + '</w:t></w:r>' +
+      '</w:p>';
+  }
 
-    handle.addEventListener('mousedown', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      dragging = true;
-      startY = e.clientY;
-      startMargin = state.sectionSpacing[idx] || 0;
-      handle.classList.add('dragging');
-      document.body.style.cursor = 'ns-resize';
-      document.body.style.userSelect = 'none';
-
-      const onMove = (e2) => {
-        if (!dragging) return;
-        const delta = e2.clientY - startY;
-        const newMargin = Math.max(0, startMargin + delta);
-        state.sectionSpacing[idx] = newMargin;
-        secEl.style.marginTop = newMargin + 'px';
-      };
-
-      const onUp = () => {
-        dragging = false;
-        handle.classList.remove('dragging');
-        document.body.style.cursor = '';
-        document.body.style.userSelect = '';
-        document.removeEventListener('mousemove', onMove);
-        document.removeEventListener('mouseup', onUp);
-        // Re-paginate to cascade changes
-        updateLivePreview();
-      };
-
-      document.addEventListener('mousemove', onMove);
-      document.addEventListener('mouseup', onUp);
+  var paras = [];
+  if (s.contactName) paras.push(wp(s.contactName, { bold: true }));
+  if (s.contactTitle) paras.push(wp(s.contactTitle));
+  if (s.companyName) paras.push(wp(s.companyName, { bold: true }));
+  if (s.address) paras.push(wp(s.address));
+  var csz = [s.city, s.state].filter(Boolean).join(', ');
+  if (s.zip) csz += ' ' + s.zip;
+  if (csz.trim()) paras.push(wp(csz));
+  var firstName = s.contactName ? s.contactName.split(' ')[0] : (ct === 'gc' ? '(Person)' : '(Customer)');
+  paras.push(wp('Hello ' + firstName + ', ', { before: 240 }));
+  paras.push(wp('Please accept our proposal for the installation of ' + (s.systemDisplayName || '(System)') + ' at the ' + (s.projectName || '(Project Name)') + ' project in ' + (s.projectCity || '(City)') + ', ' + (s.projectState || '(State)') + '.'));
+  s.scopeSections.forEach(function(sec, si) {
+    var label = s.scopeSections.length > 1 ? ('Scope ' + (si + 1)) : 'Scope of Work';
+    paras.push(wp(label + ': ' + sec.name, { bold: true, underline: true, before: 240 }));
+    sec.scopes.forEach(function(sc) {
+      var rightText = '- ' + (sc.qty || '') + ' ' + (sc.unit || '');
+      if (sc.qty2 || sc.unit2) rightText += '; ' + (sc.qty2 || '') + ' ' + (sc.unit2 || '');
+      paras.push(wpTab(sc.desc, rightText));
     });
   });
+  paras.push(wp('Products: ', { bold: true, before: 240 }));
+  s.products.forEach(function(p) {
+    const cont = checkBreak(p.text);
+    if (cont) paras.push(wp(cont, { bold: true, pageBreakBefore: true }));
+    paras.push(wp(p.text, { numId: 33 }));
+  });
+  if (s.existingConditions) {
+    paras.push(wp('Existing Site Conditions:', { bold: true, before: 240 }));
+    paras.push(wp(s.existingConditions, { bold: true }));
+  }
+  s.procedureSections.forEach(function(sec, pi) {
+    paras.push(wp('Procedures: ' + sec.header, { bold: true, before: 240 }));
+    sec.steps.forEach(function(step) {
+      const stepText = step.text.replace(/\{([^}]+)\}/g, '$1');
+      const cont = checkBreak(stepText);
+      if (cont) paras.push(wp(cont, { bold: true, pageBreakBefore: true }));
+      paras.push(wp(stepText, { numId: 34 }));
+    });
+  });
+  paras.push(wp('Cost: ', { bold: true, before: 240 }));
+  var taxTexts = { 'not-included': 'Any applicable taxes are not included.', 'plus-wsst': 'plus any applicable WSST.', 'plus-state-tax': 'plus any applicable state sales tax.', 'excludes-wsst': 'Price excludes any WSST.', 'excluding-sales-tax': 'excluding sales tax.' };
+  s.costSections.forEach(function(cs) {
+    if (cs.description) paras.push(wp(cs.description, { bold: true }));
+    paras.push(wp('The lump sum cost for the installation of ' + (s.systemDisplayName || '(System)') + ' is $' + (cs.value || '(Value)') + '.00. ' + (taxTexts[s.taxNote] || '')));
+  });
+  if (s.addOptions.length) {
+    paras.push(wp('Add Options: ', { bold: true, before: 240 }));
+    s.addOptions.forEach(function(a) { paras.push(wp(a.text, { numId: 35 })); });
+  }
+  paras.push(wp('Warranty:', { bold: true, before: 240 }));
+  paras.push(wp(s.warrantyText));
+  var activeInclusions = INCLUSIONS_MASTER.filter(function(inc) { return s.inclusions[inc.id]; });
+  if (activeInclusions.length) {
+    paras.push(wp('Inclusions & Exclusions:', { bold: true, underline: true, before: 240 }));
+    activeInclusions.forEach(function(inc) {
+      const incText = getIncText(inc);
+      const cont = checkBreak(incText);
+      if (cont) paras.push(wp(cont, { bold: true, underline: true, pageBreakBefore: true }));
+      paras.push(wp(incText, { numId: 36 }));
+    });
+  }
+  if (ct === 'gc') {
+    paras.push(wp('General Contractor Payment Draw Terms:', { bold: true, before: 240 }));
+    paras.push(wp(s.paymentTerms || 'Payment draws are due on the 10th of the month, the second month following the month of the draw invoice. For example: January draws are due on the 10th of March. Any payments delinquent 30 days or more will be subject to work stoppage or a 1.5% interest charge until the account is current.', { bold: true }));
+  } else {
+    paras.push(wp('Standard HTI Customer Payment Terms', { bold: true, before: 240 }));
+    paras.push(wp(s.paymentTerms || "Terms of acceptance and pricing are based upon NET 30 from the completion date. Material invoicing will be sent in the month material is landed on the customer\u2019s site, due NET 30. Progress billing will be sent monthly for % of work completed through the end of that calendar month."));
+  }
+  paras.push(wp('Extra mobilizations and non-sequential work exclusion:', { bold: true, before: 240 }));
+  var mobNum = s.numMobilizations || '1';
+  var mobLine = 'This proposal is based on ' + mobNum + ' mobilization(s)';
+  if (s.numPhases) mobLine = 'This proposal is based on ' + mobNum + ' mobilizations (and/or ' + s.numPhases + ' phases)';
+  mobLine += ", with each mobilization (or phase) area being ready for installation prior to HTI's arrival. If areas are not ready, HTI reserves the right to submit a change order for any cost impacts related to remobilization, loss of efficiency, or non-sequential work. The change order value will be determined case by case, with supporting documentation provided.";
+  paras.push(wp(mobLine));
+
+  // Signoff wrapped in a single-cell table with cantSplit so Word treats it as atomic and won't break across pages
+  var signoffParas = [
+    wp('Best regards, ', { before: 240 }),
+    wp(s.pmName || '(Project Manager)', { bold: true, before: 240 }),
+    wp(s.pmCell || '(Cell Number)'),
+    wp(s.pmEmail || '(PM Email)'),
+    wp('HTI Polymer, INC.'),
+    wp('ACCEPTED BY: _____________________________________ DATE: _______________________', { before: 480 }),
+    wp('PO#: _________________')
+  ].join('');
+  paras.push(
+    '<w:tbl>' +
+      '<w:tblPr>' +
+        '<w:tblW w:w="9360" w:type="dxa"/>' +
+        '<w:tblBorders>' +
+          '<w:top w:val="nil"/><w:left w:val="nil"/><w:bottom w:val="nil"/><w:right w:val="nil"/>' +
+          '<w:insideH w:val="nil"/><w:insideV w:val="nil"/>' +
+        '</w:tblBorders>' +
+        '<w:tblLayout w:type="fixed"/>' +
+      '</w:tblPr>' +
+      '<w:tblGrid><w:gridCol w:w="9360"/></w:tblGrid>' +
+      '<w:tr>' +
+        '<w:trPr><w:cantSplit/></w:trPr>' +
+        '<w:tc>' +
+          '<w:tcPr><w:tcW w:w="9360" w:type="dxa"/><w:tcMar><w:top w:w="0" w:type="dxa"/><w:left w:w="0" w:type="dxa"/><w:bottom w:w="0" w:type="dxa"/><w:right w:w="0" w:type="dxa"/></w:tcMar></w:tcPr>' +
+          signoffParas +
+        '</w:tc>' +
+      '</w:tr>' +
+    '</w:tbl>'
+  );
+  // Word requires a paragraph after a table, so add a tiny one
+  paras.push(emptyP());
+
+  var templateBytes = Uint8Array.from(atob(DOCX_TEMPLATE_B64), function(c) { return c.charCodeAt(0); });
+  var zip = await JSZip.loadAsync(templateBytes);
+  var docXml = await zip.file('word/document.xml').async('string');
+  var sectPrMatch = docXml.match(/<w:sectPr[\s\S]*?<\/w:sectPr>/);
+  var sectPr = sectPrMatch ? sectPrMatch[0] : '';
+  var fmtDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  var header2Xml = await zip.file('word/header2.xml').async('string');
+  zip.file('word/header2.xml', header2Xml.replace(/(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2},\s+\d{4}/, fmtDate));
+
+  // Make page-1 footer match all other footers (template's footer2.xml has extra paragraphs that push it higher)
+  var footer1Xml = await zip.file('word/footer1.xml').async('string');
+  zip.file('word/footer2.xml', footer1Xml);
+
+  var bodyContent = paras.join('') + sectPr;
+  zip.file('word/document.xml', docXml.replace(/<w:body>[\s\S]*<\/w:body>/, '<w:body>' + bodyContent + '</w:body>'));
+  return await zip.generateAsync({ type: 'blob', mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
 }
 
 // ============================================================
@@ -2110,7 +2231,8 @@ function buildProposalHTML(s) {
       if (sc.qty2 || sc.unit2) qtyStr += '; ' + escH(sc.qty2 || '') + ' ' + escH(sc.unit2 || '');
       return `<div class="scope-row"><span class="scope-desc">${fl('work',`scope_${si}_${i}_desc`,escH(sc.desc))}</span><span class="scope-dash">-</span><span class="scope-qty">${qtyStr}</span></div>`;
     }).join('');
-    return `<div class="scope-block"><div class="section-label">Scope of Work: ${fl('work',`scopeSection_${si}`,escH(sec.name))}</div>${rows}</div>`;
+    const label = s.scopeSections.length > 1 ? `Scope ${si + 1}` : 'Scope of Work';
+    return `<div class="scope-block"><div class="section-label">${label}: ${fl('work',`scopeSection_${si}`,escH(sec.name))}</div>${rows}</div>`;
   }).join('');
 
   // PRODUCTS
@@ -2184,7 +2306,7 @@ function buildProposalHTML(s) {
 
   // SIGNOFF
   const signHTML = `<div class="signoff-block"><div class="signoff">
-    <p>Best regards,</p><br><br>
+    <p>Best regards,</p><br>
     <p class="pm-name">${fl('signoff','pmName',escH(s.pmName) || '(Project Manager)')}</p>
     ${s.pmCell ? `<p>${fl('signoff','pmCell',escH(s.pmCell))}</p>` : ''}
     ${s.pmEmail ? `<p>${fl('signoff','pmEmail',escH(s.pmEmail))}</p>` : ''}
@@ -2195,12 +2317,7 @@ function buildProposalHTML(s) {
     <p>PO#: <span class="line-sm"></span></p>
   </div></div>`;
 
-  // Wrap each section with data-sec-idx and apply stored spacing
-  const allSections = [recip, greeting, intro, scopeHTML, productsHTML, existHTML, proceduresHTML, costHTML, addOptHTML, warHTML, incHTML, payHTML, mobHTML, signHTML].filter(Boolean);
-  const spacedSections = allSections.map((html, i) => {
-    const px = s.sectionSpacing[i] || 0;
-    return `<div data-sec-idx="${i}" style="margin-top:${px}px;">${html}</div>`;
-  }).join('');
+  const spacedSections = [recip, greeting, intro, scopeHTML, productsHTML, existHTML, proceduresHTML, costHTML, addOptHTML, warHTML, incHTML, payHTML, mobHTML, signHTML].filter(Boolean).join('');
 
   return `<div class="proposal-page">
     ${hdr}${spacedSections}
@@ -2233,7 +2350,7 @@ function buildExportSections() {
     if (!pastHeader && child.classList.contains('hti-header')) { pastHeader = true; return; }
     if (!pastHeader) return;
 
-    // Check classes on the child itself or its first inner element (for data-sec-idx wrappers)
+    // Check classes on the child itself or its first inner element
     const hasClass = (cls) => child.classList.contains(cls) || (child.querySelector && child.querySelector(':scope > .' + cls));
 
     let type = 'atomic';
@@ -2263,7 +2380,7 @@ function buildExportSections() {
   document.body.removeChild(tempDiv);
 
   const footC = `<div class="page-footer"><div class="continued">Continued on Next Page</div>${licFoot}<br><div class="confidential">CONFIDENTIAL</div></div>`;
-  const footF = `<div class="page-footer">${licFoot}<br><div class="confidential">CONFIDENTIAL</div></div>`;
+  const footF = `<div class="page-footer"><div class="continued" style="visibility:hidden;">Continued on Next Page</div>${licFoot}<br><div class="confidential">CONFIDENTIAL</div></div>`;
 
   return { hdr, sections, footC, footF };
 }
@@ -2277,7 +2394,7 @@ function smartPaginate(hdr, sections, footC, footF) {
 
   const measurer = document.createElement('div');
   measurer.className = 'proposal-page';
-  measurer.style.cssText = 'position:absolute;left:-9999px;top:0;width:816px;padding:0 60px;overflow:visible;';
+  measurer.style.cssText = 'position:absolute;left:-9999px;top:0;width:816px;padding:0 96px;overflow:visible;font-size:10pt;line-height:1.2;font-family:Calibri,sans-serif;';
   document.body.appendChild(measurer);
 
   const measured = sections.map(sec => {
@@ -2419,88 +2536,10 @@ let _exportFootC = '';
 let _exportFootF = '';
 let _exportUsable = 800;
 let _exportHdrH = 150;
-let _reflowTimer = null;
 
-function showExportPreview() {
-  const { hdr, sections, footC, footF } = buildExportSections();
-  _exportHdr = hdr; _exportFootC = footC; _exportFootF = footF;
 
-  const footMeasurer = document.createElement('div');
-  footMeasurer.className = 'proposal-page export-page';
-  footMeasurer.style.cssText = 'position:absolute;left:-9999px;top:0;';
-  footMeasurer.innerHTML = footC;
-  document.body.appendChild(footMeasurer);
-  const footerEl = footMeasurer.querySelector('.page-footer');
-  const FOOTER_H = footerEl ? footerEl.offsetHeight : 60;
-  document.body.removeChild(footMeasurer);
-  _exportUsable = 1056 - 10 - FOOTER_H - 20;
 
-  const hdrMeasurer = document.createElement('div');
-  hdrMeasurer.className = 'proposal-page export-page';
-  hdrMeasurer.style.cssText = 'position:absolute;left:-9999px;top:0;height:auto;overflow:visible;';
-  hdrMeasurer.innerHTML = hdr;
-  document.body.appendChild(hdrMeasurer);
-  _exportHdrH = Math.max(hdrMeasurer.scrollHeight + 16, 250);
-  document.body.removeChild(hdrMeasurer);
 
-  const pagesHTML = smartPaginate(hdr, sections, footC, footF);
-  document.getElementById('exportPreviewPages').innerHTML = pagesHTML;
-  document.getElementById('exportModal').classList.add('active');
-  attachReflowListeners();
-}
-
-function attachReflowListeners() {
-  const previewEl = document.getElementById('exportPreviewPages');
-  previewEl.addEventListener('input', () => {
-    clearTimeout(_reflowTimer);
-    _reflowTimer = setTimeout(reflowExportPages, 300);
-  });
-  // Tab key inserts a tab like Word
-  previewEl.addEventListener('keydown', (e) => {
-    if (e.key === 'Tab') {
-      e.preventDefault();
-      document.execCommand('insertText', false, '\t');
-    }
-  });
-}
-
-function saveCursorPosition() {
-  const sel = window.getSelection();
-  if (!sel.rangeCount) return null;
-  const range = sel.getRangeAt(0);
-  const previewEl = document.getElementById('exportPreviewPages');
-  if (!previewEl.contains(range.startContainer)) return null;
-  const walker = document.createTreeWalker(previewEl, NodeFilter.SHOW_TEXT);
-  let charOffset = 0;
-  let node;
-  while (node = walker.nextNode()) {
-    if (node === range.startContainer) return charOffset + range.startOffset;
-    charOffset += node.textContent.length;
-  }
-  return null;
-}
-
-function restoreCursorPosition(globalOffset) {
-  if (globalOffset === null) return;
-  const previewEl = document.getElementById('exportPreviewPages');
-  const walker = document.createTreeWalker(previewEl, NodeFilter.SHOW_TEXT);
-  let charCount = 0;
-  let node;
-  while (node = walker.nextNode()) {
-    const len = node.textContent.length;
-    if (charCount + len >= globalOffset) {
-      const range = document.createRange();
-      range.setStart(node, globalOffset - charCount);
-      range.collapse(true);
-      const sel = window.getSelection();
-      sel.removeAllRanges();
-      sel.addRange(range);
-      // Don't scroll — keep user's scroll position
-      return;
-    }
-    charCount += len;
-  }
-}
 
 function getOrCreateNextPage(previewEl, exportPages) {
   let pageHdr = _exportHdr.replace(/<\/div>(\s*<\/div>\s*<\/div>\s*)$/, `<div class="hti-page-num">...</div></div>$1`);
@@ -2519,122 +2558,13 @@ function getContentLimit(ec) {
   return _exportUsable - _exportHdrH;
 }
 
-function reflowExportPages() {
-  const previewEl = document.getElementById('exportPreviewPages');
-  const scrollParent = previewEl.closest('.export-modal-body') || previewEl;
-  const scrollTop = scrollParent.scrollTop;
-  const cursorPos = saveCursorPosition();
-  let exportPages = Array.from(previewEl.querySelectorAll('.proposal-page'));
-  if (!exportPages.length) return;
 
-  const contentLimit = getContentLimit();
-
-  // Make all pages auto-height so we can measure real content
-  exportPages.forEach(p => { p.style.height = 'auto'; p.style.overflow = 'visible'; });
-
-  // PUSH DOWN: For each page, push overflowing children to next page
-  let changed = true;
-  let safety = 0;
-  while (changed && safety++ < 50) {
-    changed = false;
-    exportPages = Array.from(previewEl.querySelectorAll('.proposal-page'));
-    for (let pi = 0; pi < exportPages.length; pi++) {
-      const ec = exportPages[pi].querySelector('.export-content');
-      if (!ec || !ec.children.length) continue;
-
-      const ecTop = ec.getBoundingClientRect().top;
-      const maxBottom = ecTop + contentLimit;
-
-      // Find the first child whose bottom exceeds the limit
-      const children = Array.from(ec.children);
-      for (let ci = children.length - 1; ci >= 1; ci--) {
-        if (children[ci].getBoundingClientRect().bottom > maxBottom) {
-          // Move this child to next page
-          let nextPage = exportPages[pi + 1];
-          if (!nextPage) nextPage = getOrCreateNextPage(previewEl, exportPages);
-          const nextEc = nextPage.querySelector('.export-content');
-          nextEc.insertBefore(children[ci], nextEc.firstChild);
-          changed = true;
-        }
-      }
-    }
-  }
-
-  // PULL UP: For each page, pull children from next page if they fit
-  changed = true;
-  safety = 0;
-  while (changed && safety++ < 50) {
-    changed = false;
-    exportPages = Array.from(previewEl.querySelectorAll('.proposal-page'));
-    for (let pi = 0; pi < exportPages.length - 1; pi++) {
-      const ec = exportPages[pi].querySelector('.export-content');
-      const nextEc = exportPages[pi + 1].querySelector('.export-content');
-      if (!ec || !nextEc || !nextEc.firstElementChild) continue;
-
-      const ecTop = ec.getBoundingClientRect().top;
-      const maxBottom = ecTop + contentLimit;
-      const curBottom = ec.lastElementChild ? ec.lastElementChild.getBoundingClientRect().bottom : ecTop;
-      const candidate = nextEc.firstElementChild;
-      const candidateH = candidate.getBoundingClientRect().height;
-
-      if (curBottom + candidateH <= maxBottom) {
-        ec.appendChild(candidate);
-        changed = true;
-      }
-    }
-  }
-
-  // Remove empty trailing pages
-  exportPages = Array.from(previewEl.querySelectorAll('.proposal-page'));
-  for (let pi = exportPages.length - 1; pi > 0; pi--) {
-    const ec = exportPages[pi].querySelector('.export-content');
-    if (ec && !ec.children.length && !ec.textContent.trim()) {
-      exportPages[pi].remove();
-      exportPages.splice(pi, 1);
-    } else {
-      break;
-    }
-  }
-
-  // Restore fixed height and update page numbers/footers
-  const totalPages = exportPages.length;
-  exportPages.forEach((page, i) => {
-    page.style.height = '1056px';
-    page.style.overflow = 'hidden';
-
-    const footer = page.querySelector('.page-footer');
-    if (footer) footer.outerHTML = i < totalPages - 1 ? _exportFootC : _exportFootF;
-
-    const existingNum = page.querySelector('.hti-page-num');
-    if (i > 0) {
-      if (existingNum) {
-        existingNum.textContent = `Page ${i + 1} of ${totalPages}`;
-      } else {
-        const overlay = page.querySelector('.hti-header-overlay');
-        if (overlay) {
-          const numDiv = document.createElement('div');
-          numDiv.className = 'hti-page-num';
-          numDiv.textContent = `Page ${i + 1} of ${totalPages}`;
-          overlay.appendChild(numDiv);
-        }
-      }
-    } else if (existingNum) {
-      existingNum.remove();
-    }
-  });
-
-  restoreCursorPosition(cursorPos);
-  scrollParent.scrollTop = scrollTop;
-}
-
-function closeExportPreview() {
-  document.getElementById('exportModal').classList.remove('active');
-}
 
 function confirmExportPDF() {
-  const previewPages = document.getElementById('exportPreviewPages');
-  const container = previewPages.cloneNode(true);
+  const livePreview = document.getElementById('livePreview');
+  const container = livePreview.cloneNode(true);
   container.querySelectorAll('[contenteditable]').forEach(el => el.removeAttribute('contenteditable'));
+  container.querySelectorAll('.field-link').forEach(el => el.style.borderBottom = 'none');
   container.querySelectorAll('.proposal-page').forEach(p => { p.style.boxShadow = 'none'; p.style.marginBottom = '0'; });
 
   const projectName = state.projectName || 'Draft';
@@ -2646,180 +2576,15 @@ function confirmExportPDF() {
     jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
   };
   html2pdf().set(opt).from(container).save();
-  closeExportPreview();
 }
 
 // WORD EXPORT
 async function confirmExportWord() {
-  const s = state;
-  const ct = s.clientType;
-
-  function wp(text, opts) {
-    opts = opts || {};
-    const bold = opts.bold, underline = opts.underline, sz = opts.sz || 20, numId = opts.numId, ilvl = opts.ilvl || 0;
-    let rpr = '<w:sz w:val="' + sz + '"/><w:szCs w:val="' + sz + '"/>';
-    if (bold) rpr += '<w:b/><w:bCs/>';
-    if (underline) rpr += '<w:u w:val="single"/>';
-    let ppr = '<w:pPr><w:autoSpaceDE w:val="0"/><w:autoSpaceDN w:val="0"/><w:adjustRightInd w:val="0"/><w:spacing w:line="240" w:lineRule="auto"/>';
-    if (numId) ppr += '<w:numPr><w:ilvl w:val="' + ilvl + '"/><w:numId w:val="' + numId + '"/></w:numPr>';
-    ppr += '<w:rPr>' + rpr + '</w:rPr></w:pPr>';
-    const esc = function(t) { return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); };
-    return '<w:p>' + ppr + '<w:r><w:rPr>' + rpr + '</w:rPr><w:t xml:space="preserve">' + esc(text) + '</w:t></w:r></w:p>';
-  }
-  function emptyP() {
-    return '<w:p><w:pPr><w:autoSpaceDE w:val="0"/><w:autoSpaceDN w:val="0"/><w:adjustRightInd w:val="0"/><w:spacing w:line="240" w:lineRule="auto"/><w:rPr><w:sz w:val="20"/><w:szCs w:val="20"/></w:rPr></w:pPr></w:p>';
-  }
-
-  var paras = [];
-
-  // Recipient (paras 0-3, then blank)
-  if (s.contactName) paras.push(wp(s.contactName, { bold: true }));
-  if (s.contactTitle) paras.push(wp(s.contactTitle));
-  if (s.companyName) paras.push(wp(s.companyName, { bold: true }));
-  if (s.address) paras.push(wp(s.address));
-  var csz = [s.city, s.state].filter(Boolean).join(', ');
-  if (s.zip) csz += ' ' + s.zip;
-  if (csz.trim()) paras.push(wp(csz));
-  paras.push(emptyP());
-
-  // Greeting + Intro (bold, then blank)
-  var firstName = s.contactName ? s.contactName.split(' ')[0] : (ct === 'gc' ? '(Person)' : '(Customer)');
-  paras.push(wp('Hello ' + firstName + ', ', { bold: true }));
-  paras.push(wp('Please accept our proposal for the installation of ' + (s.systemDisplayName || '(System)') + ' at the ' + (s.projectName || '(Project Name)') + ' project in ' + (s.projectCity || '(City)') + ', ' + (s.projectState || '(State)') + '.', { bold: true }));
-  paras.push(emptyP());
-
-  // Scope sections (header bold+underline, items bold)
-  s.scopeSections.forEach(function(sec) {
-    paras.push(wp('Scope: ' + sec.name, { bold: true, underline: true }));
-    sec.scopes.forEach(function(sc) {
-      var line = sc.desc + ' - ' + (sc.qty || '') + ' ' + (sc.unit || '');
-      if (sc.qty2 || sc.unit2) line += '; ' + (sc.qty2 || '') + ' ' + (sc.unit2 || '');
-      paras.push(wp(line, { bold: true }));
-    });
-  });
-  paras.push(emptyP());
-
-  // Products (header bold, items as bullet list numId=33)
-  paras.push(wp('Products: ', { bold: true }));
-  s.products.forEach(function(p) { paras.push(wp(p.text, { bold: true, numId: 33 })); });
-  paras.push(emptyP());
-
-  // Existing conditions
-  if (s.existingConditions) {
-    paras.push(wp('Existing Site Conditions:', { bold: true }));
-    paras.push(wp(s.existingConditions, { bold: true }));
-    paras.push(emptyP());
-  }
-
-  // Procedures (header bold, first step bold+bullet, rest bullet numId=34)
-  s.procedureSections.forEach(function(sec) {
-    paras.push(wp('Procedures: ' + sec.header, { bold: true }));
-    sec.steps.forEach(function(step, i) {
-      var t = step.text.replace(/\{([^}]+)\}/g, '$1');
-      paras.push(wp(t, { numId: 34, bold: i === 0 }));
-    });
-  });
-  paras.push(wp('', { bold: true }));
-  paras.push(emptyP());
-
-  // Cost (header bold, description bold, amount normal)
-  paras.push(wp('Cost: ', { bold: true }));
-  var taxTexts = { 'not-included': 'Any applicable taxes are not included.', 'plus-wsst': 'plus any applicable WSST.', 'plus-state-tax': 'plus any applicable state sales tax.', 'excludes-wsst': 'Price excludes any WSST.', 'excluding-sales-tax': 'excluding sales tax.' };
-  s.costSections.forEach(function(cs) {
-    if (cs.description) paras.push(wp(cs.description, { bold: true }));
-    paras.push(wp('The lump sum cost for the installation of ' + (s.systemDisplayName || '(System)') + ' is $' + (cs.value || '(Value)') + '.00. ' + (taxTexts[s.taxNote] || '')));
-  });
-  paras.push(emptyP());
-
-  // Add options (header bold, items as numbered list numId=35)
-  if (s.addOptions.length) {
-    paras.push(wp('Add Options: ', { bold: true }));
-    s.addOptions.forEach(function(a) { paras.push(wp(a.text, { numId: 35 })); });
-    paras.push(wp('', { bold: true }));
-    paras.push(emptyP());
-  }
-
-  // Warranty (header bold, text normal)
-  paras.push(wp('Warranty:', { bold: true }));
-  paras.push(wp(s.warrantyText));
-  paras.push(emptyP());
-
-  // Inclusions (header bold+underline, items as bullet list numId=36)
-  var activeInclusions = INCLUSIONS_MASTER.filter(function(inc) { return s.inclusions[inc.id]; });
-  if (activeInclusions.length) {
-    paras.push(wp('Inclusions & Exclusions:', { bold: true, underline: true }));
-    activeInclusions.forEach(function(inc) { paras.push(wp(getIncText(inc), { numId: 36 })); });
-    paras.push(emptyP());
-    paras.push(emptyP());
-  }
-
-  // Payment terms (header bold, text bold for GC)
-  if (ct === 'gc') {
-    paras.push(wp('General Contractor Payment Draw Terms:', { bold: true }));
-    paras.push(wp(s.paymentTerms || 'Payment draws are due on the 10th of the month, the second month following the month of the draw invoice. For example: January draws are due on the 10th of March. Any payments delinquent 30 days or more will be subject to work stoppage or a 1.5% interest charge until the account is current.', { bold: true }));
-  } else {
-    paras.push(wp('Standard HTI Customer Payment Terms', { bold: true }));
-    paras.push(wp(s.paymentTerms || 'Terms of acceptance and pricing are based upon NET 30 from the completion date. Material invoicing will be sent in the month material is landed on the customer\u2019s site, due NET 30. Progress billing will be sent monthly for % of work completed through the end of that calendar month.'));
-  }
-  paras.push(emptyP());
-  paras.push(emptyP());
-
-  // Mobilization (header bold, text bold)
-  paras.push(wp('Extra mobilizations and non-sequential work exclusion:', { bold: true }));
-  var mobNum = s.numMobilizations || '1';
-  var mobLine = 'This proposal is based on ' + mobNum + ' mobilization(s)';
-  if (s.numPhases) mobLine = 'This proposal is based on ' + mobNum + ' mobilizations (and/or ' + s.numPhases + ' phases)';
-  mobLine += ", with each mobilization (or phase) area being ready for installation prior to HTI's arrival. If areas are not ready, HTI reserves the right to submit a change order for any cost impacts related to remobilization, loss of efficiency, or non-sequential work. The change order value will be determined case by case, with supporting documentation provided.";
-  paras.push(wp(mobLine, { bold: true }));
-
-  // Sign-off (matching template: many blank lines, PM bold, email bold+underline)
-  paras.push(emptyP());
-  paras.push(emptyP());
-  paras.push(emptyP());
-  paras.push(emptyP());
-  paras.push(emptyP());
-  paras.push(emptyP());
-  paras.push(emptyP());
-  paras.push(emptyP());
-  paras.push(emptyP());
-  paras.push(emptyP());
-  paras.push(wp('Best regards, '));
-  paras.push(emptyP());
-  paras.push(wp(s.pmName || '(Project Manager)', { bold: true }));
-  paras.push(wp(s.pmCell || '(Cell Number)', { bold: true }));
-  paras.push(wp(s.pmEmail || '(PM Email)', { bold: true, underline: true }));
-  paras.push(wp('HTI Polymer, INC.'));
-  paras.push(emptyP());
-  paras.push(emptyP());
-  paras.push(emptyP());
-  paras.push(emptyP());
-  paras.push(emptyP());
-  paras.push(emptyP());
-  paras.push(emptyP());
-  paras.push(wp('ACCEPTED BY: _____________________________________ DATE: _______________________'));
-  paras.push(wp('PO#: _________________'));
-
-  var templateBytes = Uint8Array.from(atob(DOCX_TEMPLATE_B64), function(c) { return c.charCodeAt(0); });
-  var zip = await JSZip.loadAsync(templateBytes);
-  var docXml = await zip.file('word/document.xml').async('string');
-
-  var sectPrMatch = docXml.match(/<w:sectPr[\s\S]*?<\/w:sectPr>/);
-  var sectPr = sectPrMatch ? sectPrMatch[0] : '';
-
-  var fmtDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-  var header2Xml = await zip.file('word/header2.xml').async('string');
-  var updatedHeader2 = header2Xml.replace(/(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2},\s+\d{4}/, fmtDate);
-  zip.file('word/header2.xml', updatedHeader2);
-
-  var bodyContent = paras.join('') + sectPr;
-  var newDocXml = docXml.replace(/<w:body>[\s\S]*<\/w:body>/, '<w:body>' + bodyContent + '</w:body>');
-  zip.file('word/document.xml', newDocXml);
-
-  var blob = await zip.generateAsync({ type: 'blob', mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
-  var projectName = s.projectName || 'Draft';
+  var blob = await generateWordBlob();
+  if (!blob) return;
+  var projectName = state.projectName || 'Draft';
   var filename = 'HTI_Proposal_' + projectName.replace(/[^a-zA-Z0-9]/g, '_') + '_' + new Date().toISOString().split('T')[0] + '.docx';
   saveAs(blob, filename);
-  closeExportPreview();
 }
 
 // INIT
@@ -2827,23 +2592,5 @@ init();
 
 </script>
 
-<!-- Final Edit / Export Modal -->
-<div class="export-modal-overlay" id="exportModal">
-  <div class="export-modal-header">
-    <h2 style="color:#e2a308; margin:0; font-size:18px;">Final Edit</h2>
-    <div class="export-modal-actions">
-      <div class="edit-toolbar">
-        <button class="btn btn-secondary btn-sm" onmousedown="event.preventDefault()" onclick="document.execCommand('bold')" title="Bold (Ctrl+B)"><strong>B</strong></button>
-        <button class="btn btn-secondary btn-sm" onmousedown="event.preventDefault()" onclick="document.execCommand('underline')" title="Underline (Ctrl+U)" style="text-decoration:underline;">U</button>
-      </div>
-      <button class="btn btn-secondary" onclick="closeExportPreview()">Back to Editor</button>
-      <button class="btn btn-primary" onclick="confirmExportPDF()">Export PDF</button>
-      <button class="btn btn-primary" onclick="confirmExportWord()">Export Word</button>
-    </div>
-  </div>
-  <div class="export-modal-body">
-    <div class="export-modal-pages" id="exportPreviewPages"></div>
-  </div>
-</div>
 </body>
 </html>
