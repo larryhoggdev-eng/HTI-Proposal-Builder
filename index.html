@@ -241,6 +241,21 @@
   .top-bar .btn { padding: 8px 16px; font-size: 12px; }
 
   .main-content { display: flex; flex: 1; overflow: hidden; }
+
+  /* ============ TAB BAR ============ */
+  .tab-bar { display: flex; background: #0f1d3a; border-bottom: 2px solid #2a2a4a; flex-shrink: 0; }
+  .tab-btn {
+    padding: 10px 20px; font-size: 12px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.5px; color: #888; background: transparent; border: none;
+    cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px;
+    transition: all 0.15s;
+  }
+  .tab-btn:hover { color: #ccc; }
+  .tab-btn.active { color: #e2a308; border-bottom-color: #e2a308; }
+  .tab-panel { display: none; flex: 1; overflow: hidden; flex-direction: column; }
+  .tab-panel.active { display: flex; }
+  .tab-panel .main-content { flex: 1; }
+
   .editor-panel { flex: 1; overflow-y: auto; background: #2d2d2d; padding: 20px; min-width: 0; }
   .editor-scroll { max-width: 700px; margin: 0 auto; }
   .form-section { background: #1a1a2e; border-radius: 8px; padding: 12px; margin-bottom: 10px; border: 1px solid #2a2a4a; }
@@ -319,6 +334,50 @@
   .sys-selected-tag .tag-x:hover { color: #c0392b; }
 
   .preview-panel { flex: 1; overflow-y: auto; background: #3a3a3a; padding: 20px; display: flex; justify-content: center; border-left: 3px solid #e2a308; }
+
+  /* ============ DOCUMENTS PANEL ============ */
+  .docs-panel { flex: 1; overflow-y: auto; background: #2d2d2d; padding: 20px; }
+  .docs-scroll { max-width: 900px; margin: 0 auto; }
+  .doc-category {
+    background: #1e1e3a; border: 1px solid #2a2a4a; border-radius: 8px;
+    margin-bottom: 16px; overflow: hidden;
+  }
+  .doc-category-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 16px; background: #16213e; cursor: pointer; user-select: none;
+  }
+  .doc-category-header h3 {
+    color: #e2a308; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; margin: 0;
+  }
+  .doc-category-header .file-count { color: #888; font-size: 11px; }
+  .doc-category-body { padding: 12px 16px; }
+  .doc-dropzone {
+    border: 2px dashed #444; border-radius: 8px; padding: 24px; text-align: center;
+    color: #666; font-size: 13px; transition: all 0.2s; cursor: pointer; margin-bottom: 12px;
+  }
+  .doc-dropzone:hover { border-color: #e2a308; color: #ccc; }
+  .doc-dropzone.dragover { border-color: #e2a308; background: rgba(226,163,8,0.08); color: #e2a308; }
+  .doc-dropzone input[type="file"] { display: none; }
+  .doc-file-list { list-style: none; padding: 0; margin: 0; }
+  .doc-file-item {
+    display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+    background: #12122a; border: 1px solid #2a2a4a; border-radius: 6px; margin-bottom: 6px;
+    transition: all 0.15s;
+  }
+  .doc-file-item:hover { border-color: #444; }
+  .doc-file-icon { font-size: 20px; flex-shrink: 0; width: 28px; text-align: center; }
+  .doc-file-info { flex: 1; min-width: 0; }
+  .doc-file-name { font-size: 13px; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .doc-file-meta { font-size: 10px; color: #888; margin-top: 2px; }
+  .doc-file-actions { display: flex; gap: 4px; flex-shrink: 0; }
+  .doc-file-actions .btn { padding: 4px 8px; font-size: 10px; }
+  .doc-preview-wrap {
+    margin-top: 8px; background: #0a0a1a; border: 1px solid #2a2a4a; border-radius: 6px;
+    overflow: hidden; max-height: 500px; overflow-y: auto;
+  }
+  .doc-preview-wrap img { width: 100%; display: block; }
+  .doc-preview-wrap iframe { width: 100%; height: 500px; border: none; background: #fff; }
+  .doc-preview-wrap .no-preview { padding: 20px; text-align: center; color: #666; font-size: 12px; }
   .preview-scroll { width: 850px; transform-origin: top center; }
   .preview-scroll .proposal-page { margin-bottom: 20px; }
   .preview-scroll .export-content { cursor: text; }
@@ -619,12 +678,88 @@
   </div>
 </div>
 
-<div class="main-content">
-  <div class="editor-panel">
-    <div class="editor-scroll" id="previewContainer"></div>
+<div class="tab-bar">
+  <button class="tab-btn active" onclick="switchTab('project')">Project</button>
+  <button class="tab-btn" onclick="switchTab('proposal')">Proposal</button>
+  <button class="tab-btn" onclick="switchTab('documents')">Documents</button>
+</div>
+
+<div class="tab-panel active" id="tabProject">
+  <div class="main-content" style="flex:1;">
+    <div class="editor-panel">
+      <div class="editor-scroll" id="previewContainer"></div>
+    </div>
+    <div class="preview-panel">
+      <div class="preview-scroll" id="livePreview"></div>
+    </div>
   </div>
-  <div class="preview-panel">
-    <div class="preview-scroll" id="livePreview"></div>
+</div>
+
+<div class="tab-panel" id="tabProposal">
+  <div class="preview-panel" style="border:none; flex:1;">
+    <div class="preview-scroll" id="proposalFullPreview"></div>
+  </div>
+</div>
+
+<div class="tab-panel" id="tabDocuments">
+  <div class="docs-panel">
+    <div class="docs-scroll">
+      <div class="doc-category" data-category="takeoffs">
+        <div class="doc-category-header" onclick="toggleDocCategory(this)">
+          <h3>Takeoffs</h3>
+          <span class="file-count" id="count-takeoffs">0 files</span>
+        </div>
+        <div class="doc-category-body">
+          <div class="doc-dropzone" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event,'takeoffs')" onclick="this.querySelector('input').click()">
+            Drop files here or click to browse
+            <input type="file" multiple onchange="handleFileSelect(event,'takeoffs')">
+          </div>
+          <ul class="doc-file-list" id="files-takeoffs"></ul>
+        </div>
+      </div>
+
+      <div class="doc-category" data-category="specs">
+        <div class="doc-category-header" onclick="toggleDocCategory(this)">
+          <h3>Specs</h3>
+          <span class="file-count" id="count-specs">0 files</span>
+        </div>
+        <div class="doc-category-body">
+          <div class="doc-dropzone" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event,'specs')" onclick="this.querySelector('input').click()">
+            Drop files here or click to browse
+            <input type="file" multiple onchange="handleFileSelect(event,'specs')">
+          </div>
+          <ul class="doc-file-list" id="files-specs"></ul>
+        </div>
+      </div>
+
+      <div class="doc-category" data-category="additional">
+        <div class="doc-category-header" onclick="toggleDocCategory(this)">
+          <h3>Additional Documents</h3>
+          <span class="file-count" id="count-additional">0 files</span>
+        </div>
+        <div class="doc-category-body">
+          <div class="doc-dropzone" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event,'additional')" onclick="this.querySelector('input').click()">
+            Drop files here or click to browse
+            <input type="file" multiple onchange="handleFileSelect(event,'additional')">
+          </div>
+          <ul class="doc-file-list" id="files-additional"></ul>
+        </div>
+      </div>
+
+      <div class="doc-category" data-category="proposal">
+        <div class="doc-category-header" onclick="toggleDocCategory(this)">
+          <h3>Proposal</h3>
+          <span class="file-count" id="count-proposal">0 files</span>
+        </div>
+        <div class="doc-category-body">
+          <div class="doc-dropzone" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event,'proposal')" onclick="this.querySelector('input').click()">
+            Drop files here or click to browse
+            <input type="file" multiple onchange="handleFileSelect(event,'proposal')">
+          </div>
+          <ul class="doc-file-list" id="files-proposal"></ul>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -2014,6 +2149,242 @@ function escH(str) { return (str || '').replace(/&/g, '&amp;').replace(/</g, '&l
 // ============================================================
 // INIT
 // ============================================================
+// ============================================================
+// TAB SWITCHING
+// ============================================================
+function switchTab(tabName) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelector(`.tab-btn[onclick*="${tabName}"]`).classList.add('active');
+  document.getElementById('tab' + tabName.charAt(0).toUpperCase() + tabName.slice(1)).classList.add('active');
+  // When switching to proposal tab, render a fresh full preview
+  if (tabName === 'proposal') updateProposalFullPreview();
+  // When switching to documents, refresh file lists
+  if (tabName === 'documents') refreshAllFileLists();
+}
+
+function updateProposalFullPreview() {
+  const el = document.getElementById('proposalFullPreview');
+  if (!el) return;
+  // Reuse the same pagination pipeline as the live preview
+  const { hdr, sections, footC, footF } = buildExportSections();
+  const footMeasurer = document.createElement('div');
+  footMeasurer.className = 'proposal-page export-page';
+  footMeasurer.style.cssText = 'position:absolute;left:-9999px;top:0;';
+  footMeasurer.innerHTML = footC;
+  document.body.appendChild(footMeasurer);
+  const footerEl = footMeasurer.querySelector('.page-footer');
+  const FOOTER_H = footerEl ? footerEl.offsetHeight : 60;
+  document.body.removeChild(footMeasurer);
+  _exportUsable = 42 * 16;
+  _exportHdrH = 0;
+  el.innerHTML = smartPaginate(hdr, sections, footC, footF);
+}
+
+// ============================================================
+// DOCUMENT MANAGEMENT (IndexedDB)
+// ============================================================
+const DOC_DB_NAME = 'hti-docs';
+const DOC_DB_VERSION = 1;
+let _docDB = null;
+
+function openDocDB() {
+  return new Promise((resolve, reject) => {
+    if (_docDB) { resolve(_docDB); return; }
+    const req = indexedDB.open(DOC_DB_NAME, DOC_DB_VERSION);
+    req.onupgradeneeded = (e) => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains('files')) {
+        const store = db.createObjectStore('files', { keyPath: 'id' });
+        store.createIndex('projectCategory', ['projectId', 'category'], { unique: false });
+      }
+    };
+    req.onsuccess = (e) => { _docDB = e.target.result; resolve(_docDB); };
+    req.onerror = (e) => reject(e.target.error);
+  });
+}
+
+async function saveFileToDB(projectId, category, file) {
+  const db = await openDocDB();
+  const id = projectId + '-' + category + '-' + Date.now() + '-' + Math.random().toString(36).substr(2, 6);
+  const arrayBuffer = await file.arrayBuffer();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('files', 'readwrite');
+    tx.objectStore('files').put({
+      id, projectId, category,
+      name: file.name, type: file.type, size: file.size,
+      data: arrayBuffer, addedAt: Date.now()
+    });
+    tx.oncomplete = () => resolve(id);
+    tx.onerror = (e) => reject(e.target.error);
+  });
+}
+
+async function getFilesForCategory(projectId, category) {
+  const db = await openDocDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('files', 'readonly');
+    const idx = tx.objectStore('files').index('projectCategory');
+    const req = idx.getAll([projectId, category]);
+    req.onsuccess = () => resolve(req.result || []);
+    req.onerror = (e) => reject(e.target.error);
+  });
+}
+
+async function getFileById(fileId) {
+  const db = await openDocDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('files', 'readonly');
+    const req = tx.objectStore('files').get(fileId);
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = (e) => reject(e.target.error);
+  });
+}
+
+async function deleteFileFromDB(fileId) {
+  const db = await openDocDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('files', 'readwrite');
+    tx.objectStore('files').delete(fileId);
+    tx.oncomplete = () => resolve();
+    tx.onerror = (e) => reject(e.target.error);
+  });
+}
+
+// ============================================================
+// DOCUMENT UI
+// ============================================================
+function toggleDocCategory(headerEl) {
+  const body = headerEl.nextElementSibling;
+  body.style.display = body.style.display === 'none' ? '' : 'none';
+}
+
+function handleDragOver(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  e.currentTarget.classList.add('dragover');
+}
+
+function handleDragLeave(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  e.currentTarget.classList.remove('dragover');
+}
+
+async function handleDrop(e, category) {
+  e.preventDefault();
+  e.stopPropagation();
+  e.currentTarget.classList.remove('dragover');
+  if (!_currentProjectId) return;
+  const files = e.dataTransfer.files;
+  for (const file of files) {
+    await saveFileToDB(_currentProjectId, category, file);
+  }
+  await renderFileList(category);
+}
+
+async function handleFileSelect(e, category) {
+  if (!_currentProjectId) return;
+  const files = e.target.files;
+  for (const file of files) {
+    await saveFileToDB(_currentProjectId, category, file);
+  }
+  e.target.value = '';
+  await renderFileList(category);
+}
+
+function getFileIcon(type, name) {
+  if (type.startsWith('image/')) return '🖼️';
+  if (type === 'application/pdf') return '📄';
+  if (name.match(/\.(xlsx?|csv)$/i)) return '📊';
+  if (name.match(/\.(docx?|rtf)$/i)) return '📝';
+  if (name.match(/\.(dwg|dxf)$/i)) return '📐';
+  return '📎';
+}
+
+function formatFileSize(bytes) {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / 1048576).toFixed(1) + ' MB';
+}
+
+function canPreview(type, name) {
+  return type.startsWith('image/') || type === 'application/pdf';
+}
+
+async function renderFileList(category) {
+  if (!_currentProjectId) return;
+  const files = await getFilesForCategory(_currentProjectId, category);
+  const listEl = document.getElementById('files-' + category);
+  const countEl = document.getElementById('count-' + category);
+  if (countEl) countEl.textContent = files.length + ' file' + (files.length !== 1 ? 's' : '');
+
+  if (!files.length) { listEl.innerHTML = ''; return; }
+
+  listEl.innerHTML = files.map(f => {
+    const icon = getFileIcon(f.type, f.name);
+    const size = formatFileSize(f.size);
+    const added = new Date(f.addedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    const previewable = canPreview(f.type, f.name);
+    return `<li class="doc-file-item">
+      <span class="doc-file-icon">${icon}</span>
+      <div class="doc-file-info">
+        <div class="doc-file-name">${escH(f.name)}</div>
+        <div class="doc-file-meta">${size} • ${added}</div>
+      </div>
+      <div class="doc-file-actions">
+        ${previewable ? `<button class="btn btn-secondary" onclick="toggleFilePreview('${f.id}', this)">Preview</button>` : ''}
+        <button class="btn btn-secondary" onclick="downloadFile('${f.id}')">Download</button>
+        <button class="btn btn-danger" onclick="removeFile('${f.id}','${category}')">Delete</button>
+      </div>
+    </li>
+    <div class="doc-preview-wrap" id="preview-${f.id}" style="display:none;"></div>`;
+  }).join('');
+}
+
+async function refreshAllFileLists() {
+  for (const cat of ['takeoffs', 'specs', 'additional', 'proposal']) {
+    await renderFileList(cat);
+  }
+}
+
+async function toggleFilePreview(fileId, btn) {
+  const wrap = document.getElementById('preview-' + fileId);
+  if (!wrap) return;
+  if (wrap.style.display !== 'none') {
+    wrap.style.display = 'none';
+    btn.textContent = 'Preview';
+    return;
+  }
+  // Load and show preview
+  const file = await getFileById(fileId);
+  if (!file) return;
+  const blob = new Blob([file.data], { type: file.type });
+  const url = URL.createObjectURL(blob);
+  if (file.type.startsWith('image/')) {
+    wrap.innerHTML = `<img src="${url}" alt="${escH(file.name)}">`;
+  } else if (file.type === 'application/pdf') {
+    wrap.innerHTML = `<iframe src="${url}#toolbar=1"></iframe>`;
+  } else {
+    wrap.innerHTML = '<div class="no-preview">Preview not available for this file type</div>';
+  }
+  wrap.style.display = '';
+  btn.textContent = 'Hide';
+}
+
+async function downloadFile(fileId) {
+  const file = await getFileById(fileId);
+  if (!file) return;
+  const blob = new Blob([file.data], { type: file.type });
+  saveAs(blob, file.name);
+}
+
+async function removeFile(fileId, category) {
+  if (!confirm('Delete this file?')) return;
+  await deleteFileFromDB(fileId);
+  await renderFileList(category);
+}
+
 function init() {
   INCLUSIONS_MASTER.forEach(inc => { state.inclusions[inc.id] = inc.default; });
   render();
