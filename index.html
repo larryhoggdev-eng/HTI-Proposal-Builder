@@ -575,11 +575,15 @@
   .quote-search-wrap { position: relative; margin-bottom: 12px; }
   .quote-search-wrap .sys-dropdown { border-radius: 0 0 6px 6px; }
 
-  /* Catalogue view */
-  .cat-view-toggle { display: flex; gap: 4px; margin-left: auto; }
-  .cat-view-toggle .btn { padding: 4px 10px; font-size: 10px; }
-  .cat-view-toggle .btn.active { background: #e2a308; color: #000; }
-  .catalogue-wrap { margin-bottom: 16px; }
+  /* Quote sub-tabs */
+  .quote-subtab-bar { display: flex; background: #0f1d3a; border-bottom: 1px solid #2a2a4a; padding: 0 16px; flex-shrink: 0; }
+  .quote-subtab { padding: 8px 16px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #666; background: none; border: none; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+  .quote-subtab:hover { color: #ccc; }
+  .quote-subtab.active { color: #e2a308; border-bottom-color: #e2a308; }
+  .quote-subpanel { display: none; flex: 1; overflow-y: auto; }
+  .quote-subpanel.active { display: block; }
+  .catalogue-columns { display: flex; gap: 20px; }
+  .catalogue-column { flex: 1; min-width: 0; }
   .catalogue-vendor { margin-bottom: 12px; }
   .catalogue-vendor-header {
     display: flex; align-items: center; gap: 8px; padding: 8px 12px;
@@ -593,22 +597,19 @@
     text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #2a2a4a;
   }
   .catalogue-item {
-    display: flex; align-items: center; gap: 6px; padding: 6px 12px;
-    border-bottom: 1px solid #1a1a2e; font-size: 12px; color: #ccc;
-    transition: background 0.1s;
+    display: flex; align-items: center; gap: 4px; padding: 5px 8px;
+    border-bottom: 1px solid #1a1a2e; font-size: 11px; color: #ccc;
   }
-  .catalogue-item:hover { background: #142650; }
   .catalogue-item:last-child { border-bottom: none; }
-  .catalogue-item .cat-name { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .catalogue-item .cat-detail { color: #888; font-size: 11px; flex: 0 0 80px; text-align: right; }
-  .catalogue-item .cat-price { color: #e2a308; font-size: 11px; flex: 0 0 80px; text-align: right; font-weight: 600; }
-  .catalogue-item .btn-add-cat {
-    flex: 0 0 24px; height: 24px; background: #27ae60; color: #fff; border: none;
-    border-radius: 50%; font-size: 16px; font-weight: 700; cursor: pointer; display: flex;
-    align-items: center; justify-content: center; padding: 0; line-height: 1; opacity: 0.6;
+  .catalogue-item .cat-name { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 11px; }
+  .catalogue-item .cat-detail { color: #888; font-size: 10px; flex: 0 0 55px; text-align: center; }
+  .catalogue-item .cat-price { color: #e2a308; font-size: 10px; flex: 0 0 60px; text-align: right; font-weight: 600; }
+  .catalogue-item .cat-input {
+    width: 50px; padding: 2px 4px; background: #0f3460; border: 1px solid #333; border-radius: 3px;
+    color: #fff; font-size: 10px; text-align: center; flex: 0 0 50px;
   }
-  .catalogue-item:hover .btn-add-cat { opacity: 1; }
-  .catalogue-item .btn-add-cat:hover { background: #2ecc71; }
+  .catalogue-item .cat-input:focus { border-color: #e2a308; outline: none; }
+  .catalogue-item .cat-ext { color: #27ae60; font-size: 10px; flex: 0 0 65px; text-align: right; font-weight: 600; }
 
 </style>
 </head>
@@ -836,113 +837,114 @@
   </div>
 </div>
 
-<div class="tab-panel" id="tabQuote">
-  <div class="quote-panel">
-    <div class="quote-scroll">
+<div class="tab-panel" id="tabQuote" style="flex-direction:column;">
+  <div class="quote-subtab-bar">
+    <button class="quote-subtab active" onclick="switchQuoteSubtab('catalogue')">Material Catalogue</button>
+    <button class="quote-subtab" onclick="switchQuoteSubtab('labor')">Labor, Travel &amp; Misc</button>
+    <button class="quote-subtab" onclick="switchQuoteSubtab('summary')">Cost Summary</button>
+  </div>
 
-      <!-- A. Materials -->
-      <div class="quote-section" id="quoteMaterialsSection">
-        <div style="display:flex; align-items:center; margin-bottom:12px;">
-          <h3 style="margin:0;">Materials</h3>
-          <div class="cat-view-toggle">
-            <button class="btn btn-secondary btn-sm active" id="matViewSearch" onclick="setMatView('search')">Search</button>
-            <button class="btn btn-secondary btn-sm" id="matViewCatalogue" onclick="setMatView('catalogue')">Catalogue</button>
+  <!-- Sub-tab: Material Catalogue -->
+  <div class="quote-subpanel active" id="quoteSubCatalogue">
+    <div class="quote-panel">
+      <div class="quote-scroll">
+        <div class="quote-section">
+          <div style="display:flex; align-items:center; gap:12px; margin-bottom:12px;">
+            <h3 style="margin:0;">Material Catalogue</h3>
+            <div class="quote-search-wrap" style="flex:1; margin-bottom:0;">
+              <input type="text" class="sys-search-input" id="quoteMaterialSearch" placeholder="Search products..." oninput="filterQuoteMaterials()" onfocus="filterQuoteMaterials()" style="font-size:12px;">
+              <div class="sys-dropdown" id="quoteMaterialDropdown"></div>
+            </div>
           </div>
-        </div>
-        <div id="matSearchView">
-          <div class="quote-search-wrap">
-            <input type="text" class="sys-search-input" id="quoteMaterialSearch" placeholder="Search products by name, number, vendor, or category..." oninput="filterQuoteMaterials()" onfocus="filterQuoteMaterials()">
-            <div class="sys-dropdown" id="quoteMaterialDropdown"></div>
-          </div>
-        </div>
-        <div id="matCatalogueView" style="display:none;">
-          <div class="catalogue-wrap" id="catalogueContainer"></div>
-        </div>
-        <table class="quote-table">
-          <thead>
-            <tr><th>Vendor</th><th>Product</th><th>Color</th><th>UOM</th><th style="width:70px">Qty</th><th style="width:90px">Unit Rate</th><th style="width:90px">Quoted Rate</th><th style="width:100px">Extension</th><th style="width:30px"></th></tr>
-          </thead>
-          <tbody id="quoteMaterialsBody"></tbody>
-        </table>
-        <div class="quote-total-row" id="quoteMaterialsTotal">Materials Total: $0.00</div>
-      </div>
-
-      <!-- B. Labor -->
-      <div class="quote-section" id="quoteLaborSection">
-        <h3>Labor</h3>
-        <table class="quote-table">
-          <thead>
-            <tr><th>Activity</th><th style="width:70px">Men</th><th style="width:70px">Days</th><th style="width:90px">Rate</th><th style="width:100px">Extension</th><th style="width:30px"></th></tr>
-          </thead>
-          <tbody id="quoteLaborBody"></tbody>
-        </table>
-        <button class="btn btn-secondary btn-sm" onclick="addQuoteLaborRow()" style="margin-top:6px;">+ Add Labor Row</button>
-        <div class="quote-total-row" id="quoteLaborTotal">Labor Total: $0.00</div>
-      </div>
-
-      <!-- C. Travel & Expenses -->
-      <div class="quote-section" id="quoteTravelSection">
-        <h3>Travel &amp; Expenses</h3>
-        <table class="quote-table">
-          <thead>
-            <tr><th>Cost Code</th><th>Description</th><th style="width:70px">Qty</th><th style="width:90px">Rate</th><th style="width:100px">Extension</th></tr>
-          </thead>
-          <tbody id="quoteTravelBody"></tbody>
-        </table>
-        <div class="quote-total-row" id="quoteTravelTotal">Travel Total: $0.00</div>
-      </div>
-
-      <!-- D. Additional Costs -->
-      <div class="quote-section" id="quoteAdditionalSection">
-        <h3>Additional Costs</h3>
-        <table class="quote-table">
-          <thead>
-            <tr><th>Cost Code</th><th>Description</th><th style="width:120px">Amount</th><th>Notes</th></tr>
-          </thead>
-          <tbody id="quoteAdditionalBody"></tbody>
-        </table>
-        <div class="quote-total-row" id="quoteAdditionalTotal">Additional Total: $0.00</div>
-      </div>
-
-      <!-- E. Tax -->
-      <div class="quote-section" id="quoteTaxSection">
-        <h3>Tax</h3>
-        <div style="display:flex; align-items:center; gap:12px;">
-          <label style="font-size:12px; color:#aaa;">Tax Rate %</label>
-          <input type="number" id="quoteTaxRate" value="10" step="0.01" min="0" max="100" style="width:100px; padding:7px 9px; background:#0f3460; border:1px solid #333; border-radius:4px; color:#fff; font-size:13px;" oninput="onQuoteTaxChange(this.value)">
-          <span style="font-size:14px; color:#ccc;" id="quoteTaxAmount">Tax on Materials: $0.00</span>
+          <div class="catalogue-columns" id="catalogueContainer"></div>
+          <div class="quote-total-row" id="quoteMaterialsTotal" style="margin-top:12px;">Materials Total: $0.00</div>
         </div>
       </div>
+    </div>
+  </div>
 
-      <!-- F. Cost Summary -->
-      <div class="quote-section" id="quoteSummarySection">
-        <h3>Cost Summary</h3>
-        <table class="quote-summary-table">
-          <tbody>
-            <tr><td>Materials Subtotal</td><td id="sumMaterials">$0.00</td></tr>
-            <tr><td>Labor Subtotal</td><td id="sumLabor">$0.00</td></tr>
-            <tr><td>Travel &amp; Expenses Subtotal</td><td id="sumTravel">$0.00</td></tr>
-            <tr><td>Additional Costs Subtotal</td><td id="sumAdditional">$0.00</td></tr>
-            <tr><td>Tax</td><td id="sumTax">$0.00</td></tr>
-            <tr class="grand-total"><td>Grand Total (Cost)</td><td id="sumGrandTotal">$0.00</td></tr>
-          </tbody>
-        </table>
-        <div style="display:flex; align-items:center; gap:16px; margin-top:16px; padding-top:12px; border-top:1px solid #333;">
-          <div>
-            <label style="font-size:11px; color:#aaa; text-transform:uppercase; letter-spacing:0.5px;">Markup %</label>
-            <input type="number" id="quoteMarkupPct" value="0" step="0.1" min="0" style="width:100px; padding:7px 9px; background:#0f3460; border:1px solid #333; border-radius:4px; color:#fff; font-size:13px; margin-top:3px;" oninput="onQuoteMarkupChange(this.value)">
-          </div>
-          <div style="flex:1;">
-            <div style="font-size:12px; color:#aaa; margin-bottom:4px;">Bid Amount</div>
-            <div style="font-size:22px; font-weight:700; color:#e2a308;" id="quoteBidAmount">$0.00</div>
-          </div>
-          <div>
-            <div style="font-size:12px; color:#aaa; margin-bottom:4px;">Gross Profit %</div>
-            <div style="font-size:18px; font-weight:700; color:#27ae60;" id="quoteGrossProfit">0.0%</div>
+  <!-- Sub-tab: Labor, Travel & Misc -->
+  <div class="quote-subpanel" id="quoteSubLabor">
+    <div class="quote-panel">
+      <div class="quote-scroll">
+        <div class="quote-section" id="quoteLaborSection">
+          <h3>Labor</h3>
+          <table class="quote-table">
+            <thead>
+              <tr><th>Activity</th><th style="width:70px">Men</th><th style="width:70px">Days</th><th style="width:90px">Rate</th><th style="width:100px">Extension</th><th style="width:30px"></th></tr>
+            </thead>
+            <tbody id="quoteLaborBody"></tbody>
+          </table>
+          <button class="btn btn-secondary btn-sm" onclick="addQuoteLaborRow()" style="margin-top:6px;">+ Add Labor Row</button>
+          <div class="quote-total-row" id="quoteLaborTotal">Labor Total: $0.00</div>
+        </div>
+
+        <div class="quote-section" id="quoteTravelSection">
+          <h3>Travel &amp; Expenses</h3>
+          <table class="quote-table">
+            <thead>
+              <tr><th>Cost Code</th><th>Description</th><th style="width:70px">Qty</th><th style="width:90px">Rate</th><th style="width:100px">Extension</th></tr>
+            </thead>
+            <tbody id="quoteTravelBody"></tbody>
+          </table>
+          <div class="quote-total-row" id="quoteTravelTotal">Travel Total: $0.00</div>
+        </div>
+
+        <div class="quote-section" id="quoteAdditionalSection">
+          <h3>Additional Costs</h3>
+          <table class="quote-table">
+            <thead>
+              <tr><th>Cost Code</th><th>Description</th><th style="width:120px">Amount</th><th>Notes</th></tr>
+            </thead>
+            <tbody id="quoteAdditionalBody"></tbody>
+          </table>
+          <div class="quote-total-row" id="quoteAdditionalTotal">Additional Total: $0.00</div>
+        </div>
+
+        <div class="quote-section" id="quoteTaxSection">
+          <h3>Tax</h3>
+          <div style="display:flex; align-items:center; gap:12px;">
+            <label style="font-size:12px; color:#aaa;">Tax Rate %</label>
+            <input type="number" id="quoteTaxRate" value="10" step="0.01" min="0" max="100" style="width:100px; padding:7px 9px; background:#0f3460; border:1px solid #333; border-radius:4px; color:#fff; font-size:13px;" oninput="onQuoteTaxChange(this.value)">
+            <span style="font-size:14px; color:#ccc;" id="quoteTaxAmount">Tax on Materials: $0.00</span>
           </div>
         </div>
       </div>
+    </div>
+  </div>
 
+  <!-- Sub-tab: Cost Summary -->
+  <div class="quote-subpanel" id="quoteSubSummary">
+    <div class="quote-panel">
+      <div class="quote-scroll">
+        <div class="quote-section" id="quoteSummarySection">
+          <h3>Cost Summary</h3>
+          <table class="quote-summary-table">
+            <tbody>
+              <tr><td>Materials Subtotal</td><td id="sumMaterials">$0.00</td></tr>
+              <tr><td>Labor Subtotal</td><td id="sumLabor">$0.00</td></tr>
+              <tr><td>Travel &amp; Expenses Subtotal</td><td id="sumTravel">$0.00</td></tr>
+              <tr><td>Additional Costs Subtotal</td><td id="sumAdditional">$0.00</td></tr>
+              <tr><td>Tax</td><td id="sumTax">$0.00</td></tr>
+              <tr class="grand-total"><td>Grand Total (Cost)</td><td id="sumGrandTotal">$0.00</td></tr>
+            </tbody>
+          </table>
+          <div style="display:flex; align-items:center; gap:16px; margin-top:16px; padding-top:12px; border-top:1px solid #333;">
+            <div>
+              <label style="font-size:11px; color:#aaa; text-transform:uppercase; letter-spacing:0.5px;">Markup %</label>
+              <input type="number" id="quoteMarkupPct" value="0" step="0.1" min="0" style="width:100px; padding:7px 9px; background:#0f3460; border:1px solid #333; border-radius:4px; color:#fff; font-size:13px; margin-top:3px;" oninput="onQuoteMarkupChange(this.value)">
+            </div>
+            <div style="flex:1;">
+              <div style="font-size:12px; color:#aaa; margin-bottom:4px;">Bid Amount</div>
+              <div style="font-size:22px; font-weight:700; color:#e2a308;" id="quoteBidAmount">$0.00</div>
+            </div>
+            <div>
+              <div style="font-size:12px; color:#aaa; margin-bottom:4px;">Gross Profit %</div>
+              <div style="font-size:18px; font-weight:700; color:#27ae60;" id="quoteGrossProfit">0.0%</div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -4776,30 +4778,38 @@ function filterQuoteMaterials() {
 }
 
 // ============================================================
-// MATERIAL VIEW TOGGLE: Search vs Catalogue
+// QUOTE SUB-TABS
 // ============================================================
-let _matView = 'search';
-
-function setMatView(view) {
-  _matView = view;
-  document.getElementById('matSearchView').style.display = view === 'search' ? '' : 'none';
-  document.getElementById('matCatalogueView').style.display = view === 'catalogue' ? '' : 'none';
-  document.getElementById('matViewSearch').classList.toggle('active', view === 'search');
-  document.getElementById('matViewCatalogue').classList.toggle('active', view === 'catalogue');
-  if (view === 'catalogue') renderCatalogueView();
+function switchQuoteSubtab(name) {
+  document.querySelectorAll('.quote-subtab').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.quote-subpanel').forEach(p => p.classList.remove('active'));
+  document.querySelector(`.quote-subtab[onclick*="${name}"]`).classList.add('active');
+  const panelMap = { catalogue: 'quoteSubCatalogue', labor: 'quoteSubLabor', summary: 'quoteSubSummary' };
+  document.getElementById(panelMap[name]).classList.add('active');
+  if (name === 'catalogue') renderCatalogueView();
+  if (name === 'summary') recalcQuoteSummary();
 }
 
+// ============================================================
+// CATALOGUE VIEW: inline editable, two-column layout
+// ============================================================
 function renderCatalogueView() {
   const container = document.getElementById('catalogueContainer');
   if (!container || !_productsCatalogCache.length) {
-    if (container) container.innerHTML = '<div style="color:#666;text-align:center;padding:20px;">Loading catalogue...</div>';
+    if (container) container.innerHTML = '<div style="color:#666;text-align:center;padding:40px;">Loading catalogue...</div>';
     return;
   }
 
-  // Group products by vendor, then by category
+  ensureQuoteState();
+
+  // Build a lookup: catalogId → material entry in state (for qty/quotedRate)
+  const matLookup = {};
+  state.quote.materials.forEach((m, i) => { if (m.catalogId) matLookup[m.catalogId] = { idx: i, ...m }; });
+
+  // Group products by vendor, then category
   const vendors = {};
   _productsCatalogCache.forEach(p => {
-    if (!p.active && p.active !== undefined) return;
+    if (p.active === false) return;
     const v = p.vendor || 'Other';
     if (!vendors[v]) vendors[v] = {};
     const cat = p.category || 'General';
@@ -4807,49 +4817,117 @@ function renderCatalogueView() {
     vendors[v][cat].push(p);
   });
 
-  // Check which catalog IDs are already in the quote
-  const addedIds = new Set();
-  if (state.quote && state.quote.materials) {
-    state.quote.materials.forEach(m => { if (m.catalogId) addedIds.add(m.catalogId); });
-  }
-
-  let html = '';
   const vendorOrder = ['SW', 'SGC', 'SIKA', 'Other'];
   const sortedVendors = Object.keys(vendors).sort((a, b) => {
     const ai = vendorOrder.indexOf(a); const bi = vendorOrder.indexOf(b);
     return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
   });
 
-  sortedVendors.forEach(vendor => {
+  // Split vendors across two columns
+  const col1Vendors = sortedVendors.filter((_, i) => i % 2 === 0);
+  const col2Vendors = sortedVendors.filter((_, i) => i % 2 === 1);
+
+  function renderVendorBlock(vendor) {
     const categories = vendors[vendor];
     const totalProducts = Object.values(categories).reduce((sum, arr) => sum + arr.length, 0);
-    html += `<div class="catalogue-vendor">
+    let html = `<div class="catalogue-vendor">
       <div class="catalogue-vendor-header" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? '' : 'none';">
         <h4>${escH(vendor)}</h4>
         <span class="vendor-count">${totalProducts} products</span>
       </div>
       <div class="catalogue-vendor-body">`;
 
-    // Sort categories
     const catNames = Object.keys(categories).sort();
     catNames.forEach(cat => {
       if (cat) html += `<div class="catalogue-cat-header">${escH(cat)}</div>`;
       categories[cat].forEach(p => {
-        const isAdded = addedIds.has(p.id);
-        html += `<div class="catalogue-item" ${isAdded ? 'style="opacity:0.5;"' : ''}>
+        const entry = matLookup[p.id];
+        const qty = entry ? entry.qty : '';
+        const qr = entry && entry.quotedRate != null ? entry.quotedRate : '';
+        const rate = qr !== '' ? parseFloat(qr) : parseFloat(p.unit_rate) || 0;
+        const ext = qty ? (parseFloat(qty) * rate) : 0;
+        html += `<div class="catalogue-item">
           <span class="cat-name" title="${escH(p.product_name)}">${escH(p.product_name)}</span>
-          <span class="cat-detail">${escH(p.color || '')}</span>
           <span class="cat-detail">${escH(p.uom || '')}</span>
           <span class="cat-price">${fmtMoney(p.unit_rate)}</span>
-          <button class="btn-add-cat" onclick="addQuoteMaterial('${p.id}'); renderCatalogueView();" title="${isAdded ? 'Already added' : 'Add to quote'}"${isAdded ? ' disabled style="opacity:0.2;"' : ''}>+</button>
+          <input class="cat-input" type="number" min="0" placeholder="Qty" value="${qty || ''}"
+            onchange="onCatalogueQtyChange('${p.id}', this.value)" title="Quantity">
+          <input class="cat-input" type="number" min="0" step="0.01" placeholder="Qt Rate" value="${qr}"
+            onchange="onCatalogueRateChange('${p.id}', this.value)" title="Quoted Rate Override">
+          <span class="cat-ext">${ext > 0 ? fmtMoney(ext) : ''}</span>
         </div>`;
       });
     });
 
     html += `</div></div>`;
-  });
+    return html;
+  }
+
+  let html = '<div class="catalogue-column">';
+  col1Vendors.forEach(v => { html += renderVendorBlock(v); });
+  html += '</div><div class="catalogue-column">';
+  col2Vendors.forEach(v => { html += renderVendorBlock(v); });
+  html += '</div>';
 
   container.innerHTML = html;
+  updateCatalogueMaterialsTotal();
+}
+
+// When qty changes in catalogue view
+function onCatalogueQtyChange(catalogId, val) {
+  ensureQuoteState();
+  const qty = parseFloat(val) || 0;
+  const idx = state.quote.materials.findIndex(m => m.catalogId === catalogId);
+
+  if (qty > 0 && idx === -1) {
+    // Add new material entry
+    const p = _productsCatalogCache.find(x => x.id === catalogId);
+    if (!p) return;
+    state.quote.materials.push({
+      catalogId: p.id, vendor: p.vendor || '', productName: p.product_name || '',
+      color: p.color || '', uom: p.uom || '', qty: qty,
+      unitRate: parseFloat(p.unit_rate) || 0, quotedRate: null
+    });
+  } else if (qty > 0 && idx >= 0) {
+    state.quote.materials[idx].qty = qty;
+  } else if (qty === 0 && idx >= 0) {
+    state.quote.materials.splice(idx, 1);
+  }
+  schedulePersist();
+  updateCatalogueMaterialsTotal();
+}
+
+// When quoted rate changes in catalogue view
+function onCatalogueRateChange(catalogId, val) {
+  ensureQuoteState();
+  const idx = state.quote.materials.findIndex(m => m.catalogId === catalogId);
+  if (idx === -1) {
+    // If no entry yet, create one with qty 0 and the quoted rate
+    const p = _productsCatalogCache.find(x => x.id === catalogId);
+    if (!p) return;
+    state.quote.materials.push({
+      catalogId: p.id, vendor: p.vendor || '', productName: p.product_name || '',
+      color: p.color || '', uom: p.uom || '', qty: 0,
+      unitRate: parseFloat(p.unit_rate) || 0, quotedRate: val === '' ? null : (parseFloat(val) || 0)
+    });
+  } else {
+    state.quote.materials[idx].quotedRate = val === '' ? null : (parseFloat(val) || 0);
+  }
+  schedulePersist();
+  // Update the extension display for this row without full re-render
+  updateCatalogueMaterialsTotal();
+}
+
+function updateCatalogueMaterialsTotal() {
+  ensureQuoteState();
+  let total = 0;
+  state.quote.materials.forEach(m => {
+    const rate = m.quotedRate != null ? m.quotedRate : m.unitRate;
+    total += (m.qty || 0) * rate;
+  });
+  const el = document.getElementById('quoteMaterialsTotal');
+  if (el) el.textContent = 'Materials Total: ' + fmtMoney(total);
+  recalcQuoteSummary();
 }
 
 function addQuoteMaterial(catalogId) {
@@ -4870,8 +4948,9 @@ function addQuoteMaterial(catalogId) {
   document.getElementById('quoteMaterialDropdown').classList.remove('open');
   document.getElementById('quoteMaterialDropdown').innerHTML = '';
   schedulePersist();
-  renderQuoteMaterials();
-  recalcQuoteSummary();
+  updateCatalogueMaterialsTotal();
+  // If catalogue is visible, refresh it
+  if (document.getElementById('quoteSubCatalogue').classList.contains('active')) renderCatalogueView();
 }
 
 function removeQuoteMaterial(idx) {
@@ -4894,26 +4973,8 @@ function onQuoteMaterialChange(idx, field, val) {
 }
 
 function renderQuoteMaterials() {
-  ensureQuoteState();
-  const tbody = document.getElementById('quoteMaterialsBody');
-  let total = 0;
-  tbody.innerHTML = state.quote.materials.map((m, i) => {
-    const rate = m.quotedRate != null ? m.quotedRate : m.unitRate;
-    const ext = (m.qty || 0) * rate;
-    total += ext;
-    return `<tr>
-      <td><span class="quote-vendor-tag">${escH(m.vendor)}</span></td>
-      <td>${escH(m.productName)}</td>
-      <td>${escH(m.color)}</td>
-      <td>${escH(m.uom)}</td>
-      <td><input type="number" class="narrow" value="${m.qty || ''}" min="0" step="1" onchange="onQuoteMaterialChange(${i},'qty',this.value)"></td>
-      <td>${fmtMoney(m.unitRate)}</td>
-      <td><input type="number" class="narrow" value="${m.quotedRate != null ? m.quotedRate : ''}" min="0" step="0.01" placeholder="—" onchange="onQuoteMaterialChange(${i},'quotedRate',this.value)"></td>
-      <td style="text-align:right; font-weight:600;">${fmtMoney(ext)}</td>
-      <td><button class="btn-remove" onclick="removeQuoteMaterial(${i})">×</button></td>
-    </tr>`;
-  }).join('');
-  document.getElementById('quoteMaterialsTotal').textContent = 'Materials Total: ' + fmtMoney(total);
+  // Replaced by catalogue view — just update the total
+  updateCatalogueMaterialsTotal();
 }
 
 // ---- Labor ----
@@ -5094,7 +5155,7 @@ function renderQuoteTool() {
   document.getElementById('quoteTaxRate').value = state.quote.taxRate;
   document.getElementById('quoteMarkupPct').value = state.quote.markupPct;
 
-  renderQuoteMaterials();
+  renderCatalogueView();
   renderQuoteLabor();
   renderQuoteTravel();
   renderQuoteAdditional();
