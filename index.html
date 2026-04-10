@@ -536,6 +536,45 @@
   ::-webkit-scrollbar-track { background: #1a1a2e; }
   ::-webkit-scrollbar-thumb { background: #e2a308; border-radius: 4px; }
 
+  /* ============ QUOTE TOOL ============ */
+  .quote-panel { flex: 1; overflow-y: auto; background: #2d2d2d; padding: 20px; }
+  .quote-scroll { max-width: 1000px; margin: 0 auto; }
+  .quote-section { background: #1e1e3a; border-radius: 8px; padding: 16px 20px; margin-bottom: 12px; border: 1px solid #2a2a4a; }
+  .quote-section h3 {
+    color: #e2a308; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px;
+    border-bottom: 1px solid #333; padding-bottom: 6px;
+  }
+  .quote-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 8px; }
+  .quote-table th {
+    text-align: left; padding: 6px 8px; color: #e2a308; font-size: 10px; text-transform: uppercase;
+    letter-spacing: 0.5px; border-bottom: 1px solid #333; background: #0f1d3a;
+  }
+  .quote-table td { padding: 6px 8px; color: #ccc; border-bottom: 1px solid #2a2a4a; vertical-align: middle; }
+  .quote-table input {
+    width: 100%; padding: 5px 7px; background: #0f3460; border: 1px solid #333; border-radius: 3px;
+    color: #fff; font-size: 12px; font-family: inherit;
+  }
+  .quote-table input:focus { border-color: #e2a308; outline: none; }
+  .quote-table input.narrow { width: 80px; }
+  .quote-table .btn-remove {
+    width: 24px; height: 24px; background: #e74c3c; color: #fff; border: none; border-radius: 50%;
+    font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center;
+    justify-content: center; padding: 0; line-height: 1;
+  }
+  .quote-table .btn-remove:hover { background: #c0392b; }
+  .quote-vendor-tag {
+    display: inline-block; padding: 2px 6px; border-radius: 3px; font-size: 10px; font-weight: 600;
+    background: rgba(226,163,8,0.2); color: #e2a308; white-space: nowrap;
+  }
+  .quote-total-row { text-align: right; font-size: 14px; font-weight: 700; color: #e2a308; padding: 8px 0; }
+  .quote-summary-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  .quote-summary-table td { padding: 8px 12px; border-bottom: 1px solid #2a2a4a; }
+  .quote-summary-table td:first-child { color: #ccc; }
+  .quote-summary-table td:last-child { text-align: right; color: #fff; font-weight: 600; }
+  .quote-summary-table tr.grand-total td { color: #e2a308; font-size: 18px; font-weight: 700; border-top: 2px solid #e2a308; }
+  .quote-search-wrap { position: relative; margin-bottom: 12px; }
+  .quote-search-wrap .sys-dropdown { border-radius: 0 0 6px 6px; }
+
 </style>
 </head>
 <body>
@@ -681,6 +720,7 @@
 <div class="tab-bar">
   <button class="tab-btn active" onclick="switchTab('builder')">Proposal Builder</button>
   <button class="tab-btn" onclick="switchTab('project')">Project</button>
+  <button class="tab-btn" onclick="switchTab('quote')">Quote Tool</button>
 </div>
 
 <div class="tab-panel active" id="tabBuilder">
@@ -757,6 +797,106 @@
           </div>
         </div>
       </div>
+    </div>
+  </div>
+</div>
+
+<div class="tab-panel" id="tabQuote">
+  <div class="quote-panel">
+    <div class="quote-scroll">
+
+      <!-- A. Materials -->
+      <div class="quote-section" id="quoteMaterialsSection">
+        <h3>Materials</h3>
+        <div class="quote-search-wrap">
+          <input type="text" class="sys-search-input" id="quoteMaterialSearch" placeholder="Search products by name, number, vendor, or category..." oninput="filterQuoteMaterials()" onfocus="filterQuoteMaterials()">
+          <div class="sys-dropdown" id="quoteMaterialDropdown"></div>
+        </div>
+        <table class="quote-table">
+          <thead>
+            <tr><th>Vendor</th><th>Product</th><th>Color</th><th>UOM</th><th style="width:70px">Qty</th><th style="width:90px">Unit Rate</th><th style="width:90px">Quoted Rate</th><th style="width:100px">Extension</th><th style="width:30px"></th></tr>
+          </thead>
+          <tbody id="quoteMaterialsBody"></tbody>
+        </table>
+        <div class="quote-total-row" id="quoteMaterialsTotal">Materials Total: $0.00</div>
+      </div>
+
+      <!-- B. Labor -->
+      <div class="quote-section" id="quoteLaborSection">
+        <h3>Labor</h3>
+        <table class="quote-table">
+          <thead>
+            <tr><th>Activity</th><th style="width:70px">Men</th><th style="width:70px">Days</th><th style="width:90px">Rate</th><th style="width:100px">Extension</th><th style="width:30px"></th></tr>
+          </thead>
+          <tbody id="quoteLaborBody"></tbody>
+        </table>
+        <button class="btn btn-secondary btn-sm" onclick="addQuoteLaborRow()" style="margin-top:6px;">+ Add Labor Row</button>
+        <div class="quote-total-row" id="quoteLaborTotal">Labor Total: $0.00</div>
+      </div>
+
+      <!-- C. Travel & Expenses -->
+      <div class="quote-section" id="quoteTravelSection">
+        <h3>Travel &amp; Expenses</h3>
+        <table class="quote-table">
+          <thead>
+            <tr><th>Cost Code</th><th>Description</th><th style="width:70px">Qty</th><th style="width:90px">Rate</th><th style="width:100px">Extension</th></tr>
+          </thead>
+          <tbody id="quoteTravelBody"></tbody>
+        </table>
+        <div class="quote-total-row" id="quoteTravelTotal">Travel Total: $0.00</div>
+      </div>
+
+      <!-- D. Additional Costs -->
+      <div class="quote-section" id="quoteAdditionalSection">
+        <h3>Additional Costs</h3>
+        <table class="quote-table">
+          <thead>
+            <tr><th>Cost Code</th><th>Description</th><th style="width:120px">Amount</th><th>Notes</th></tr>
+          </thead>
+          <tbody id="quoteAdditionalBody"></tbody>
+        </table>
+        <div class="quote-total-row" id="quoteAdditionalTotal">Additional Total: $0.00</div>
+      </div>
+
+      <!-- E. Tax -->
+      <div class="quote-section" id="quoteTaxSection">
+        <h3>Tax</h3>
+        <div style="display:flex; align-items:center; gap:12px;">
+          <label style="font-size:12px; color:#aaa;">Tax Rate %</label>
+          <input type="number" id="quoteTaxRate" value="10" step="0.01" min="0" max="100" style="width:100px; padding:7px 9px; background:#0f3460; border:1px solid #333; border-radius:4px; color:#fff; font-size:13px;" oninput="onQuoteTaxChange(this.value)">
+          <span style="font-size:14px; color:#ccc;" id="quoteTaxAmount">Tax on Materials: $0.00</span>
+        </div>
+      </div>
+
+      <!-- F. Cost Summary -->
+      <div class="quote-section" id="quoteSummarySection">
+        <h3>Cost Summary</h3>
+        <table class="quote-summary-table">
+          <tbody>
+            <tr><td>Materials Subtotal</td><td id="sumMaterials">$0.00</td></tr>
+            <tr><td>Labor Subtotal</td><td id="sumLabor">$0.00</td></tr>
+            <tr><td>Travel &amp; Expenses Subtotal</td><td id="sumTravel">$0.00</td></tr>
+            <tr><td>Additional Costs Subtotal</td><td id="sumAdditional">$0.00</td></tr>
+            <tr><td>Tax</td><td id="sumTax">$0.00</td></tr>
+            <tr class="grand-total"><td>Grand Total (Cost)</td><td id="sumGrandTotal">$0.00</td></tr>
+          </tbody>
+        </table>
+        <div style="display:flex; align-items:center; gap:16px; margin-top:16px; padding-top:12px; border-top:1px solid #333;">
+          <div>
+            <label style="font-size:11px; color:#aaa; text-transform:uppercase; letter-spacing:0.5px;">Markup %</label>
+            <input type="number" id="quoteMarkupPct" value="0" step="0.1" min="0" style="width:100px; padding:7px 9px; background:#0f3460; border:1px solid #333; border-radius:4px; color:#fff; font-size:13px; margin-top:3px;" oninput="onQuoteMarkupChange(this.value)">
+          </div>
+          <div style="flex:1;">
+            <div style="font-size:12px; color:#aaa; margin-bottom:4px;">Bid Amount</div>
+            <div style="font-size:22px; font-weight:700; color:#e2a308;" id="quoteBidAmount">$0.00</div>
+          </div>
+          <div>
+            <div style="font-size:12px; color:#aaa; margin-bottom:4px;">Gross Profit %</div>
+            <div style="font-size:18px; font-weight:700; color:#27ae60;" id="quoteGrossProfit">0.0%</div>
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 </div>
@@ -2184,6 +2324,11 @@ function switchTab(tabName) {
     if (src && dest) dest.innerHTML = src.innerHTML;
     refreshAllFileLists();
   }
+
+  // When switching to Quote tab, load caches and render
+  if (tabName === 'quote') {
+    initQuoteTool();
+  }
 }
 
 // ============================================================
@@ -2431,9 +2576,11 @@ async function resetToDefault() {
     inclusionBold: {},
     inclusionOverrides: {},
     workSchedule: 'both',
-    _warrantyType: 'standard-1yr'
+    _warrantyType: 'standard-1yr',
+    quote: null
   });
 
+  _quoteInitialized = false;
   INCLUSIONS_MASTER.forEach(inc => { state.inclusions[inc.id] = inc.default; });
   applyProfileDefaults();
   render();
@@ -4433,6 +4580,412 @@ document.addEventListener('keydown', function(e) {
 
 // NOTE: init() is now called from applyAuthState() once the user is authenticated + approved.
 // We do NOT call init() at page load anymore.
+
+// ============================================================
+// QUOTE TOOL
+// ============================================================
+let _productsCatalogCache = null;
+let _rateCardCache = null;
+let _quoteInitialized = false;
+
+const QUOTE_TRAVEL_CODES = [
+  '7-100','7-200','7-300','7-400','7-500','7-600','7-700','7-770',
+  '7-910','7-920','7-930','7-940','7-950','7-960'
+];
+
+const QUOTE_ADDITIONAL_CODES = [
+  { code: '4-100', label: 'Subcontractor' },
+  { code: '5-100', label: 'Freight' },
+  { code: '5-300', label: 'Equipment Rental' },
+  { code: '5-400', label: 'Tools' },
+  { code: '5-500', label: 'Consumables Box Store' },
+  { code: '5-550', label: 'PO Consumables' },
+  { code: '5-600', label: 'In-House Equipment' },
+  { code: '5-900', label: 'Warranty Markup' },
+  { code: '5-901', label: 'Contingency' }
+];
+
+const QUOTE_DEFAULT_LABOR = [
+  { activity: 'Prep', men: 0, days: 0, rate: 0 },
+  { activity: 'Cove', men: 0, days: 0, rate: 0 },
+  { activity: 'Trowel', men: 0, days: 0, rate: 0 },
+  { activity: 'Seal', men: 0, days: 0, rate: 0 },
+  { activity: 'Joints', men: 0, days: 0, rate: 0 }
+];
+
+function ensureQuoteState() {
+  if (!state.quote) {
+    state.quote = {
+      materials: [],
+      labor: JSON.parse(JSON.stringify(QUOTE_DEFAULT_LABOR)),
+      travel: {},
+      additional: {},
+      taxRate: 10,
+      markupPct: 0
+    };
+  }
+  // Ensure sub-objects
+  if (!state.quote.materials) state.quote.materials = [];
+  if (!state.quote.labor) state.quote.labor = JSON.parse(JSON.stringify(QUOTE_DEFAULT_LABOR));
+  if (!state.quote.travel) state.quote.travel = {};
+  if (!state.quote.additional) state.quote.additional = {};
+  if (state.quote.taxRate == null) state.quote.taxRate = 10;
+  if (state.quote.markupPct == null) state.quote.markupPct = 0;
+}
+
+async function fetchProductsCatalog() {
+  if (_productsCatalogCache) return _productsCatalogCache;
+  try {
+    const { data, error } = await supa.from('products_catalog').select('*').eq('active', true).order('vendor').order('product_name');
+    if (error) throw error;
+    _productsCatalogCache = data || [];
+  } catch (e) {
+    console.warn('Failed to fetch products_catalog:', e);
+    _productsCatalogCache = [];
+  }
+  return _productsCatalogCache;
+}
+
+async function fetchRateCard() {
+  if (_rateCardCache) return _rateCardCache;
+  try {
+    const { data, error } = await supa.from('rate_card').select('*').eq('active', true);
+    if (error) throw error;
+    _rateCardCache = data || [];
+  } catch (e) {
+    console.warn('Failed to fetch rate_card:', e);
+    _rateCardCache = [];
+  }
+  return _rateCardCache;
+}
+
+function getRateByCode(costCode) {
+  if (!_rateCardCache) return { rate: 0, description: costCode };
+  const r = _rateCardCache.find(x => x.cost_code === costCode);
+  return r ? { rate: parseFloat(r.default_rate) || 0, description: r.description || costCode, unit: r.unit || '' } : { rate: 0, description: costCode, unit: '' };
+}
+
+async function initQuoteTool() {
+  ensureQuoteState();
+  await Promise.all([fetchProductsCatalog(), fetchRateCard()]);
+
+  // Pre-fill labor rates from rate_card cost_code 2-100
+  if (!_quoteInitialized && _rateCardCache) {
+    const laborRate = getRateByCode('2-100');
+    state.quote.labor.forEach(row => {
+      if (!row.rate) row.rate = laborRate.rate;
+    });
+
+    // Pre-fill travel if empty
+    QUOTE_TRAVEL_CODES.forEach(code => {
+      if (!state.quote.travel[code]) {
+        const r = getRateByCode(code);
+        state.quote.travel[code] = { qty: 0, rate: r.rate };
+      }
+    });
+
+    // Pre-fill additional if empty
+    QUOTE_ADDITIONAL_CODES.forEach(item => {
+      if (state.quote.additional[item.code] == null) {
+        state.quote.additional[item.code] = { amount: 0, notes: '' };
+      }
+    });
+  }
+  _quoteInitialized = true;
+  renderQuoteTool();
+}
+
+function fmtMoney(n) {
+  return '$' + (parseFloat(n) || 0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+
+// ---- Materials ----
+function filterQuoteMaterials() {
+  const input = document.getElementById('quoteMaterialSearch');
+  const dd = document.getElementById('quoteMaterialDropdown');
+  const q = (input.value || '').toLowerCase().trim();
+  if (!q || !_productsCatalogCache) { dd.classList.remove('open'); dd.innerHTML = ''; return; }
+
+  const matches = _productsCatalogCache.filter(p => {
+    return (p.product_name || '').toLowerCase().includes(q)
+      || (p.product_number || '').toLowerCase().includes(q)
+      || (p.vendor || '').toLowerCase().includes(q)
+      || (p.category || '').toLowerCase().includes(q);
+  }).slice(0, 20);
+
+  if (!matches.length) {
+    dd.innerHTML = '<div class="sys-dropdown-empty">No products found</div>';
+    dd.classList.add('open');
+    return;
+  }
+
+  dd.innerHTML = matches.map((p, i) =>
+    `<div class="sys-dropdown-item" onclick="addQuoteMaterial(${p.id})">
+      <div class="sys-dropdown-name">${escH(p.product_name || '')}</div>
+      <div class="sys-dropdown-tags">${escH(p.vendor || '')} | ${escH(p.category || '')} | ${escH(p.product_number || '')}</div>
+      <div class="sys-dropdown-match">${escH(p.color || '')} | ${p.uom || ''} | ${fmtMoney(p.unit_rate)}</div>
+    </div>`
+  ).join('');
+  dd.classList.add('open');
+}
+
+function addQuoteMaterial(catalogId) {
+  ensureQuoteState();
+  const p = _productsCatalogCache.find(x => x.id === catalogId);
+  if (!p) return;
+  state.quote.materials.push({
+    catalogId: p.id,
+    vendor: p.vendor || '',
+    productName: p.product_name || '',
+    color: p.color || '',
+    uom: p.uom || '',
+    qty: 0,
+    unitRate: parseFloat(p.unit_rate) || 0,
+    quotedRate: null
+  });
+  document.getElementById('quoteMaterialSearch').value = '';
+  document.getElementById('quoteMaterialDropdown').classList.remove('open');
+  document.getElementById('quoteMaterialDropdown').innerHTML = '';
+  schedulePersist();
+  renderQuoteMaterials();
+  recalcQuoteSummary();
+}
+
+function removeQuoteMaterial(idx) {
+  ensureQuoteState();
+  state.quote.materials.splice(idx, 1);
+  schedulePersist();
+  renderQuoteMaterials();
+  recalcQuoteSummary();
+}
+
+function onQuoteMaterialChange(idx, field, val) {
+  ensureQuoteState();
+  const m = state.quote.materials[idx];
+  if (!m) return;
+  if (field === 'qty') m.qty = parseFloat(val) || 0;
+  if (field === 'quotedRate') m.quotedRate = val === '' ? null : (parseFloat(val) || 0);
+  schedulePersist();
+  renderQuoteMaterials();
+  recalcQuoteSummary();
+}
+
+function renderQuoteMaterials() {
+  ensureQuoteState();
+  const tbody = document.getElementById('quoteMaterialsBody');
+  let total = 0;
+  tbody.innerHTML = state.quote.materials.map((m, i) => {
+    const rate = m.quotedRate != null ? m.quotedRate : m.unitRate;
+    const ext = (m.qty || 0) * rate;
+    total += ext;
+    return `<tr>
+      <td><span class="quote-vendor-tag">${escH(m.vendor)}</span></td>
+      <td>${escH(m.productName)}</td>
+      <td>${escH(m.color)}</td>
+      <td>${escH(m.uom)}</td>
+      <td><input type="number" class="narrow" value="${m.qty || ''}" min="0" step="1" onchange="onQuoteMaterialChange(${i},'qty',this.value)"></td>
+      <td>${fmtMoney(m.unitRate)}</td>
+      <td><input type="number" class="narrow" value="${m.quotedRate != null ? m.quotedRate : ''}" min="0" step="0.01" placeholder="—" onchange="onQuoteMaterialChange(${i},'quotedRate',this.value)"></td>
+      <td style="text-align:right; font-weight:600;">${fmtMoney(ext)}</td>
+      <td><button class="btn-remove" onclick="removeQuoteMaterial(${i})">×</button></td>
+    </tr>`;
+  }).join('');
+  document.getElementById('quoteMaterialsTotal').textContent = 'Materials Total: ' + fmtMoney(total);
+}
+
+// ---- Labor ----
+function addQuoteLaborRow() {
+  ensureQuoteState();
+  const laborRate = getRateByCode('2-100');
+  state.quote.labor.push({ activity: '', men: 0, days: 0, rate: laborRate.rate });
+  schedulePersist();
+  renderQuoteLabor();
+  recalcQuoteSummary();
+}
+
+function removeQuoteLaborRow(idx) {
+  ensureQuoteState();
+  state.quote.labor.splice(idx, 1);
+  schedulePersist();
+  renderQuoteLabor();
+  recalcQuoteSummary();
+}
+
+function onQuoteLaborChange(idx, field, val) {
+  ensureQuoteState();
+  const row = state.quote.labor[idx];
+  if (!row) return;
+  if (field === 'activity') row.activity = val;
+  else if (field === 'men') row.men = parseFloat(val) || 0;
+  else if (field === 'days') row.days = parseFloat(val) || 0;
+  else if (field === 'rate') row.rate = parseFloat(val) || 0;
+  schedulePersist();
+  renderQuoteLabor();
+  recalcQuoteSummary();
+}
+
+function renderQuoteLabor() {
+  ensureQuoteState();
+  const tbody = document.getElementById('quoteLaborBody');
+  let total = 0;
+  tbody.innerHTML = state.quote.labor.map((row, i) => {
+    const ext = (row.men || 0) * (row.days || 0) * (row.rate || 0);
+    total += ext;
+    return `<tr>
+      <td><input type="text" value="${escH(row.activity)}" onchange="onQuoteLaborChange(${i},'activity',this.value)"></td>
+      <td><input type="number" class="narrow" value="${row.men || ''}" min="0" step="1" onchange="onQuoteLaborChange(${i},'men',this.value)"></td>
+      <td><input type="number" class="narrow" value="${row.days || ''}" min="0" step="0.5" onchange="onQuoteLaborChange(${i},'days',this.value)"></td>
+      <td><input type="number" class="narrow" value="${row.rate || ''}" min="0" step="0.01" onchange="onQuoteLaborChange(${i},'rate',this.value)"></td>
+      <td style="text-align:right; font-weight:600;">${fmtMoney(ext)}</td>
+      <td><button class="btn-remove" onclick="removeQuoteLaborRow(${i})">×</button></td>
+    </tr>`;
+  }).join('');
+  document.getElementById('quoteLaborTotal').textContent = 'Labor Total: ' + fmtMoney(total);
+}
+
+// ---- Travel ----
+function onQuoteTravelChange(code, field, val) {
+  ensureQuoteState();
+  if (!state.quote.travel[code]) state.quote.travel[code] = { qty: 0, rate: 0 };
+  if (field === 'qty') state.quote.travel[code].qty = parseFloat(val) || 0;
+  if (field === 'rate') state.quote.travel[code].rate = parseFloat(val) || 0;
+  schedulePersist();
+  renderQuoteTravel();
+  recalcQuoteSummary();
+}
+
+function renderQuoteTravel() {
+  ensureQuoteState();
+  const tbody = document.getElementById('quoteTravelBody');
+  let total = 0;
+  tbody.innerHTML = QUOTE_TRAVEL_CODES.map(code => {
+    const t = state.quote.travel[code] || { qty: 0, rate: 0 };
+    const info = getRateByCode(code);
+    const ext = (t.qty || 0) * (t.rate || 0);
+    total += ext;
+    return `<tr>
+      <td>${escH(code)}</td>
+      <td>${escH(info.description)}</td>
+      <td><input type="number" class="narrow" value="${t.qty || ''}" min="0" step="1" onchange="onQuoteTravelChange('${code}','qty',this.value)"></td>
+      <td><input type="number" class="narrow" value="${t.rate || ''}" min="0" step="0.01" onchange="onQuoteTravelChange('${code}','rate',this.value)"></td>
+      <td style="text-align:right; font-weight:600;">${fmtMoney(ext)}</td>
+    </tr>`;
+  }).join('');
+  document.getElementById('quoteTravelTotal').textContent = 'Travel Total: ' + fmtMoney(total);
+}
+
+// ---- Additional ----
+function onQuoteAdditionalChange(code, field, val) {
+  ensureQuoteState();
+  if (!state.quote.additional[code]) state.quote.additional[code] = { amount: 0, notes: '' };
+  if (field === 'amount') state.quote.additional[code].amount = parseFloat(val) || 0;
+  if (field === 'notes') state.quote.additional[code].notes = val;
+  schedulePersist();
+  renderQuoteAdditional();
+  recalcQuoteSummary();
+}
+
+function renderQuoteAdditional() {
+  ensureQuoteState();
+  const tbody = document.getElementById('quoteAdditionalBody');
+  let total = 0;
+  tbody.innerHTML = QUOTE_ADDITIONAL_CODES.map(item => {
+    const a = state.quote.additional[item.code] || { amount: 0, notes: '' };
+    total += (parseFloat(a.amount) || 0);
+    return `<tr>
+      <td>${escH(item.code)}</td>
+      <td>${escH(item.label)}</td>
+      <td><input type="number" value="${a.amount || ''}" min="0" step="0.01" onchange="onQuoteAdditionalChange('${item.code}','amount',this.value)"></td>
+      <td><input type="text" value="${escH(a.notes || '')}" onchange="onQuoteAdditionalChange('${item.code}','notes',this.value)" placeholder="Notes..."></td>
+    </tr>`;
+  }).join('');
+  document.getElementById('quoteAdditionalTotal').textContent = 'Additional Total: ' + fmtMoney(total);
+}
+
+// ---- Tax ----
+function onQuoteTaxChange(val) {
+  ensureQuoteState();
+  state.quote.taxRate = parseFloat(val) || 0;
+  schedulePersist();
+  recalcQuoteSummary();
+}
+
+// ---- Markup ----
+function onQuoteMarkupChange(val) {
+  ensureQuoteState();
+  state.quote.markupPct = parseFloat(val) || 0;
+  schedulePersist();
+  recalcQuoteSummary();
+}
+
+// ---- Summary ----
+function calcQuoteTotals() {
+  ensureQuoteState();
+  let matTotal = 0;
+  state.quote.materials.forEach(m => {
+    const rate = m.quotedRate != null ? m.quotedRate : m.unitRate;
+    matTotal += (m.qty || 0) * rate;
+  });
+
+  let laborTotal = 0;
+  state.quote.labor.forEach(r => { laborTotal += (r.men || 0) * (r.days || 0) * (r.rate || 0); });
+
+  let travelTotal = 0;
+  QUOTE_TRAVEL_CODES.forEach(code => {
+    const t = state.quote.travel[code] || { qty: 0, rate: 0 };
+    travelTotal += (t.qty || 0) * (t.rate || 0);
+  });
+
+  let additionalTotal = 0;
+  QUOTE_ADDITIONAL_CODES.forEach(item => {
+    const a = state.quote.additional[item.code] || { amount: 0 };
+    additionalTotal += (parseFloat(a.amount) || 0);
+  });
+
+  const taxRate = state.quote.taxRate || 0;
+  const tax = matTotal * (taxRate / 100);
+  const grandTotal = matTotal + laborTotal + travelTotal + additionalTotal + tax;
+  const markupPct = state.quote.markupPct || 0;
+  const bidAmount = grandTotal * (1 + markupPct / 100);
+  const grossProfit = bidAmount > 0 ? ((bidAmount - grandTotal) / bidAmount) * 100 : 0;
+
+  return { matTotal, laborTotal, travelTotal, additionalTotal, tax, grandTotal, bidAmount, grossProfit };
+}
+
+function recalcQuoteSummary() {
+  const t = calcQuoteTotals();
+  document.getElementById('sumMaterials').textContent = fmtMoney(t.matTotal);
+  document.getElementById('sumLabor').textContent = fmtMoney(t.laborTotal);
+  document.getElementById('sumTravel').textContent = fmtMoney(t.travelTotal);
+  document.getElementById('sumAdditional').textContent = fmtMoney(t.additionalTotal);
+  document.getElementById('sumTax').textContent = fmtMoney(t.tax);
+  document.getElementById('sumGrandTotal').textContent = fmtMoney(t.grandTotal);
+  document.getElementById('quoteBidAmount').textContent = fmtMoney(t.bidAmount);
+  document.getElementById('quoteGrossProfit').textContent = t.grossProfit.toFixed(1) + '%';
+  document.getElementById('quoteTaxAmount').textContent = 'Tax on Materials: ' + fmtMoney(t.tax);
+}
+
+function renderQuoteTool() {
+  ensureQuoteState();
+  // Populate inputs from state
+  document.getElementById('quoteTaxRate').value = state.quote.taxRate;
+  document.getElementById('quoteMarkupPct').value = state.quote.markupPct;
+
+  renderQuoteMaterials();
+  renderQuoteLabor();
+  renderQuoteTravel();
+  renderQuoteAdditional();
+  recalcQuoteSummary();
+}
+
+// Close material dropdown on outside click
+document.addEventListener('click', function(e) {
+  const wrap = document.getElementById('quoteMaterialSearch');
+  const dd = document.getElementById('quoteMaterialDropdown');
+  if (wrap && dd && !wrap.contains(e.target) && !dd.contains(e.target)) {
+    dd.classList.remove('open');
+  }
+});
 
 </script>
 
