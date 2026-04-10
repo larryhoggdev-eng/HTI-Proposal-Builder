@@ -4,12 +4,174 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>HTI Polymer - Proposal Builder</title>
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#e2a308">
+<script>
+  // Register the service worker as soon as possible.
+  // Skipped on file:// origins because service workers require http(s).
+  if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js').then(reg => {
+        console.log('[SW] Registered, scope:', reg.scope);
+        // Listen for updates and auto-skip waiting so new versions activate immediately
+        reg.addEventListener('updatefound', () => {
+          const newWorker = reg.installing;
+          if (newWorker) {
+            newWorker.addEventListener('statechange', () => {
+              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                console.log('[SW] New version available');
+              }
+            });
+          }
+        });
+      }).catch(err => {
+        console.warn('[SW] Registration failed:', err);
+      });
+    });
+  } else if (location.protocol === 'file:') {
+    console.log('[SW] Skipped (file:// origin — service workers require http(s))');
+  }
+</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  // ============================================================
+  // SUPABASE CLIENT
+  // ============================================================
+  const SUPABASE_URL = 'https://uwhadfapwqvdsskjuofi.supabase.co';
+  const SUPABASE_ANON_KEY = 'sb_publishable_cPDh7nXuSO7FOij8o5A3HA_-Zu6erIN';
+  const supa = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
+      storage: window.localStorage,
+      storageKey: 'hti-auth-session'
+    }
+  });
+  console.log('Supabase client initialized:', !!supa);
+</script>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #1a1a2e; color: #e0e0e0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+
+  /* ============ AUTH OVERLAY ============ */
+  .auth-overlay {
+    position: fixed; inset: 0; background: #1a1a2e; z-index: 99999;
+    display: flex; align-items: center; justify-content: center; padding: 20px;
+  }
+  .auth-overlay.hidden { display: none; }
+  .auth-card {
+    background: #16213e; border: 1px solid #2a2a4a; border-radius: 12px;
+    padding: 36px 40px; max-width: 420px; width: 100%;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+  }
+  .auth-card h1 { color: #e2a308; font-size: 22px; margin-bottom: 6px; text-align: center; }
+  .auth-card .auth-sub { color: #888; font-size: 12px; text-align: center; margin-bottom: 24px; }
+  .auth-card .form-row { margin-bottom: 14px; }
+  .auth-card label { display: block; font-size: 11px; color: #aaa; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .auth-card input[type="email"],
+  .auth-card input[type="password"] {
+    width: 100%; padding: 10px 12px; background: #0f3460; border: 1px solid #333; border-radius: 4px;
+    color: #fff; font-size: 14px; font-family: inherit;
+  }
+  .auth-card input:focus { border-color: #e2a308; outline: none; }
+  .auth-card .auth-checkbox { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #ccc; margin-bottom: 18px; cursor: pointer; }
+  .auth-card .auth-checkbox input { accent-color: #e2a308; cursor: pointer; }
+  .auth-card .btn-auth {
+    width: 100%; padding: 12px; background: #e2a308; color: #000; border: none; border-radius: 4px;
+    font-size: 14px; font-weight: 700; cursor: pointer; margin-bottom: 12px;
+  }
+  .auth-card .btn-auth:hover { background: #f0b429; }
+  .auth-card .btn-auth:disabled { opacity: 0.5; cursor: not-allowed; }
+  .auth-card .auth-toggle { text-align: center; font-size: 12px; color: #888; }
+  .auth-card .auth-toggle a { color: #e2a308; cursor: pointer; text-decoration: underline; }
+  .auth-card .auth-error { color: #e74c3c; font-size: 12px; margin-bottom: 12px; min-height: 16px; text-align: center; }
+  .auth-card .auth-success { color: #27ae60; font-size: 13px; text-align: center; padding: 16px 0; line-height: 1.5; }
+  .auth-card .auth-pending { color: #e2a308; font-size: 13px; text-align: center; padding: 16px 0; line-height: 1.5; }
+  .auth-card .btn-signout {
+    margin-top: 12px; padding: 8px; background: #2a2a4a; color: #ccc;
+    border: 1px solid #444; border-radius: 4px; font-size: 12px; cursor: pointer; width: 100%;
+  }
+  .auth-card .btn-signout:hover { background: #3a3a5a; color: #fff; }
+
+  /* ============ ADMIN MODAL ============ */
+  .admin-modal-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 9999;
+    align-items: flex-start; justify-content: center; padding: 30px; overflow-y: auto;
+  }
+  .admin-modal-overlay.active { display: flex; }
+  .admin-modal {
+    background: #16213e; border: 1px solid #2a2a4a; border-radius: 12px;
+    padding: 24px; max-width: 900px; width: 100%; max-height: 90vh; overflow-y: auto;
+  }
+  .admin-modal-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 16px; padding-bottom: 12px; border-bottom: 2px solid #e2a308;
+  }
+  .admin-modal-header h2 { color: #e2a308; margin: 0; font-size: 18px; }
+  .admin-modal-close {
+    background: #2a2a4a; color: #ccc; border: 1px solid #444; border-radius: 4px;
+    padding: 8px 14px; cursor: pointer; font-size: 12px;
+  }
+  .admin-modal-close:hover { background: #3a3a5a; color: #fff; }
+  .admin-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .admin-table th, .admin-table td {
+    padding: 10px 8px; text-align: left; border-bottom: 1px solid #2a2a4a;
+  }
+  .admin-table th {
+    color: #e2a308; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;
+    background: #0f1d3a;
+  }
+  .admin-table td { color: #ccc; vertical-align: middle; }
+  .admin-table .badge {
+    display: inline-block; padding: 2px 8px; border-radius: 10px;
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
+  }
+  .admin-table .badge-approved { background: rgba(39,174,96,0.2); color: #2ecc71; }
+  .admin-table .badge-pending { background: rgba(226,163,8,0.2); color: #e2a308; }
+  .admin-table .badge-admin { background: rgba(155,89,182,0.2); color: #c39bd3; margin-left: 4px; }
+  .admin-table .actions { display: flex; gap: 4px; flex-wrap: wrap; }
+  .admin-table .btn-action {
+    padding: 4px 8px; font-size: 10px; border: none; border-radius: 3px; cursor: pointer; font-weight: 600;
+  }
+  .admin-table .btn-approve { background: #27ae60; color: #fff; }
+  .admin-table .btn-approve:hover { background: #2ecc71; }
+  .admin-table .btn-revoke { background: #95a5a6; color: #fff; }
+  .admin-table .btn-revoke:hover { background: #7f8c8d; }
+  .admin-table .btn-makeadmin { background: #8e44ad; color: #fff; }
+  .admin-table .btn-makeadmin:hover { background: #9b59b6; }
+  .admin-table .btn-delete { background: #c0392b; color: #fff; }
+  .admin-table .btn-delete:hover { background: #e74c3c; }
+  .admin-empty { padding: 30px; text-align: center; color: #666; }
+
+  /* ============ PROFILE SETTINGS MODAL ============ */
+  .profile-modal-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 9999;
+    align-items: center; justify-content: center; padding: 30px;
+  }
+  .profile-modal-overlay.active { display: flex; }
+  .profile-modal {
+    background: #16213e; border: 1px solid #2a2a4a; border-radius: 12px;
+    padding: 24px 28px; max-width: 480px; width: 100%;
+  }
+  .profile-modal h2 { color: #e2a308; margin: 0 0 6px 0; font-size: 18px; }
+  .profile-modal .profile-sub { color: #888; font-size: 12px; margin-bottom: 20px; }
+  .profile-modal .form-row { margin-bottom: 12px; }
+  .profile-modal label { display: block; font-size: 11px; color: #aaa; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .profile-modal input, .profile-modal textarea {
+    width: 100%; padding: 9px 11px; background: #0f3460; border: 1px solid #333; border-radius: 4px;
+    color: #fff; font-size: 13px; font-family: inherit;
+  }
+  .profile-modal input:focus, .profile-modal textarea:focus { border-color: #e2a308; outline: none; }
+  .profile-modal textarea { resize: vertical; min-height: 50px; }
+  .profile-modal .profile-actions { display: flex; gap: 8px; margin-top: 16px; }
+  .profile-modal .profile-actions .btn { flex: 1; padding: 10px; font-size: 13px; }
+  .profile-modal .profile-msg { font-size: 12px; margin-top: 8px; min-height: 16px; text-align: center; }
+  .profile-modal .profile-msg.success { color: #27ae60; }
+  .profile-modal .profile-msg.error { color: #e74c3c; }
 
   .top-bar {
     display: flex; align-items: center; gap: 16px; background: #16213e; padding: 10px 20px;
@@ -51,9 +213,22 @@
   .export-bar { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
   .export-bar .btn { flex: 1; padding: 12px; font-size: 13px; min-width: 100px; }
 
-  .inclusion-check { display: flex; align-items: flex-start; gap: 6px; margin-bottom: 4px; font-size: 12px; }
-  .inclusion-check input[type="checkbox"] { margin-top: 2px; accent-color: #e2a308; }
-  .inclusion-check label { color: #ccc; cursor: pointer; line-height: 1.3; }
+  .inclusion-check { display: flex; align-items: flex-start; gap: 6px; margin-bottom: 8px; font-size: 12px; }
+  .inclusion-check input[type="checkbox"] { margin-top: 5px; accent-color: #e2a308; flex-shrink: 0; }
+  .inclusion-check label { color: #ccc; cursor: pointer; line-height: 1.4; flex: 1; word-break: break-word; }
+  .inclusion-check .inc-bold-btn {
+    flex-shrink: 0; width: 22px; height: 22px; padding: 0; background: #2a2a4a; color: #ccc;
+    border: 1px solid #444; border-radius: 3px; cursor: pointer; font-size: 11px; line-height: 1;
+    display: flex; align-items: center; justify-content: center; margin-top: 1px;
+  }
+  .inclusion-check .inc-bold-btn:hover { background: #3a3a5a; color: #fff; }
+  .inclusion-check .inc-bold-btn.active { background: #e2a308; color: #000; border-color: #e2a308; }
+  .inclusion-check .inc-text {
+    flex: 1; min-height: 24px; resize: none; overflow: hidden;
+    padding: 4px 7px; background: #0f3460; border: 1px solid #333; border-radius: 4px;
+    color: #fff; font-family: inherit; font-size: 12px; line-height: 1.4;
+  }
+  .inclusion-check .inc-text:focus { border-color: #e2a308; outline: none; }
 
   .sys-search-wrap { position: relative; }
   .sys-search-input {
@@ -110,6 +285,8 @@
   .form-card h3 .collapse-arrow { margin-right: 8px; font-size: 10px; transition: transform 0.2s; display: inline-block; }
   .form-card h3 .collapse-arrow.collapsed { transform: rotate(-90deg); }
   .form-card h3 .section-warn { margin-left: auto; color: #e2a308; font-size: 16px; font-weight: 700; line-height: 1; }
+  .form-card h3 .section-toggle { margin-left: auto; accent-color: #e2a308; cursor: pointer; width: 16px; height: 16px; }
+  .form-card h3 .section-toggle + .section-warn { margin-left: 8px; }
   .form-card .card-body { overflow: hidden; transition: max-height 0.3s ease; }
   .form-card .card-body.collapsed { max-height: 0 !important; overflow: hidden; padding: 0; margin: 0; }
   .form-card .form-row label { display: block; font-size: 11px; color: #aaa; margin-bottom: 3px; text-transform: uppercase; letter-spacing: 0.5px; }
@@ -123,6 +300,22 @@
   .form-card .form-row-inline { display: flex; gap: 8px; }
   .form-card .form-row-inline .form-row { flex: 1; }
 
+  /* Template editor: contenteditable div with inline placeholder highlighting */
+  .template-editor-wrap { width: 100%; }
+  .form-card .form-row .template-editor-wrap .template-editor {
+    display: block; width: 100%; min-height: 60px;
+    padding: 7px 9px; background: #0f3460; border: 1px solid #333; border-radius: 4px;
+    color: #fff; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 13px; line-height: 1.4;
+    white-space: pre-wrap; word-wrap: break-word; outline: none;
+    cursor: text;
+  }
+  .form-card .form-row .template-editor-wrap .template-editor:focus { border-color: #e2a308; }
+  .form-card .form-row .template-editor-wrap .template-editor .ph {
+    background: rgba(226,163,8,0.45); color: #ffd700;
+    border-radius: 2px; padding: 0 2px;
+  }
+
   .repeater-row { display: flex; align-items: flex-start; gap: 6px; margin-bottom: 6px; padding: 8px 10px; background: #12122a; border-radius: 4px; border: 1px solid #2a2a4a; }
   .repeater-row .form-row { margin-bottom: 0; flex: 1; }
   .repeater-row .form-row.narrow { flex: 0 0 80px; }
@@ -135,7 +328,12 @@
   .procedure-section-block { background: #12122a; border-radius: 6px; padding: 10px 12px; margin-bottom: 8px; border: 1px solid #2a2a4a; }
   .procedure-section-block .form-row { margin-bottom: 6px; }
   .procedure-step-row { display: flex; gap: 6px; margin-bottom: 4px; align-items: flex-start; }
-  .procedure-step-row textarea { flex: 1; min-height: 40px; overflow: hidden; resize: none; }
+  .procedure-step-row textarea {
+    flex: 1; min-height: 40px; overflow: hidden; resize: none;
+    padding: 7px 9px; background: #0f3460; border: 1px solid #333; border-radius: 4px;
+    color: #fff; font-size: 13px; font-family: inherit; line-height: 1.4;
+  }
+  .procedure-step-row textarea:focus { border-color: #e2a308; outline: none; }
   .procedure-step-row .step-num { flex: 0 0 24px; color: #e2a308; font-size: 12px; font-weight: 700; text-align: center; padding-top: 8px; }
   .procedure-step-row .btn-remove { flex: 0 0 28px; height: 28px; margin-top: 2px; background: #e74c3c; color: #fff; border: none; border-radius: 50%; font-size: 14px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; line-height: 1; }
   .procedure-step-row .btn-remove:hover { background: #c0392b; }
@@ -153,9 +351,9 @@
   .export-content { tab-size: 4; -moz-tab-size: 4; }
   .hti-header { position: absolute; top: 0; left: 0; right: 0; height: 200px; margin: 0; overflow: hidden; z-index: 0; }
   .hti-logo-img { width: 80%; display: block; margin: 0 auto; }
-  .hti-header-overlay { position: absolute; bottom: 16px; right: 96px; text-align: right; padding: 6px 0; }
-  .proposal-page:first-child .hti-header-overlay { bottom: 34px; }
-  .hti-header-title { position: absolute; top: calc(50% + 4px); left: 176px; transform: translateY(-50%); text-align: left; line-height: 0.85; }
+  .hti-header-overlay { position: absolute; bottom: 14px; right: 96px; text-align: right; padding: 6px 0; }
+  .proposal-page:first-child .hti-header-overlay { bottom: 32px; }
+  .hti-header-title { position: absolute; top: calc(50% + 4px); left: 231px; transform: translateY(-50%); text-align: left; line-height: 0.85; }
   .hti-header-title-main { font-size: 48pt; font-weight: 700; color: #000; font-family: Georgia, serif; }
   .hti-header-title-sub { font-size: 18pt; font-weight: 700; color: #000; font-family: Georgia, serif; }
   .hti-address { font-size: 11pt; color: #000; white-space: nowrap; }
@@ -227,33 +425,65 @@
 </head>
 <body>
 
+<!-- ==================== AUTH OVERLAY ==================== -->
+<div class="auth-overlay" id="authOverlay">
+  <div class="auth-card" id="authCard">
+    <h1>HTI Proposal Builder</h1>
+    <p class="auth-sub" id="authSub">Sign in to continue</p>
+
+    <div id="authForm">
+      <div class="auth-error" id="authError"></div>
+      <div class="form-row">
+        <label>Email</label>
+        <input type="email" id="authEmail" autocomplete="email" placeholder="you@htipolymer.com">
+      </div>
+      <div class="form-row">
+        <label>Password</label>
+        <input type="password" id="authPassword" autocomplete="current-password" placeholder="Password">
+      </div>
+      <label class="auth-checkbox">
+        <input type="checkbox" id="authRemember" checked> Stay signed in on this device
+      </label>
+      <button class="btn-auth" id="authSubmitBtn" onclick="handleAuthSubmit()">Sign In</button>
+      <div class="auth-toggle">
+        <span id="authToggleText">Don't have an account?</span>
+        <a id="authToggleLink" onclick="toggleAuthMode()">Create one</a>
+      </div>
+    </div>
+
+    <div id="authCheckEmail" style="display:none;">
+      <div class="auth-success">
+        ✓ Account created!<br><br>
+        Check your inbox for a verification link.<br>
+        Click it to confirm your email, then sign in.
+      </div>
+      <button class="btn-signout" onclick="showAuthMode('signin')">Back to Sign In</button>
+    </div>
+
+    <div id="authPending" style="display:none;">
+      <div class="auth-pending">
+        ⏳ Your account is awaiting admin approval.<br><br>
+        You'll be able to access the proposal builder once an admin has approved your account.
+      </div>
+      <button class="btn-signout" onclick="handleSignOut()">Sign Out</button>
+    </div>
+  </div>
+</div>
+
 <div class="top-bar">
   <h1>HTI Proposal Builder</h1>
 
   <div class="bar-section">
     <label>Start from Previous Project</label>
-    <select id="prevProjectSelect" onchange="loadPreviousProject(this.value); this.value='';" style="border-color:#e2a308;">
-      <option value="">-- Select a Past Project --</option>
-      <option value="continental-place">Continental Place - Loading Dock HTS (B+E, Feb 2026)</option>
-      <option value="google-westlake">Google Westlake Ph2 - Polished Concrete (LCL, Aug 2025)</option>
-      <option value="grant-courthouse">Grant County Courthouse - SGC Deck Traffic (Jan 2026)</option>
-      <option value="grant-coroner">Grant County Coroner - Kitchen UC Resurfacing (Dec 2025)</option>
-      <option value="kp-bellingham">King &amp; Prince - Bellingham Production (Feb 2026)</option>
-      <option value="kp-line1">King &amp; Prince - Line 1 Patching (Nov 2025)</option>
-      <option value="lineage-lynden">Lineage - Lynden Cranberry Dock MMA Sealer (Jan 2026)</option>
-      <option value="mente-hangar">MENTE Hangar - Boeing Field Repairs (Jan 2026)</option>
-      <option value="raedwood">Raedwood Cabinet Co. - HTS Flooring (Dec 2025)</option>
-      <option value="safran-paintbooth">Safran Group - Paint Booth Anti-Graffiti (Mar 2026)</option>
-      <option value="signature-slc">Signature Aviation - SLC Hangars 8 &amp; 12 (Jan 2026)</option>
-      <option value="slim-chickens">Slim Chickens - Pasco Mac-Guard MMA (Feb 2026)</option>
-      <option value="super1-kalispell">Super1 Foods - Kalispell UC Kitchen (Dec 2025)</option>
-      <option value="uw-blakely">UW Blakely - Storage Grind &amp; Seal (Feb 2026)</option>
-    </select>
+    <div class="sys-search-wrap" id="prevSearchWrap">
+      <input type="text" id="prevSearchInput" class="sys-search-input" placeholder="Search past projects..." onclick="openPrevDropdown()" oninput="filterPrevProjects()" style="width:280px; border-color:#e2a308;">
+      <div class="sys-dropdown" id="prevDropdown"></div>
+    </div>
     <div id="prevProjectTag"></div>
   </div>
 
   <div class="bar-section">
-    <label>Flooring System Template</label>
+    <label>Start From Flooring System</label>
     <div class="sys-search-wrap" id="sysSearchWrap">
       <input type="text" id="sysSearchInput" class="sys-search-input" placeholder="Search systems..." onclick="openSysDropdown()" oninput="filterSystems()" style="width:280px;">
       <div class="sys-dropdown" id="sysDropdown"></div>
@@ -262,13 +492,54 @@
   </div>
 
   <div class="bar-section" style="margin-left: auto;">
-    <button class="btn btn-secondary btn-sm" onmousedown="event.preventDefault()" onclick="document.execCommand('bold')" title="Bold (Ctrl+B)"><strong>B</strong></button>
-    <button class="btn btn-secondary btn-sm" onmousedown="event.preventDefault()" onclick="document.execCommand('underline')" title="Underline (Ctrl+U)" style="text-decoration:underline;">U</button>
-    <span style="border-left:1px solid #444; height:20px; margin:0 4px;"></span>
     <button class="btn btn-primary" onclick="confirmExportPDF()">Export PDF</button>
     <button class="btn btn-primary" onclick="confirmExportWord()">Export Word</button>
-    <button class="btn btn-secondary" onclick="window.print()">Print</button>
     <button class="btn btn-danger" onclick="resetToDefault()">Reset</button>
+    <button class="btn btn-secondary" onclick="openProfilePanel()">Profile</button>
+    <button class="btn btn-secondary" id="adminBtn" style="display:none;" onclick="openAdminPanel()">Admin</button>
+    <button class="btn btn-secondary" onclick="handleSignOut()" title="Sign out">⎋</button>
+  </div>
+</div>
+
+<!-- ==================== PROFILE SETTINGS MODAL ==================== -->
+<div class="profile-modal-overlay" id="profileModal">
+  <div class="profile-modal">
+    <h2>Profile Settings</h2>
+    <p class="profile-sub">These defaults fill in automatically when you start a new proposal.</p>
+    <div class="form-row">
+      <label>PM Name</label>
+      <input type="text" id="profilePmName" placeholder="e.g. Chris Larabee">
+    </div>
+    <div class="form-row">
+      <label>Cell Number</label>
+      <input type="text" id="profilePmCell" placeholder="206-xxx-xxxx">
+    </div>
+    <div class="form-row">
+      <label>Email</label>
+      <input type="text" id="profilePmEmail" placeholder="name@htipolymer.com">
+    </div>
+    <div class="form-row">
+      <label>Sign-off Closing</label>
+      <textarea id="profileSignoffClosing" rows="2" placeholder="e.g. Best regards,"></textarea>
+    </div>
+    <div class="profile-msg" id="profileMsg"></div>
+    <div class="profile-actions">
+      <button class="btn btn-secondary" onclick="closeProfilePanel()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveProfile()">Save Profile</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== ADMIN MODAL ==================== -->
+<div class="admin-modal-overlay" id="adminModal">
+  <div class="admin-modal">
+    <div class="admin-modal-header">
+      <h2>User Administration</h2>
+      <button class="admin-modal-close" onclick="closeAdminPanel()">Close</button>
+    </div>
+    <div id="adminPanelContent">
+      <div class="admin-empty">Loading...</div>
+    </div>
   </div>
 </div>
 
@@ -302,7 +573,7 @@ const SYSTEMS = {
       "HTI will install {30} mils WFT of Sherwin Williams MPE Epoxy resin in a pigmented color (TBD) as a body coat, to provide a smooth, high-strength base for the topcoat.",
       "Once dry, HTI will install an application of the Sherwin Williams HTS 100 Urethane Sealer in a matching color to the body coat @ {4} mils WFT. An additional 2oz of Aluminum Oxide high-wear additive will be added into the sealer for added slip and abrasion resistance."
     ],
-    defaultScopes: [{ desc: "(Flooring Scope)", qty: "", unit: "Square Feet" }],
+    defaultScopes: [{ desc: "FLOORING SCOPE", qty: "", unit: "Square Feet" }],
     warranty: "standard-1yr"
   },
   "performance-hts-moisture": {
@@ -672,8 +943,8 @@ const WARRANTIES = {
 
 
 const INCLUSIONS_MASTER = [
-  { id: "work-schedule", text: "Work to be performed both on workdays and weekends with the possibility of extended hours.", default: true },
-  { id: "one-mobilization", text: "Work to be performed in one mobilization. Non-sequential or additional mobilizations may result in extra charge for each occurrence.", default: true },
+  { id: "work-schedule", text: "Work to be performed {WORKDAYS} with the possibility of extended hours.", default: true },
+  { id: "one-mobilization", text: "Work to be performed in {MOBS}. Non-sequential or additional mobilizations may result in extra charge for each occurrence.", default: true },
   { id: "labor-rate", text: "{{LABOR}}", default: true },
   { id: "dry-clean", text: "All areas must be dry, clean, and degreased. The substrate temperature must be between 55\u00B0F and 85\u00B0F.", default: true },
   { id: "sole-access", text: "Pricing assumes HTI Polymer will have sole access to all areas in our scope on the start date. Any delay in crew access to the area will result in a remobilization fee.", default: true },
@@ -713,9 +984,9 @@ let state = {
   existingConditions: '',
   warrantyText: WARRANTIES['standard-1yr'],
   numMobilizations: '1', numPhases: '',
-  pmName: '', pmCell: '', pmEmail: '',
+  pmName: '', pmCell: '', pmEmail: '', signoffClosing: 'Best regards,',
 
-  scopeSections: [{ name: 'Installation of (System)', scopes: [{ desc: '(Flooring Scope)', qty: '', unit: 'Square Feet' }] }],
+  scopeSections: [{ name: 'Installation of SYSTEM', scopes: [{ desc: 'FLOORING SCOPE', qty: '', unit: 'Square Feet' }] }],
   products: [],
   procedureSections: [{ header: '', steps: [] }],
   taxNote: 'not-included',
@@ -725,12 +996,175 @@ let state = {
     { text: "Additional mobilization cost of $2,500 per mobilization." }
   ],
   inclusions: {},
+  inclusionBold: {},
+  inclusionOverrides: {},
+  workSchedule: 'both',
   paymentTerms: '',
+  omitPaymentTerms: false,
+  introTemplate: 'Please accept our proposal for the installation of {SYSTEM} at the {PROJECT NAME} project in {CITY}, {STATE}.',
+  costTemplate: 'The lump sum cost for the installation of {SYSTEM} is ${VALUE}.00. {TAX}',
+  mobilizationTemplate: "This proposal is based on {MOBS}, with each mobilization (or phase) area being ready for installation prior to HTI's arrival. If areas are not ready, HTI reserves the right to submit a change order for any cost impacts related to remobilization, loss of efficiency, or non-sequential work. The change order value will be determined case by case, with supporting documentation provided.",
+  omitMobilization: false,
   _warrantyType: 'standard-1yr'
 };
 
-// Track which sections are collapsed (persists across renders)
-const collapsedSections = {};
+// ============================================================
+// PERSISTENCE: local + cloud sync
+// ============================================================
+// Strategy:
+//  - Every state mutation triggers a debounced save (~800ms)
+//  - The full state object is serialized to JSON
+//  - Saved to localStorage immediately (per-user key) for instant offline persistence
+//  - Pushed to Supabase as one "current draft" row per user
+//  - On sign-in, we load from cloud first, fall back to local if offline
+const PERSIST_DEBOUNCE_MS = 800;
+let _persistTimer = null;
+let _isLoadingState = false;       // suppresses auto-save while we're loading data into state
+let _lastSavedJson = '';            // avoid unnecessary writes
+let _currentDraftId = null;         // the proposal row id in Supabase for the current user
+
+function localDraftKey() {
+  return currentUser ? 'hti-draft-' + currentUser.id : 'hti-draft-anon';
+}
+
+// Serialize state, but skip ephemeral / undefined fields
+function serializeState() {
+  return JSON.stringify(state);
+}
+
+// Apply a serialized state JSON back into the live state object
+function applyStateJson(json) {
+  if (!json) return;
+  try {
+    const parsed = JSON.parse(json);
+    if (parsed && typeof parsed === 'object') {
+      _isLoadingState = true;
+      // Replace state contents in-place so other code holding the reference still works
+      Object.keys(state).forEach(k => { delete state[k]; });
+      Object.assign(state, parsed);
+      _isLoadingState = false;
+    }
+  } catch (e) {
+    console.warn('Failed to parse stored state:', e);
+  }
+}
+
+function schedulePersist() {
+  if (_isLoadingState) return;
+  if (!currentUser) return; // never persist for unauthenticated users
+  clearTimeout(_persistTimer);
+  _persistTimer = setTimeout(persistNow, PERSIST_DEBOUNCE_MS);
+}
+
+async function persistNow() {
+  if (!currentUser) return;
+  const json = serializeState();
+  if (json === _lastSavedJson) return;
+  _lastSavedJson = json;
+
+  // 1) Local save (instant, always works)
+  try {
+    localStorage.setItem(localDraftKey(), json);
+    localStorage.setItem(localDraftKey() + '-savedAt', String(Date.now()));
+  } catch (e) {
+    console.warn('localStorage save failed:', e);
+  }
+
+  // 2) Cloud save (best-effort, silent failure if offline)
+  try {
+    if (_currentDraftId) {
+      // Update existing draft
+      await supa.from('proposals')
+        .update({ state: JSON.parse(json), title: state.projectName || 'Untitled Proposal' })
+        .eq('id', _currentDraftId);
+    } else {
+      // Insert new draft
+      const { data, error } = await supa.from('proposals')
+        .insert({
+          owner_id: currentUser.id,
+          state: JSON.parse(json),
+          title: state.projectName || 'Untitled Proposal'
+        })
+        .select('id')
+        .single();
+      if (error) throw error;
+      if (data && data.id) _currentDraftId = data.id;
+    }
+  } catch (e) {
+    console.warn('Cloud save failed (will retry on next change):', e.message || e);
+  }
+}
+
+// Load the user's draft from cloud (with localStorage fallback)
+async function loadUserDraft() {
+  if (!currentUser) return false;
+
+  // Try cloud first
+  let cloudData = null;
+  try {
+    const { data, error } = await supa
+      .from('proposals')
+      .select('id, state, updated_at')
+      .eq('owner_id', currentUser.id)
+      .order('updated_at', { ascending: false })
+      .limit(1);
+    if (!error && data && data.length > 0) {
+      cloudData = data[0];
+      _currentDraftId = cloudData.id;
+    }
+  } catch (e) {
+    console.warn('Cloud load failed, falling back to local:', e.message || e);
+  }
+
+  // Compare with local copy and use whichever is newer
+  const localJson = localStorage.getItem(localDraftKey());
+  const localSavedAt = parseInt(localStorage.getItem(localDraftKey() + '-savedAt') || '0', 10);
+  const cloudUpdatedAt = cloudData ? new Date(cloudData.updated_at).getTime() : 0;
+
+  let chosenJson = null;
+  if (cloudData && cloudUpdatedAt >= localSavedAt) {
+    chosenJson = JSON.stringify(cloudData.state);
+    console.log('Loaded draft from cloud');
+  } else if (localJson) {
+    chosenJson = localJson;
+    console.log('Loaded draft from local storage');
+  }
+
+  if (chosenJson) {
+    applyStateJson(chosenJson);
+    _lastSavedJson = chosenJson;
+    return true;
+  }
+  return false;
+}
+
+// Clear the user's draft from both local and cloud (called by Reset)
+async function clearUserDraft() {
+  if (!currentUser) return;
+  try {
+    localStorage.removeItem(localDraftKey());
+    localStorage.removeItem(localDraftKey() + '-savedAt');
+  } catch (e) {}
+  try {
+    if (_currentDraftId) {
+      await supa.from('proposals').delete().eq('id', _currentDraftId);
+      _currentDraftId = null;
+    } else {
+      // Just in case there's an orphan
+      await supa.from('proposals').delete().eq('owner_id', currentUser.id);
+    }
+  } catch (e) {
+    console.warn('Cloud clear failed:', e.message || e);
+  }
+  _lastSavedJson = '';
+}
+
+// Track which sections are collapsed (persists across renders).
+// All sections start collapsed by default except Project Info.
+const collapsedSections = {
+  recipient: true, scope: true, products: true, procedures: true,
+  cost: true, warranty: true, payment: true, mobilization: true, signoff: true
+};
 
 function toggleSection(sectionId) {
   collapsedSections[sectionId] = !collapsedSections[sectionId];
@@ -748,24 +1182,58 @@ function getSectionWarnings() {
   if (!s.projectName.trim() || !s.projectCity.trim() || !s.projectState.trim() || !s.systemDisplayName.trim()) w['project-info'] = true;
   // Recipient: companyName required, contactName for GC
   if (!s.companyName.trim() || (s.clientType === 'gc' && !s.contactName.trim())) w['recipient'] = true;
-  // Work section: scope, products, procedures, cost
-  if (s.scopeSections.some(sec => !sec.name.trim() || sec.scopes.some(sc => !sc.desc.trim() || !sc.qty.trim()))
-    || s.products.length === 0 || s.products.some(p => !p.text.trim())
-    || s.procedureSections.some(sec => sec.steps.length === 0 || sec.steps.some(st => !st.text.trim()))
-    || s.costSections.some(cs => !cs.value.trim())) w['work'] = true;
+  // Scope: at least one scope with desc and qty
+  if (s.scopeSections.some(sec => !sec.name.trim() || sec.scopes.some(sc => !sc.desc.trim() || !sc.qty.trim()))) w['scope'] = true;
+  // Products: at least one product with text
+  if (s.products.length === 0 || s.products.some(p => !p.text.trim())) w['products'] = true;
+  // Procedures: each section needs at least one step
+  if (s.procedureSections.some(sec => sec.steps.length === 0 || sec.steps.some(st => !st.text.trim()))) w['procedures'] = true;
+  // Cost: each cost section needs a value
+  if (s.costSections.some(cs => !cs.value.trim())) w['cost'] = true;
   // Sign-off: pmName required
   if (!s.pmName.trim() || !s.pmCell.trim() || !s.pmEmail.trim()) w['signoff'] = true;
   return w;
 }
 
-function cardHeader(sectionId, title) {
+function cardHeader(sectionId, title, toggleField) {
   const warnings = getSectionWarnings();
   const isCollapsed = collapsedSections[sectionId];
   const warn = warnings[sectionId] ? '<span class="section-warn" title="Has unfilled fields">&#9888;</span>' : '';
-  return `<h3 onclick="toggleSection('${sectionId}')"><span class="collapse-arrow${isCollapsed?' collapsed':''}" id="arrow-${sectionId}">&#9660;</span>${title}${warn}</h3><div class="card-body${isCollapsed?' collapsed':''}" id="card-body-${sectionId}">`;
+  // Optional include/exclude checkbox in the header (visible even when collapsed)
+  // toggleField is the name of an `omit*` state field. Checkbox is checked when section is shown (not omitted).
+  let toggle = '';
+  if (toggleField) {
+    const isShown = !state[toggleField];
+    toggle = `<input type="checkbox" class="section-toggle" ${isShown ? 'checked' : ''} onclick="event.stopPropagation();" onchange="state['${toggleField}'] = !this.checked; render();" title="Show this section in the proposal">`;
+  }
+  return `<h3 onclick="toggleSection('${sectionId}')"><span class="collapse-arrow${isCollapsed?' collapsed':''}" id="arrow-${sectionId}">&#9660;</span>${title}${toggle}${warn}</h3><div class="card-body${isCollapsed?' collapsed':''}" id="card-body-${sectionId}">`;
 }
 
+// Returns the rendered text for an inclusion, applying overrides + placeholder substitution
 function getIncText(inc) {
+  // User override takes precedence
+  let raw = (state.inclusionOverrides && state.inclusionOverrides[inc.id]) || '';
+  if (!raw) {
+    if (inc.id === 'labor-rate') {
+      const lt = state.laborType || 'open-shop';
+      if (lt === 'open-shop') raw = "Pricing is not based on union or prevailing wage labor rates.";
+      else if (lt === 'prevailing') raw = "Work to be performed utilizing Prevailing Wage labor rates.";
+      else raw = "Work to be performed utilizing Union labor rates. Overtime, weekend, and holiday hours may result in increased labor rates.";
+    } else {
+      const ct = state.clientType;
+      if (ct === 'direct' && inc.directText) raw = inc.directText;
+      else if (ct === 'gc' && inc.gcText) raw = inc.gcText;
+      else raw = inc.text || inc.gcText || inc.directText || '';
+    }
+  }
+  // Substitute placeholders
+  return resolveInclusionPlaceholders(raw);
+}
+
+// Returns the raw text for an inclusion (for editor use, no substitution)
+function getIncRawText(inc) {
+  let raw = (state.inclusionOverrides && state.inclusionOverrides[inc.id]) || '';
+  if (raw) return raw;
   if (inc.id === 'labor-rate') {
     const lt = state.laborType || 'open-shop';
     if (lt === 'open-shop') return "Pricing is not based on union or prevailing wage labor rates.";
@@ -778,6 +1246,37 @@ function getIncText(inc) {
   return inc.text || inc.gcText || inc.directText || '';
 }
 
+function resolveInclusionPlaceholders(text) {
+  const s = state;
+  const mobNum = s.numMobilizations || '1';
+  const mobsPlain = s.numPhases
+    ? mobNum + ' mobilizations (and/or ' + s.numPhases + ' phases)'
+    : mobNum + ' mobilization(s)';
+  let workdays = 'both on workdays and weekends';
+  if (s.workSchedule === 'weekdays') workdays = 'on workdays';
+  else if (s.workSchedule === 'weekends') workdays = 'on weekends';
+  return text
+    .replace(/\{MOBS\}/g, mobsPlain)
+    .replace(/\{WORKDAYS\}/g, workdays);
+}
+
+
+const PREV_PROJECT_LABELS = {
+  "continental-place": "Continental Place - Loading Dock HTS (B+E, Feb 2026)",
+  "google-westlake": "Google Westlake Ph2 - Polished Concrete (LCL, Aug 2025)",
+  "grant-courthouse": "Grant County Courthouse - SGC Deck Traffic (Jan 2026)",
+  "grant-coroner": "Grant County Coroner - Kitchen UC Resurfacing (Dec 2025)",
+  "kp-bellingham": "King & Prince - Bellingham Production (Feb 2026)",
+  "kp-line1": "King & Prince - Line 1 Patching (Nov 2025)",
+  "lineage-lynden": "Lineage - Lynden Cranberry Dock MMA Sealer (Jan 2026)",
+  "mente-hangar": "MENTE Hangar - Boeing Field Repairs (Jan 2026)",
+  "raedwood": "Raedwood Cabinet Co. - HTS Flooring (Dec 2025)",
+  "safran-paintbooth": "Safran Group - Paint Booth Anti-Graffiti (Mar 2026)",
+  "signature-slc": "Signature Aviation - SLC Hangars 8 & 12 (Jan 2026)",
+  "slim-chickens": "Slim Chickens - Pasco Mac-Guard MMA (Feb 2026)",
+  "super1-kalispell": "Super1 Foods - Kalispell UC Kitchen (Dec 2025)",
+  "uw-blakely": "UW Blakely - Storage Grind & Seal (Feb 2026)"
+};
 
 const PREV_PROJECTS = {
   "continental-place": {
@@ -1308,12 +1807,13 @@ function init() {
   render();
 }
 
-function resetToDefault() {
+async function resetToDefault() {
   if (!confirm('Clear everything and return to the blank template?')) return;
   selectedSystemId = '';
   document.getElementById('sysSearchInput').value = '';
   document.getElementById('sysSelectedTag').innerHTML = '';
-  document.getElementById('prevProjectSelect').value = '';
+  clearPrevProject();
+  await clearUserDraft();
 
   Object.assign(state, {
     clientType: 'gc', laborType: 'open-shop',
@@ -1323,10 +1823,15 @@ function resetToDefault() {
     existingConditions: '',
     warrantyText: WARRANTIES['standard-1yr'],
     numMobilizations: '1', numPhases: '',
-    pmName: '', pmCell: '', pmEmail: '',
-  
+    pmName: '', pmCell: '', pmEmail: '', signoffClosing: 'Best regards,',
+
     paymentTerms: '',
-    scopeSections: [{ name: 'Installation of (System)', scopes: [{ desc: '(Flooring Scope)', qty: '', unit: 'Square Feet' }] }],
+    omitPaymentTerms: false,
+    introTemplate: 'Please accept our proposal for the installation of {SYSTEM} at the {PROJECT NAME} project in {CITY}, {STATE}.',
+    costTemplate: 'The lump sum cost for the installation of {SYSTEM} is ${VALUE}.00. {TAX}',
+    mobilizationTemplate: "This proposal is based on {MOBS}, with each mobilization (or phase) area being ready for installation prior to HTI's arrival. If areas are not ready, HTI reserves the right to submit a change order for any cost impacts related to remobilization, loss of efficiency, or non-sequential work. The change order value will be determined case by case, with supporting documentation provided.",
+    omitMobilization: false,
+    scopeSections: [{ name: 'Installation of SYSTEM', scopes: [{ desc: 'FLOORING SCOPE', qty: '', unit: 'Square Feet' }] }],
     products: [],
     procedureSections: [{ header: '', steps: [] }],
     taxNote: 'not-included',
@@ -1336,10 +1841,14 @@ function resetToDefault() {
       { text: "Additional mobilization cost of $2,500 per mobilization." }
     ],
     inclusions: {},
+    inclusionBold: {},
+    inclusionOverrides: {},
+    workSchedule: 'both',
     _warrantyType: 'standard-1yr'
   });
 
   INCLUSIONS_MASTER.forEach(inc => { state.inclusions[inc.id] = inc.default; });
+  applyProfileDefaults();
   render();
 }
 
@@ -1383,9 +1892,11 @@ function clearSystem() {
 }
 
 function clearPrevProject() {
-  const sel = document.getElementById('prevProjectSelect');
-  sel.style.display = '';
-  sel.value = '';
+  const searchInput = document.getElementById('prevSearchInput');
+  if (searchInput) {
+    searchInput.style.display = '';
+    searchInput.value = '';
+  }
   const tag = document.getElementById('prevProjectTag');
   if (tag) tag.innerHTML = '';
 }
@@ -1444,7 +1955,69 @@ function filterSystems() {
 document.addEventListener('click', function(e) {
   const wrap = document.getElementById('sysSearchWrap');
   if (wrap && !wrap.contains(e.target)) closeSysDropdown();
+  const prevWrap = document.getElementById('prevSearchWrap');
+  if (prevWrap && !prevWrap.contains(e.target)) closePrevDropdown();
 });
+
+// ============================================================
+// SEARCHABLE PREVIOUS PROJECT DROPDOWN
+// ============================================================
+function openPrevDropdown() {
+  filterPrevProjects();
+  document.getElementById('prevDropdown').classList.add('open');
+}
+
+function closePrevDropdown() {
+  document.getElementById('prevDropdown').classList.remove('open');
+}
+
+function filterPrevProjects() {
+  const query = document.getElementById('prevSearchInput').value.toLowerCase().trim();
+  const dropdown = document.getElementById('prevDropdown');
+  const keys = Object.keys(PREV_PROJECT_LABELS);
+  let html = '';
+
+  keys.forEach(projectId => {
+    const label = PREV_PROJECT_LABELS[projectId];
+    const proj = PREV_PROJECTS[projectId];
+    if (!proj) return;
+
+    // Build searchable haystack from label + project fields
+    const searchableChunks = [
+      label,
+      proj.projectName || '',
+      proj.companyName || '',
+      proj.contactName || '',
+      proj.systemDisplayName || '',
+      proj.projectCity || '',
+      proj.projectState || '',
+      proj.scopeHeader || ''
+    ].map(s => s.toLowerCase());
+
+    if (query === '' || searchableChunks.some(chunk => chunk.includes(query))) {
+      let matchNote = '';
+      if (query) {
+        if ((proj.projectName || '').toLowerCase().includes(query)) matchNote = `Project: ${proj.projectName}`;
+        else if ((proj.companyName || '').toLowerCase().includes(query)) matchNote = `Company: ${proj.companyName}`;
+        else if ((proj.contactName || '').toLowerCase().includes(query)) matchNote = `Contact: ${proj.contactName}`;
+        else if ((proj.systemDisplayName || '').toLowerCase().includes(query)) matchNote = `System: ${proj.systemDisplayName}`;
+        else if ((proj.projectCity || '').toLowerCase().includes(query)) matchNote = `City: ${proj.projectCity}`;
+      }
+
+      const subline = [proj.companyName, proj.projectCity && proj.projectState ? proj.projectCity + ', ' + proj.projectState : ''].filter(Boolean).join(' • ');
+
+      html += `<div class="sys-dropdown-item" onclick="loadPreviousProject('${projectId}')">
+        <div class="sys-dropdown-name">${escH(label)}</div>
+        ${subline ? `<div class="sys-dropdown-tags">${escH(subline)}</div>` : ''}
+        ${matchNote ? `<div class="sys-dropdown-match">${escH(matchNote)}</div>` : ''}
+      </div>`;
+    }
+  });
+
+  if (!html) html = '<div class="sys-dropdown-empty">No projects match your search</div>';
+  dropdown.innerHTML = html;
+  dropdown.classList.add('open');
+}
 
 // ============================================================
 // LOAD PREVIOUS PROJECT
@@ -1472,11 +2045,21 @@ function loadPreviousProject(projectId) {
     _warrantyType: p.warrantyType || 'standard-1yr',
     numMobilizations: p.numMobilizations || '1',
     numPhases: p.numPhases || '',
-    pmName: p.pmName || '',
-    pmCell: p.pmCell || '',
-    pmEmail: p.pmEmail || '',
+    // Keep the current profile's sign-off info — do NOT overwrite with the historical project's values
+    pmName: (currentProfile && currentProfile.pm_name) || '',
+    pmCell: (currentProfile && currentProfile.pm_cell) || '',
+    pmEmail: (currentProfile && currentProfile.pm_email) || '',
+    signoffClosing: (currentProfile && currentProfile.signoff_closing) || 'Best regards,',
   
     paymentTerms: '',
+    omitPaymentTerms: false,
+    inclusionBold: {},
+    inclusionOverrides: {},
+    workSchedule: 'both',
+    introTemplate: 'Please accept our proposal for the installation of {SYSTEM} at the {PROJECT NAME} project in {CITY}, {STATE}.',
+    costTemplate: 'The lump sum cost for the installation of {SYSTEM} is ${VALUE}.00. {TAX}',
+    mobilizationTemplate: "This proposal is based on {MOBS}, with each mobilization (or phase) area being ready for installation prior to HTI's arrival. If areas are not ready, HTI reserves the right to submit a change order for any cost impacts related to remobilization, loss of efficiency, or non-sequential work. The change order value will be determined case by case, with supporting documentation provided.",
+    omitMobilization: false,
     scopeSections: p.scopeSections
       ? p.scopeSections.map(sec => ({ name: sec.name, scopes: sec.scopes.map(s => ({...s})) }))
       : [{ name: p.scopeHeader || '', scopes: (p.scopes || []).map(s => ({...s})) }],
@@ -1491,9 +2074,13 @@ function loadPreviousProject(projectId) {
     addOptions: (p.addOptions || []).map(a => ({...a}))
   });
 
-  const sel = document.getElementById('prevProjectSelect');
-  const label = sel.options[sel.selectedIndex]?.text || projectId;
-  sel.style.display = 'none';
+  const label = PREV_PROJECT_LABELS[projectId] || projectId;
+  const searchInput = document.getElementById('prevSearchInput');
+  if (searchInput) {
+    searchInput.value = '';
+    searchInput.style.display = 'none';
+  }
+  closePrevDropdown();
   const prevTag = document.getElementById('prevProjectTag');
   if (prevTag) prevTag.innerHTML = `<span class="sys-selected-tag">${escH(p.projectName || label)}<button class="tag-x" onclick="clearPrevProject()">&times;</button></span>`;
 
@@ -1511,13 +2098,24 @@ function renderInclusionChecks() {
   const container = document.getElementById('inclusionChecksForm');
   if (!container) return;
   container.innerHTML = INCLUSIONS_MASTER.map(inc => {
-    const dt = getIncText(inc);
+    const isChecked = state.inclusions[inc.id];
+    const isBold = state.inclusionBold && state.inclusionBold[inc.id];
+    const rawText = getIncRawText(inc);
     return `<div class="inclusion-check">
-      <input type="checkbox" id="inc-${inc.id}" ${state.inclusions[inc.id] ? 'checked' : ''}
-        onchange="state.inclusions['${inc.id}']=this.checked;">
-      <label for="inc-${inc.id}">${dt.substring(0, 80)}${dt.length > 80 ? '...' : ''}</label>
+      <input type="checkbox" id="inc-${inc.id}" ${isChecked ? 'checked' : ''}
+        onchange="state.inclusions['${inc.id}']=this.checked; schedulePreviewUpdate();">
+      <button type="button" class="inc-bold-btn ${isBold ? 'active' : ''}" title="Bold this line in the proposal"
+        onclick="state.inclusionBold = state.inclusionBold || {}; state.inclusionBold['${inc.id}'] = !state.inclusionBold['${inc.id}']; this.classList.toggle('active'); schedulePreviewUpdate();"><strong>B</strong></button>
+      <textarea class="inc-text" rows="1" data-inc-id="${inc.id}"
+        oninput="this.style.height='auto'; this.style.height=this.scrollHeight+'px';"
+        onblur="state.inclusionOverrides = state.inclusionOverrides || {}; state.inclusionOverrides['${inc.id}'] = this.value; schedulePreviewUpdate();">${escH(rawText)}</textarea>
     </div>`;
   }).join('');
+  // Auto-size all the inclusion textareas
+  container.querySelectorAll('.inc-text').forEach(ta => {
+    ta.style.height = 'auto';
+    ta.style.height = ta.scrollHeight + 'px';
+  });
 }
 function checkAllInclusions() { INCLUSIONS_MASTER.forEach(i => state.inclusions[i.id] = true); renderInclusionChecks(); }
 function uncheckAllInclusions() { INCLUSIONS_MASTER.forEach(i => state.inclusions[i.id] = false); renderInclusionChecks(); }
@@ -1555,7 +2153,7 @@ function swap(arr, i, dir) {
 }
 
 let _previewTimer = null;
-function schedulePreviewUpdate() { clearTimeout(_previewTimer); _previewTimer = setTimeout(updateLivePreview, 150); }
+function schedulePreviewUpdate() { clearTimeout(_previewTimer); _previewTimer = setTimeout(updateLivePreview, 150); schedulePersist(); }
 
 function syncField(field, val) { state[field] = val; schedulePreviewUpdate(); }
 function syncScope(sec, i, key, val) { if (state.scopeSections[sec] && state.scopeSections[sec].scopes[i]) state.scopeSections[sec].scopes[i][key] = val; schedulePreviewUpdate(); }
@@ -1597,39 +2195,47 @@ function render() {
       </div>
       <div class="form-row"><label>Labor Type</label>
         <select onchange="state.laborType=this.value; renderInclusionChecks();">
-          <option value="open-shop" ${s.laborType==='open-shop'?'selected':''}>Open Shop</option>
+          <option value="open-shop" ${s.laborType==='open-shop'?'selected':''}>Non-Union</option>
           <option value="prevailing" ${s.laborType==='prevailing'?'selected':''}>Prevailing Wage</option>
           <option value="union" ${s.laborType==='union'?'selected':''}>Union Labor</option>
         </select>
       </div>
+      <div class="form-row" style="flex:0 0 60px;"><label>Mobs</label><input value="${esc(s.numMobilizations)}" onblur="syncField('numMobilizations',this.value)" placeholder="1" style="text-align:center;"></div>
+      <div class="form-row" style="flex:0 0 70px;"><label>Phases</label><input value="${esc(s.numPhases)}" onblur="syncField('numPhases',this.value)" placeholder="-" style="text-align:center;"></div>
+    </div>
+    <div class="form-row">
+      <label>Work Schedule</label>
+      <select onchange="state.workSchedule=this.value; render();">
+        <option value="both" ${s.workSchedule==='both'?'selected':''}>Workdays and Weekends</option>
+        <option value="weekdays" ${s.workSchedule==='weekdays'?'selected':''}>Workdays Only</option>
+        <option value="weekends" ${s.workSchedule==='weekends'?'selected':''}>Weekends Only</option>
+      </select>
     </div>
   </div></div>`;
 
   // RECIPIENT
-  h += `<div class="form-card">${cardHeader("recipient","Recipient")}`;
+  h += `<div class="form-card">${cardHeader("recipient","Recipient Info + Greeting")}`;
   h += `<div class="form-row-inline">
-    <div class="form-row"><label>Contact Name</label><input value="${esc(s.contactName)}" onblur="syncField('contactName',this.value)" placeholder="Person's Name"></div>
-    <div class="form-row"><label>Title</label><input value="${esc(s.contactTitle)}" onblur="syncField('contactTitle',this.value)" placeholder="Title (optional)"></div>
+    <div class="form-row"><label>Contact Name</label><input value="${esc(s.contactName)}" onblur="syncField('contactName',this.value)" placeholder="PERSON'S NAME HERE"></div>
+    <div class="form-row"><label>Title</label><input value="${esc(s.contactTitle)}" onblur="syncField('contactTitle',this.value)" placeholder="TITLE (OPTIONAL)"></div>
   </div>`;
-  h += `<div class="form-row"><label>Company Name</label><input value="${esc(s.companyName)}" onblur="syncField('companyName',this.value)" placeholder="${ct==='gc'?'GC Name':'Customer Name'}"></div>
-    <div class="form-row"><label>Address</label><input value="${esc(s.address)}" onblur="syncField('address',this.value)" placeholder="Street Address"></div>
+  h += `<div class="form-row"><label>Company Name</label><input value="${esc(s.companyName)}" onblur="syncField('companyName',this.value)" placeholder="${ct==='gc'?'GC NAME HERE':'CUSTOMER NAME HERE'}"></div>
+    <div class="form-row"><label>Address</label><input value="${esc(s.address)}" onblur="syncField('address',this.value)" placeholder="STREET ADDRESS HERE"></div>
     <div class="form-row-inline">
-      <div class="form-row"><label>City</label><input value="${esc(s.city)}" onblur="syncField('city',this.value)" placeholder="City"></div>
+      <div class="form-row"><label>City</label><input value="${esc(s.city)}" onblur="syncField('city',this.value)" placeholder="CITY"></div>
       <div class="form-row" style="flex:0 0 60px;"><label>State</label><input value="${esc(s.state)}" onblur="syncField('state',this.value)" placeholder="ST"></div>
       <div class="form-row" style="flex:0 0 80px;"><label>ZIP</label><input value="${esc(s.zip)}" onblur="syncField('zip',this.value)" placeholder="ZIP"></div>
     </div>
+    <div class="form-row" style="margin-top:14px; padding-top:10px; border-top:1px solid #333;">
+      <label>Intro Sentence Template <span style="text-transform:none; color:#888; font-size:10px;">(use {SYSTEM}, {PROJECT NAME}, {CITY}, {STATE} as placeholders)</span></label>
+      <div class="template-editor-wrap">
+        <div class="template-editor" contenteditable="true" data-field="introTemplate" oninput="onTemplateInput(this)" onblur="syncField('introTemplate', getEditableText(this))"></div>
+      </div>
+    </div>
   </div></div>`;
 
-  // SCOPE, PRODUCTS, PROCEDURES & COST (merged)
-  h += `<div class="form-card">${cardHeader("work","Scope, Products, Procedures &amp; Cost")}
-    <div class="form-row-inline" style="margin-bottom:10px;">
-      <div class="form-row" style="flex:0 0 60px;"><label>Mobs</label><input value="${esc(s.numMobilizations)}" onblur="syncField('numMobilizations',this.value)" placeholder="1" style="text-align:center;"></div>
-      <div class="form-row" style="flex:0 0 70px;"><label>Phases</label><input value="${esc(s.numPhases)}" onblur="syncField('numPhases',this.value)" placeholder="-" style="text-align:center;"></div>
-      <div class="form-row"></div>
-    </div>`;
-
-  // -- Scope subsection
-  h += `<label class="subsection-label">Scope of Work</label>`;
+  // SCOPE OF WORK
+  h += `<div class="form-card">${cardHeader("scope","Scope of Work")}`;
   s.scopeSections.forEach((sec, si) => {
     h += `<div class="scope-section-block">
       <div class="form-row-inline" style="margin-bottom:6px;">
@@ -1652,21 +2258,20 @@ function render() {
     });
     h += `<button class="btn btn-secondary btn-sm" onclick="addScope(${si})" style="margin-top:4px;">+ Add Scope Line</button></div>`;
   });
-  h += `<button class="btn btn-primary btn-sm" onclick="addScopeSection()" style="margin-top:6px;">+ Add Scope Section</button>`;
+  h += `<button class="btn btn-primary btn-sm" onclick="addScopeSection()" style="margin-top:6px;">+ Add Scope Section</button></div></div>`;
 
-  // -- Products subsection
-  h += `<label class="subsection-label">Products</label>`;
+  // PRODUCTS
+  h += `<div class="form-card">${cardHeader("products","Products")}`;
   s.products.forEach((p, i) => {
     h += `<div class="repeater-row">
       <div class="form-row"><input value="${esc(p.text)}" onblur="syncProduct(${i},this.value)" placeholder="Product name"></div>
       <button class="btn-remove" onclick="removeProduct(${i})">&times;</button></div>`;
   });
-  h += `<button class="btn btn-secondary btn-sm" onclick="addProduct()" style="margin-top:4px;">+ Add Product</button>`;
+  h += `<button class="btn btn-secondary btn-sm" onclick="addProduct()" style="margin-top:4px;">+ Add Product</button></div></div>`;
 
-  // -- Procedures subsection
-  h += `<label class="subsection-label">Procedures</label>
-    <div class="form-row"><label>Existing Site Conditions</label><textarea style="min-height:60px;" onblur="syncField('existingConditions',this.value)" placeholder="Describe existing site conditions (optional)">${escH(s.existingConditions)}</textarea></div>
-    <p style="font-size:10px; color:#888; margin-bottom:8px;">Type {value} for mil values, e.g. {30} mils WFT</p>`;
+  // PROCEDURES
+  h += `<div class="form-card">${cardHeader("procedures","Procedures")}
+    <div class="form-row"><label>Existing Site Conditions</label><textarea style="min-height:60px;" onblur="syncField('existingConditions',this.value)" placeholder="Describe existing site conditions (optional)">${escH(s.existingConditions)}</textarea></div>`;
   s.procedureSections.forEach((sec, pi) => {
     h += `<div class="procedure-section-block">
       <div class="form-row-inline" style="margin-bottom:6px;">
@@ -1681,10 +2286,16 @@ function render() {
     });
     h += `<button class="btn btn-secondary btn-sm" onclick="addProcedureStep(${pi})" style="margin-top:4px;">+ Add Step</button></div>`;
   });
-  h += `<button class="btn btn-primary btn-sm" onclick="addProcedureSection()" style="margin-top:6px;">+ Add Procedure Section</button>`;
+  h += `<button class="btn btn-primary btn-sm" onclick="addProcedureSection()" style="margin-top:6px;">+ Add Procedure Section</button></div></div>`;
 
-  // -- Cost & Add Options subsection
-  h += `<label class="subsection-label">Cost &amp; Additional Options</label>`;
+  // COST & ADDITIONAL OPTIONS
+  h += `<div class="form-card">${cardHeader("cost","Cost &amp; Additional Options")}
+    <div class="form-row">
+      <label>Cost Sentence Template <span style="text-transform:none; color:#888; font-size:10px;">(use {SYSTEM}, {VALUE}, {TAX} as placeholders)</span></label>
+      <div class="template-editor-wrap">
+        <div class="template-editor" contenteditable="true" data-field="costTemplate" oninput="onTemplateInput(this)" onblur="syncField('costTemplate', getEditableText(this))"></div>
+      </div>
+    </div>`;
   s.costSections.forEach((cs, ci) => {
     h += `<div class="repeater-row" style="flex-wrap:wrap;">
       <div class="form-row"><label>Description</label><input value="${esc(cs.description)}" onblur="syncCostField(${ci},'description',this.value)" placeholder="Cost description"></div>
@@ -1737,13 +2348,24 @@ function render() {
     payDefault = "Terms of acceptance and pricing are based upon NET 30 from the completion date. Material invoicing will be sent in the month material is landed on the customer\u2019s site, due NET 30. Progress billing will be sent monthly for % of work completed through the end of that calendar month.";
   }
   if (!s.paymentTerms) s.paymentTerms = payDefault;
-  h += `<div class="form-card">${cardHeader("payment","Payment Terms")}
+  h += `<div class="form-card">${cardHeader("payment","Payment Terms","omitPaymentTerms")}
     <p style="font-size:10px; color:#888; margin-bottom:6px;">${ct==='gc'?'GC Payment Draw Terms':'Direct Customer Payment Terms'}</p>
-    <div class="form-row"><textarea rows="3" onblur="syncField('paymentTerms',this.value)">${escH(s.paymentTerms)}</textarea></div>
+    <div class="form-row"><textarea rows="3" onblur="syncField('paymentTerms',this.value)" ${s.omitPaymentTerms ? 'disabled style="opacity:0.4;"' : ''}>${escH(s.paymentTerms)}</textarea></div>
+  </div></div>`;
+
+  // MOBILIZATION
+  h += `<div class="form-card">${cardHeader("mobilization","Extra Mobilizations &amp; Non-sequential Work","omitMobilization")}
+    <div class="form-row">
+      <label>Mobilization Text <span style="text-transform:none; color:#888; font-size:10px;">(use {MOBS} as placeholder for "1 mobilization(s)" / "2 mobilizations (and/or 3 phases)")</span></label>
+      <div class="template-editor-wrap">
+        <div class="template-editor" contenteditable="${s.omitMobilization ? 'false' : 'true'}" data-field="mobilizationTemplate" ${s.omitMobilization ? 'style="opacity:0.4;pointer-events:none;"' : ''} oninput="onTemplateInput(this)" onblur="syncField('mobilizationTemplate', getEditableText(this))"></div>
+      </div>
+    </div>
   </div></div>`;
 
   // SIGN-OFF
   h += `<div class="form-card">${cardHeader("signoff","Sign-off")}
+    <div class="form-row"><label>Closing <span style="text-transform:none; color:#888; font-size:10px;">(press Enter for a new line)</span></label><textarea rows="2" onblur="syncField('signoffClosing',this.value)" placeholder="e.g. Best regards,">${escH(s.signoffClosing||'')}</textarea></div>
     <div class="form-row"><label>Project Manager Name</label><input value="${esc(s.pmName)}" onblur="syncField('pmName',this.value)" placeholder="e.g. Chris Larabee"></div>
     <div class="form-row-inline">
       <div class="form-row"><label>Cell Number</label><input value="${esc(s.pmCell)}" onblur="syncField('pmCell',this.value)" placeholder="206-xxx-xxxx"></div>
@@ -1751,8 +2373,10 @@ function render() {
     </div>
   </div></div>`;
 
+  schedulePersist();
   document.getElementById('previewContainer').innerHTML = h;
   renderInclusionChecks();
+  refreshTemplateHighlights();
 
   // Auto-expand all textareas that need it
   document.querySelectorAll('.procedure-step-row textarea, textarea.auto-expand').forEach(ta => {
@@ -1900,9 +2524,9 @@ async function generateWordBlob() {
   var csz = [s.city, s.state].filter(Boolean).join(', ');
   if (s.zip) csz += ' ' + s.zip;
   if (csz.trim()) paras.push(wp(csz));
-  var firstName = s.contactName ? s.contactName.split(' ')[0] : (ct === 'gc' ? '(Person)' : '(Customer)');
+  var firstName = s.contactName ? s.contactName.split(' ')[0] : (ct === 'gc' ? 'PERSON' : 'CUSTOMER');
   paras.push(wp('Hello ' + firstName + ', ', { before: 240 }));
-  paras.push(wp('Please accept our proposal for the installation of ' + (s.systemDisplayName || '(System)') + ' at the ' + (s.projectName || '(Project Name)') + ' project in ' + (s.projectCity || '(City)') + ', ' + (s.projectState || '(State)') + '.'));
+  paras.push(wp(resolveTemplateText(s.introTemplate || '', s)));
   s.scopeSections.forEach(function(sec, si) {
     var label = s.scopeSections.length > 1 ? ('Scope ' + (si + 1)) : 'Scope of Work';
     paras.push(wp(label + ': ' + sec.name, { bold: true, underline: true, before: 240 }));
@@ -1932,10 +2556,9 @@ async function generateWordBlob() {
     });
   });
   paras.push(wp('Cost: ', { bold: true, before: 240 }));
-  var taxTexts = { 'not-included': 'Any applicable taxes are not included.', 'plus-wsst': 'plus any applicable WSST.', 'plus-state-tax': 'plus any applicable state sales tax.', 'excludes-wsst': 'Price excludes any WSST.', 'excluding-sales-tax': 'excluding sales tax.' };
   s.costSections.forEach(function(cs) {
     if (cs.description) paras.push(wp(cs.description, { bold: true }));
-    paras.push(wp('The lump sum cost for the installation of ' + (s.systemDisplayName || '(System)') + ' is $' + (cs.value || '(Value)') + '.00. ' + (taxTexts[s.taxNote] || '')));
+    paras.push(wp(resolveTemplateText(s.costTemplate || '', s, { value: cs.value })));
   });
   if (s.addOptions.length) {
     paras.push(wp('Add Options: ', { bold: true, before: 240 }));
@@ -1948,31 +2571,37 @@ async function generateWordBlob() {
     paras.push(wp('Inclusions & Exclusions:', { bold: true, underline: true, before: 240 }));
     activeInclusions.forEach(function(inc) {
       const incText = getIncText(inc);
+      const incBold = !!(s.inclusionBold && s.inclusionBold[inc.id]);
       const cont = checkBreak(incText);
       if (cont) paras.push(wp(cont, { bold: true, underline: true, pageBreakBefore: true }));
-      paras.push(wp(incText, { numId: 36 }));
+      paras.push(wp(incText, { numId: 36, bold: incBold }));
     });
   }
-  if (ct === 'gc') {
-    paras.push(wp('General Contractor Payment Draw Terms:', { bold: true, before: 240 }));
-    paras.push(wp(s.paymentTerms || 'Payment draws are due on the 10th of the month, the second month following the month of the draw invoice. For example: January draws are due on the 10th of March. Any payments delinquent 30 days or more will be subject to work stoppage or a 1.5% interest charge until the account is current.', { bold: true }));
-  } else {
-    paras.push(wp('Standard HTI Customer Payment Terms', { bold: true, before: 240 }));
-    paras.push(wp(s.paymentTerms || "Terms of acceptance and pricing are based upon NET 30 from the completion date. Material invoicing will be sent in the month material is landed on the customer\u2019s site, due NET 30. Progress billing will be sent monthly for % of work completed through the end of that calendar month."));
+  if (!s.omitPaymentTerms) {
+    if (ct === 'gc') {
+      paras.push(wp('General Contractor Payment Draw Terms:', { bold: true, before: 240 }));
+      paras.push(wp(s.paymentTerms || 'Payment draws are due on the 10th of the month, the second month following the month of the draw invoice. For example: January draws are due on the 10th of March. Any payments delinquent 30 days or more will be subject to work stoppage or a 1.5% interest charge until the account is current.', { bold: true }));
+    } else {
+      paras.push(wp('Standard HTI Customer Payment Terms', { bold: true, before: 240 }));
+      paras.push(wp(s.paymentTerms || "Terms of acceptance and pricing are based upon NET 30 from the completion date. Material invoicing will be sent in the month material is landed on the customer\u2019s site, due NET 30. Progress billing will be sent monthly for % of work completed through the end of that calendar month."));
+    }
   }
-  paras.push(wp('Extra mobilizations and non-sequential work exclusion:', { bold: true, before: 240 }));
-  var mobNum = s.numMobilizations || '1';
-  var mobLine = 'This proposal is based on ' + mobNum + ' mobilization(s)';
-  if (s.numPhases) mobLine = 'This proposal is based on ' + mobNum + ' mobilizations (and/or ' + s.numPhases + ' phases)';
-  mobLine += ", with each mobilization (or phase) area being ready for installation prior to HTI's arrival. If areas are not ready, HTI reserves the right to submit a change order for any cost impacts related to remobilization, loss of efficiency, or non-sequential work. The change order value will be determined case by case, with supporting documentation provided.";
-  paras.push(wp(mobLine));
+  if (!s.omitMobilization) {
+    paras.push(wp('Extra mobilizations and non-sequential work exclusion:', { bold: true, before: 240 }));
+    paras.push(wp(resolveTemplateText(s.mobilizationTemplate || '', s)));
+  }
 
   // Signoff wrapped in a single-cell table with cantSplit so Word treats it as atomic and won't break across pages
+  // Split the closing on newlines so multi-line closings render as multiple paragraphs
+  var closingLines = (s.signoffClosing || 'Best regards,').split(/\r?\n/);
+  var closingParas = closingLines.map(function(line, i) {
+    return wp((i === closingLines.length - 1 ? line + ' ' : line), i === 0 ? { before: 240 } : {});
+  }).join('');
   var signoffParas = [
-    wp('Best regards, ', { before: 240 }),
-    wp(s.pmName || '(Project Manager)', { bold: true, before: 240 }),
-    wp(s.pmCell || '(Cell Number)'),
-    wp(s.pmEmail || '(PM Email)'),
+    closingParas,
+    wp(s.pmName || 'PROJECT MANAGER', { bold: true, before: 240 }),
+    wp(s.pmCell || 'CELL NUMBER'),
+    wp(s.pmEmail || 'PM EMAIL'),
     wp('HTI Polymer, INC.'),
     wp('ACCEPTED BY: _____________________________________ DATE: _______________________', { before: 480 }),
     wp('PO#: _________________')
@@ -2054,12 +2683,66 @@ async function generateWordBlob() {
 // PREVIEW FIELD INTERACTION
 // ============================================================
 
+// Find the editor input/textarea that corresponds to a given field-link ID
+function findEditorInput(fieldId) {
+  const container = document.getElementById('previewContainer');
+  if (!container) return null;
+  const inputs = container.querySelectorAll('input, textarea');
+  const key = fieldLinkToStateKey(fieldId);
+  if (!key) return null;
+
+  // Build a search predicate based on the field type
+  let matcher;
+  switch (key.type) {
+    case 'direct':
+      // Looks for: syncField('fieldName', or syncField("fieldName"
+      matcher = (blur) => blur.includes("syncField('" + key.field + "'") || blur.includes('syncField("' + key.field + '"');
+      break;
+    case 'scope':
+      // Looks for: syncScope(sec,idx,'key',
+      matcher = (blur) => blur.includes("syncScope(" + key.sec + "," + key.idx + ",'" + key.key + "'");
+      break;
+    case 'scopeSection':
+      // Looks for: syncScopeSection(sec,
+      matcher = (blur) => blur.includes("syncScopeSection(" + key.sec + ",");
+      break;
+    case 'product':
+      // Looks for: syncProduct(idx,
+      matcher = (blur) => blur.includes("syncProduct(" + key.idx + ",");
+      break;
+    case 'procedure':
+      // Looks for: syncProcedure(sec,idx,
+      matcher = (blur) => blur.includes("syncProcedure(" + key.sec + "," + key.idx + ",");
+      break;
+    case 'procedureHeader':
+      // Looks for: syncProcedureSectionHeader(sec,
+      matcher = (blur) => blur.includes("syncProcedureSectionHeader(" + key.sec + ",");
+      break;
+    case 'costField':
+      // Looks for: syncCostField(sec,'key',
+      matcher = (blur) => blur.includes("syncCostField(" + key.sec + ",'" + key.key + "'");
+      break;
+    case 'addOption':
+      // Looks for: syncAddOption(idx,
+      matcher = (blur) => blur.includes("syncAddOption(" + key.idx + ",");
+      break;
+    default:
+      return null;
+  }
+
+  for (const inp of inputs) {
+    const blur = inp.getAttribute('onblur') || '';
+    if (matcher(blur)) return inp;
+  }
+  return null;
+}
+
 // Map field data-field attributes back to state + editor
 function fieldLinkToStateKey(fieldId) {
   // Direct state fields
   const directFields = ['contactName','contactTitle','companyName','address','city','state','zip',
     'projectName','projectCity','projectState','systemDisplayName','existingConditions',
-    'warrantyText','paymentTerms','pmName','pmCell','pmEmail','numMobilizations','numPhases'];
+    'warrantyText','paymentTerms','pmName','pmCell','pmEmail','numMobilizations','numPhases','signoffClosing'];
   if (directFields.includes(fieldId)) return { type: 'direct', field: fieldId };
 
   // Scope: scope_0_1_desc, scopeSection_0
@@ -2115,69 +2798,163 @@ function scrollToEditorField(section, fieldId) {
     toggleSection(section);
   }
 
-  // Find the matching input/textarea in the editor
-  // For direct fields, find by placeholder or label proximity
   setTimeout(() => {
-    const container = document.getElementById('previewContainer');
-    if (!container) return;
-    const inputs = container.querySelectorAll('input, textarea');
-    for (const inp of inputs) {
-      const blur = inp.getAttribute('onblur') || '';
-      if (blur.includes(`'${fieldId}'`) || blur.includes(`"${fieldId}"`)) {
-        inp.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        inp.classList.add('field-highlight');
-        inp.focus();
-        setTimeout(() => inp.classList.remove('field-highlight'), 1500);
-        return;
-      }
+    const inp = findEditorInput(fieldId);
+    if (inp) {
+      inp.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      inp.classList.add('field-highlight');
+      inp.focus();
+      // Select all text so user can immediately type to overwrite
+      if (inp.select) inp.select();
+      setTimeout(() => inp.classList.remove('field-highlight'), 2000);
     }
   }, 100);
 }
 
-// Attach click/blur handlers to field-links in the preview
+// Attach click handlers to field-links in the preview
+// Build the highlighted HTML for a template string
+// Escapes HTML then wraps {PLACEHOLDERS} in <span class="ph">.
+// Newlines become <br> so contenteditable preserves them visually.
+function buildTemplateHighlight(text) {
+  const esc = (t) => t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  let html = esc(text || '');
+  html = html.replace(/\{[A-Z][A-Z0-9 _]*\}/g, m => '<span class="ph">' + m + '</span>');
+  // Replace newlines with <br>, preserving line breaks in contenteditable
+  html = html.replace(/\r?\n/g, '<br>');
+  return html;
+}
+
+// Get plain-text cursor offset within a contenteditable element
+function getCaretOffset(el) {
+  const sel = window.getSelection();
+  if (!sel.rangeCount) return 0;
+  const range = sel.getRangeAt(0);
+  if (!el.contains(range.endContainer)) return 0;
+  // Walk text nodes counting characters until we hit the range endContainer
+  let charCount = 0;
+  let found = false;
+  function walk(node) {
+    if (found) return;
+    if (node === range.endContainer) {
+      charCount += range.endOffset;
+      found = true;
+      return;
+    }
+    if (node.nodeType === 3) {
+      charCount += node.textContent.length;
+    } else {
+      for (const child of node.childNodes) {
+        walk(child);
+        if (found) return;
+      }
+      // <br> counts as one character (newline)
+      if (node.nodeName === 'BR') charCount += 1;
+    }
+  }
+  walk(el);
+  return charCount;
+}
+
+// Set cursor at a plain-text offset within a contenteditable element
+function setCaretOffset(el, offset) {
+  let charCount = 0;
+  let target = null;
+  let targetOffset = 0;
+  function walk(node) {
+    if (target) return;
+    if (node.nodeType === 3) {
+      const len = node.textContent.length;
+      if (charCount + len >= offset) {
+        target = node;
+        targetOffset = offset - charCount;
+        return;
+      }
+      charCount += len;
+    } else {
+      for (const child of node.childNodes) {
+        walk(child);
+        if (target) return;
+      }
+      if (node.nodeName === 'BR') {
+        if (charCount + 1 >= offset) {
+          // Place cursor right after the BR
+          const parent = node.parentNode;
+          const idx = Array.from(parent.childNodes).indexOf(node) + 1;
+          target = parent;
+          targetOffset = idx;
+          return;
+        }
+        charCount += 1;
+      }
+    }
+  }
+  walk(el);
+  if (target) {
+    const range = document.createRange();
+    if (target.nodeType === 3) {
+      range.setStart(target, Math.min(targetOffset, target.textContent.length));
+    } else {
+      range.setStart(target, targetOffset);
+    }
+    range.collapse(true);
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+  }
+}
+
+// Get plain text from contenteditable, treating <br> as newline
+function getEditableText(el) {
+  let out = '';
+  function walk(node) {
+    if (node.nodeType === 3) {
+      out += node.textContent;
+    } else if (node.nodeName === 'BR') {
+      out += '\n';
+    } else {
+      for (const child of node.childNodes) walk(child);
+    }
+  }
+  walk(el);
+  return out;
+}
+// Override innerText getter usage on the editor since we want our consistent logic
+// (Sync handlers call .innerText, we need them to work too)
+
+function onTemplateInput(el) {
+  if (!el) return;
+  const offset = getCaretOffset(el);
+  const text = getEditableText(el);
+  el.innerHTML = buildTemplateHighlight(text);
+  setCaretOffset(el, offset);
+  // Live sync to state on every input
+  const field = el.dataset.field;
+  if (field) state[field] = text;
+}
+
+// Initialize all template editors after a render — populate from state
+function refreshTemplateHighlights() {
+  document.querySelectorAll('.template-editor').forEach(el => {
+    const field = el.dataset.field;
+    if (!field) return;
+    const text = state[field] || '';
+    el.innerHTML = buildTemplateHighlight(text);
+  });
+}
+
 function attachPreviewFieldHandlers() {
   const livePreview = document.getElementById('livePreview');
   if (!livePreview) return;
 
+  // Field-links are no longer editable inline — clicking jumps to the editor field
   livePreview.querySelectorAll('.field-link').forEach(link => {
     const section = link.dataset.section;
     const field = link.dataset.field;
-
-    // On double-click, scroll to editor field
-    link.addEventListener('dblclick', (e) => {
+    link.addEventListener('click', (e) => {
       e.preventDefault();
+      e.stopPropagation();
       scrollToEditorField(section, field);
     });
-
-    // On blur after editing, sync back to state and update editor
-    link.addEventListener('blur', () => {
-      const newVal = link.textContent.trim();
-      syncFieldLinkToState(field, newVal);
-      // Update editor without re-rendering preview (to preserve cursor/edits)
-      const container = document.getElementById('previewContainer');
-      if (container) {
-        const inputs = container.querySelectorAll('input, textarea');
-        for (const inp of inputs) {
-          const blur = inp.getAttribute('onblur') || '';
-          if (blur.includes(`'${field}'`) || blur.includes(`"${field}"`)) {
-            inp.value = newVal;
-            break;
-          }
-        }
-      }
-    });
-  });
-
-  // Bold/underline keyboard shortcuts in preview
-  livePreview.addEventListener('keydown', (e) => {
-    if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
-      e.preventDefault();
-      document.execCommand('bold');
-    }
-    if ((e.ctrlKey || e.metaKey) && e.key === 'u') {
-      e.preventDefault();
-      document.execCommand('underline');
-    }
   });
 }
 
@@ -2201,6 +2978,56 @@ document.addEventListener('keydown', function(e) {
 // ============================================================
 // BUILD PROPOSAL HTML (static document for export)
 // ============================================================
+// Resolve a template string by substituting placeholders with field-link spans (for HTML preview)
+// Placeholders: {SYSTEM}, {PROJECT NAME}, {CITY}, {STATE}, {VALUE}, {TAX}, {MOBS}
+function resolveTemplateHTML(template, s, ctx) {
+  ctx = ctx || {};
+  const taxTexts = {
+    'not-included': 'Any applicable taxes are not included.',
+    'plus-wsst': 'plus any applicable WSST.',
+    'plus-state-tax': 'plus any applicable state sales tax.',
+    'excludes-wsst': 'Price excludes any WSST.',
+    'excluding-sales-tax': 'excluding sales tax.'
+  };
+  const fl = (section, field, text) => `<span class="field-link" data-section="${section}" data-field="${field}">${text}</span>`;
+  // Mobilization expansion
+  const mobsText = s.numPhases
+    ? `<strong>${escH(s.numMobilizations || '1')}</strong> mobilizations (and/or <strong>${escH(s.numPhases)}</strong> phases)`
+    : `<strong>${escH(s.numMobilizations || '1')}</strong> mobilization(s)`;
+  return escH(template)
+    .replace(/\{SYSTEM\}/g, fl('project-info','systemDisplayName', escH(s.systemDisplayName) || 'SYSTEM'))
+    .replace(/\{PROJECT NAME\}/g, fl('project-info','projectName', escH(s.projectName) || 'PROJECT NAME'))
+    .replace(/\{CITY\}/g, fl('project-info','projectCity', escH(s.projectCity) || 'CITY'))
+    .replace(/\{STATE\}/g, fl('project-info','projectState', escH(s.projectState) || 'STATE'))
+    .replace(/\{VALUE\}/g, fl('cost', ctx.costFieldId || 'costValue_0', escH(ctx.value) || 'VALUE'))
+    .replace(/\{TAX\}/g, taxTexts[s.taxNote] || '')
+    .replace(/\{MOBS\}/g, mobsText);
+}
+
+// Resolve a template string for the Word doc (plain text, no field-links)
+function resolveTemplateText(template, s, ctx) {
+  ctx = ctx || {};
+  const taxTexts = {
+    'not-included': 'Any applicable taxes are not included.',
+    'plus-wsst': 'plus any applicable WSST.',
+    'plus-state-tax': 'plus any applicable state sales tax.',
+    'excludes-wsst': 'Price excludes any WSST.',
+    'excluding-sales-tax': 'excluding sales tax.'
+  };
+  const mobNum = s.numMobilizations || '1';
+  const mobsText = s.numPhases
+    ? mobNum + ' mobilizations (and/or ' + s.numPhases + ' phases)'
+    : mobNum + ' mobilization(s)';
+  return template
+    .replace(/\{SYSTEM\}/g, s.systemDisplayName || 'SYSTEM')
+    .replace(/\{PROJECT NAME\}/g, s.projectName || 'PROJECT NAME')
+    .replace(/\{CITY\}/g, s.projectCity || 'CITY')
+    .replace(/\{STATE\}/g, s.projectState || 'STATE')
+    .replace(/\{VALUE\}/g, ctx.value || 'VALUE')
+    .replace(/\{TAX\}/g, taxTexts[s.taxNote] || '')
+    .replace(/\{MOBS\}/g, mobsText);
+}
+
 function buildProposalHTML(s) {
   const ct = s.clientType;
   const fmtDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
@@ -2219,7 +3046,7 @@ function buildProposalHTML(s) {
 
   // Field link helper: wraps text in a clickable span that links to the editor field
   // section = which collapsible section id, field = input identifier
-  const fl = (section, field, text, extra) => `<span class="field-link" data-section="${section}" data-field="${field}" contenteditable="true" ${extra||''}>${text}</span>`;
+  const fl = (section, field, text, extra) => `<span class="field-link" data-section="${section}" data-field="${field}" ${extra||''}>${text}</span>`;
 
   // Recipient
   let recip;
@@ -2251,44 +3078,39 @@ function buildProposalHTML(s) {
     recip = `<div class="recipient">${lines.join('<br>')}</div>`;
   }
 
-  const firstName = s.contactName ? s.contactName.split(' ')[0] : (ct === 'gc' ? '(Person)' : '(Customer)');
-  const greeting = `<p class="greeting" contenteditable="true">Hello ${escH(firstName)},</p>`;
-  const intro = `<p class="intro-para" contenteditable="true">Please accept our proposal for the installation of
-    ${fl('project-info','systemDisplayName',escH(s.systemDisplayName) || '(System)')} at the
-    ${fl('project-info','projectName',escH(s.projectName) || '(Project Name)')} project in
-    ${fl('project-info','projectCity',escH(s.projectCity) || '(City)')},
-    ${fl('project-info','projectState',escH(s.projectState) || '(State)')}.
-  </p>`;
+  const firstName = s.contactName ? s.contactName.split(' ')[0] : (ct === 'gc' ? 'PERSON' : 'CUSTOMER');
+  const greeting = `<p class="greeting">Hello ${fl('recipient','contactName',escH(firstName))},</p>`;
+  const intro = `<p class="intro-para">${resolveTemplateHTML(s.introTemplate || '', s)}</p>`;
 
   // SCOPE SECTIONS
   const scopeHTML = s.scopeSections.map((sec, si) => {
     const rows = sec.scopes.map((sc, i) => {
-      let qtyStr = fl('work',`scope_${si}_${i}_qty`,escH(sc.qty || '')) + ' ' + fl('work',`scope_${si}_${i}_unit`,escH(sc.unit || ''));
+      let qtyStr = fl('scope',`scope_${si}_${i}_qty`,escH(sc.qty || '')) + ' ' + fl('scope',`scope_${si}_${i}_unit`,escH(sc.unit || ''));
       if (sc.qty2 || sc.unit2) qtyStr += '; ' + escH(sc.qty2 || '') + ' ' + escH(sc.unit2 || '');
-      return `<div class="scope-row"><span class="scope-desc">${fl('work',`scope_${si}_${i}_desc`,escH(sc.desc))}</span><span class="scope-dash">-</span><span class="scope-qty">${qtyStr}</span></div>`;
+      return `<div class="scope-row"><span class="scope-desc">${fl('scope',`scope_${si}_${i}_desc`,escH(sc.desc))}</span><span class="scope-dash">-</span><span class="scope-qty">${qtyStr}</span></div>`;
     }).join('');
     const label = s.scopeSections.length > 1 ? `Scope ${si + 1}` : 'Scope of Work';
-    return `<div class="scope-block"><div class="section-label">${label}: ${fl('work',`scopeSection_${si}`,escH(sec.name))}</div>${rows}</div>`;
+    return `<div class="scope-block"><div class="section-label">${label}: ${fl('scope',`scopeSection_${si}`,escH(sec.name))}</div>${rows}</div>`;
   }).join('');
 
   // PRODUCTS
-  const prodItems = s.products.map((p, i) => `<li>${fl('work',`product_${i}`,escH(p.text))}</li>`).join('');
+  const prodItems = s.products.map((p, i) => `<li>${fl('products',`product_${i}`,escH(p.text))}</li>`).join('');
   const productsHTML = s.products.length ? `<div class="products-block"><div class="section-label-nb">Products:</div><ul class="products-list">${prodItems}</ul></div>` : '';
 
   // EXISTING CONDITIONS
   let existHTML = '';
   if (s.existingConditions) {
-    existHTML = `<div class="existing-conditions"><strong>Existing Site Conditions:</strong><br><strong>${fl('work','existingConditions',escH(s.existingConditions))}</strong></div>`;
+    existHTML = `<div class="existing-conditions"><strong>Existing Site Conditions:</strong><br><strong>${fl('procedures','existingConditions',escH(s.existingConditions))}</strong></div>`;
   }
 
   // PROCEDURES
   const proceduresHTML = s.procedureSections.map((sec, pi) => {
     const items = sec.steps.map((step, i) => {
-      let t = escH(step.text);
-      t = t.replace(/\{([^}]+)\}/g, '<strong style="font-weight:700;">$1</strong>');
-      return `<li>${fl('work',`procedure_${pi}_${i}`,t)}</li>`;
+      // Strip {braces} but don't auto-bold the contents
+      const t = escH(step.text).replace(/\{([^}]+)\}/g, '$1');
+      return `<li>${fl('procedures',`procedure_${pi}_${i}`,t)}</li>`;
     }).join('');
-    return `<div class="procedure-block"><div class="section-label-nb">Procedures: ${fl('work',`procedureHeader_${pi}`,escH(sec.header))}</div><ul class="procedures-doc-list">${items}</ul></div>`;
+    return `<div class="procedure-block"><div class="section-label-nb">Procedures: ${fl('procedures',`procedureHeader_${pi}`,escH(sec.header))}</div><ul class="procedures-doc-list">${items}</ul></div>`;
   }).join('');
 
   // COST
@@ -2303,47 +3125,50 @@ function buildProposalHTML(s) {
     return `<div class="cost-block">
     ${ci === 0 ? '<div class="section-label-nb">Cost:</div>' : ''}
     <div class="cost-section">
-      ${cs.description ? `<div class="cost-line"><strong>${fl('work',`costDesc_${ci}`,escH(cs.description))}</strong></div>` : ''}
-      <div class="cost-line">The lump sum cost for the installation of ${escH(s.systemDisplayName) || '(System)'} is
-        <strong>$${fl('work',`costValue_${ci}`,escH(cs.value) || '(Value)')}.00</strong>.
-        ${taxTexts[s.taxNote] || ''}
-      </div>
+      ${cs.description ? `<div class="cost-line"><strong>${fl('cost',`costDesc_${ci}`,escH(cs.description))}</strong></div>` : ''}
+      <div class="cost-line">${resolveTemplateHTML(s.costTemplate || '', s, { value: cs.value, costFieldId: 'costValue_' + ci })}</div>
     </div>
     </div>`;
   }).join('');
 
   // ADD OPTIONS
-  const aoItems = s.addOptions.map((a, i) => `<li>${fl('work',`addOption_${i}`,escH(a.text))}</li>`).join('');
+  const aoItems = s.addOptions.map((a, i) => `<li>${fl('cost',`addOption_${i}`,escH(a.text))}</li>`).join('');
   const addOptHTML = s.addOptions.length ? `<div class="add-options-block"><div class="section-label-nb">Add Options:</div><div class="add-options-section"><ol>${aoItems}</ol></div></div>` : '';
 
   // WARRANTY
   const warHTML = `<div class="warranty-block"><div class="section-label-nb">Warranty:</div><div class="warranty-section">${fl('warranty','warrantyText',escH(s.warrantyText))}</div></div>`;
 
   // INCLUSIONS
-  const incItems = INCLUSIONS_MASTER.filter(inc => s.inclusions[inc.id]).map(inc => `<li contenteditable="true">${getIncText(inc)}</li>`).join('');
+  const incItems = INCLUSIONS_MASTER.filter(inc => s.inclusions[inc.id]).map(inc => {
+    const isBold = s.inclusionBold && s.inclusionBold[inc.id];
+    const txt = escH(getIncText(inc));
+    return isBold ? `<li><strong>${txt}</strong></li>` : `<li>${txt}</li>`;
+  }).join('');
   const incHTML = incItems ? `<div class="inclusions-block"><div class="section-label">Inclusions &amp; Exclusions:</div><ul class="inclusions-list">${incItems}</ul></div>` : '';
 
-  // PAYMENT TERMS
-  let payHTML;
-  if (ct === 'gc') {
-    const payText = s.paymentTerms || 'Payment draws are due on the 10th of the month, the second month following the month of the draw invoice. For example: January draws are due on the 10th of March. Any payments delinquent 30 days or more will be subject to work stoppage or a 1.5% interest charge until the account is current.';
-    payHTML = `<div class="payment-block"><div class="section-label-nb">General Contractor Payment Draw Terms:</div><div class="payment-section"><strong>${fl('payment','paymentTerms',escH(payText))}</strong></div></div>`;
-  } else {
-    const payText = s.paymentTerms || "Terms of acceptance and pricing are based upon NET 30 from the completion date. Material invoicing will be sent in the month material is landed on the customer\u2019s site, due NET 30. Progress billing will be sent monthly for % of work completed through the end of that calendar month.";
-    payHTML = `<div class="payment-block"><div class="section-label-nb">Standard HTI Customer Payment Terms</div><div class="payment-section">${fl('payment','paymentTerms',escH(payText))}</div></div>`;
+  // PAYMENT TERMS (skip if omitted)
+  let payHTML = '';
+  if (!s.omitPaymentTerms) {
+    if (ct === 'gc') {
+      const payText = s.paymentTerms || 'Payment draws are due on the 10th of the month, the second month following the month of the draw invoice. For example: January draws are due on the 10th of March. Any payments delinquent 30 days or more will be subject to work stoppage or a 1.5% interest charge until the account is current.';
+      payHTML = `<div class="payment-block"><div class="section-label-nb">General Contractor Payment Draw Terms:</div><div class="payment-section"><strong>${fl('payment','paymentTerms',escH(payText))}</strong></div></div>`;
+    } else {
+      const payText = s.paymentTerms || "Terms of acceptance and pricing are based upon NET 30 from the completion date. Material invoicing will be sent in the month material is landed on the customer\u2019s site, due NET 30. Progress billing will be sent monthly for % of work completed through the end of that calendar month.";
+      payHTML = `<div class="payment-block"><div class="section-label-nb">Standard HTI Customer Payment Terms</div><div class="payment-section">${fl('payment','paymentTerms',escH(payText))}</div></div>`;
+    }
   }
 
-  // MOBILIZATION
-  const mobText = s.numPhases
-    ? `<strong>${fl('project-info','numMobilizations',escH(s.numMobilizations || '1'))}</strong> mobilizations (and/or <strong>${fl('project-info','numPhases',escH(s.numPhases))}</strong> phases)`
-    : `<strong>${fl('project-info','numMobilizations',escH(s.numMobilizations || '1'))}</strong> mobilization(s)`;
-  const mobHTML = `<div class="mobilization-block"><div class="section-label-nb">Extra mobilizations and non-sequential work exclusion:</div>
-  <div class="mobilization-section" contenteditable="true">This proposal is based on ${mobText}, with each mobilization (or phase) area being <strong>ready for installation prior to HTI\u2019s arrival</strong>. If areas are not ready, HTI reserves the right to submit a <strong>change order</strong> for any cost impacts related to <strong>remobilization, loss of efficiency, or non-sequential work</strong>. The change order value will be determined <strong>case by case</strong>, with supporting documentation provided.</div></div>`;
+  // MOBILIZATION (skip if omitted)
+  let mobHTML = '';
+  if (!s.omitMobilization) {
+    mobHTML = `<div class="mobilization-block"><div class="section-label-nb">Extra mobilizations and non-sequential work exclusion:</div>
+    <div class="mobilization-section">${resolveTemplateHTML(s.mobilizationTemplate || '', s)}</div></div>`;
+  }
 
   // SIGNOFF
   const signHTML = `<div class="signoff-block"><div class="signoff">
-    <p>Best regards,</p><br>
-    <p class="pm-name">${fl('signoff','pmName',escH(s.pmName) || '(Project Manager)')}</p>
+    <p>${fl('signoff','signoffClosing',escH(s.signoffClosing||'Best regards,').replace(/\n/g,'<br>'))}</p><br>
+    <p class="pm-name">${fl('signoff','pmName',escH(s.pmName) || 'PROJECT MANAGER')}</p>
     ${s.pmCell ? `<p>${fl('signoff','pmCell',escH(s.pmCell))}</p>` : ''}
     ${s.pmEmail ? `<p>${fl('signoff','pmEmail',escH(s.pmEmail))}</p>` : ''}
     <p>HTI Polymer, INC.</p>
@@ -2563,7 +3388,7 @@ function smartPaginate(hdr, sections, footC, footF) {
       pageHdr = hdr.replace(/<\/div>(\s*<\/div>\s*<\/div>\s*)$/, `<div class="hti-page-num">Page ${i + 1} of ${totalPages}</div></div>$1`);
     }
     const foot = i < totalPages - 1 ? footC : footF;
-    return `<div class="proposal-page export-page">${pageHdr}<div class="export-content" contenteditable="true">${sections.join('')}</div>${foot}</div>`;
+    return `<div class="proposal-page export-page">${pageHdr}<div class="export-content">${sections.join('')}</div>${foot}</div>`;
   }).join('');
 }
 
@@ -2579,7 +3404,7 @@ let _exportHdrH = 150;
 
 function getOrCreateNextPage(previewEl, exportPages) {
   let pageHdr = _exportHdr.replace(/<\/div>(\s*<\/div>\s*<\/div>\s*)$/, `<div class="hti-page-num">...</div></div>$1`);
-  const html = `<div class="proposal-page export-page">${pageHdr}<div class="export-content" contenteditable="true"></div>${_exportFootF}</div>`;
+  const html = `<div class="proposal-page export-page">${pageHdr}<div class="export-content"></div>${_exportFootF}</div>`;
   const tmp = document.createElement('div');
   tmp.innerHTML = html;
   const newPage = tmp.firstElementChild;
@@ -2623,8 +3448,364 @@ async function confirmExportWord() {
   saveAs(blob, filename);
 }
 
-// INIT
-init();
+// ============================================================
+// AUTHENTICATION
+// ============================================================
+let authMode = 'signin'; // 'signin' | 'signup'
+let currentUser = null;
+let currentProfile = null;
+
+function showAuthMode(mode) {
+  authMode = mode;
+  document.getElementById('authForm').style.display = (mode === 'signin' || mode === 'signup') ? 'block' : 'none';
+  document.getElementById('authCheckEmail').style.display = mode === 'check-email' ? 'block' : 'none';
+  document.getElementById('authPending').style.display = mode === 'pending' ? 'block' : 'none';
+  document.getElementById('authError').textContent = '';
+
+  if (mode === 'signin') {
+    document.getElementById('authSub').textContent = 'Sign in to continue';
+    document.getElementById('authSubmitBtn').textContent = 'Sign In';
+    document.getElementById('authToggleText').textContent = "Don't have an account?";
+    document.getElementById('authToggleLink').textContent = 'Create one';
+    document.getElementById('authPassword').setAttribute('autocomplete', 'current-password');
+    // Pre-fill with the last email they signed in with, if any
+    const lastEmail = localStorage.getItem('hti-last-email');
+    const emailField = document.getElementById('authEmail');
+    if (lastEmail && !emailField.value) {
+      emailField.value = lastEmail;
+      // Put cursor in the password field since the email is already filled
+      setTimeout(() => document.getElementById('authPassword').focus(), 50);
+    }
+  } else if (mode === 'signup') {
+    document.getElementById('authSub').textContent = 'Create your account';
+    document.getElementById('authSubmitBtn').textContent = 'Sign Up';
+    document.getElementById('authToggleText').textContent = 'Already have an account?';
+    document.getElementById('authToggleLink').textContent = 'Sign in';
+    document.getElementById('authPassword').setAttribute('autocomplete', 'new-password');
+  }
+}
+
+function toggleAuthMode() {
+  showAuthMode(authMode === 'signin' ? 'signup' : 'signin');
+}
+
+async function handleAuthSubmit() {
+  const email = document.getElementById('authEmail').value.trim();
+  const password = document.getElementById('authPassword').value;
+  const remember = document.getElementById('authRemember').checked;
+  const errEl = document.getElementById('authError');
+  const btn = document.getElementById('authSubmitBtn');
+
+  errEl.textContent = '';
+  if (!email || !password) { errEl.textContent = 'Email and password required.'; return; }
+  if (password.length < 6) { errEl.textContent = 'Password must be at least 6 characters.'; return; }
+
+  btn.disabled = true;
+  btn.textContent = authMode === 'signup' ? 'Creating account...' : 'Signing in...';
+
+  try {
+    if (authMode === 'signup') {
+      const { data, error } = await supa.auth.signUp({ email, password });
+      if (error) throw error;
+      // Remember this email so it pre-fills next time
+      try { localStorage.setItem('hti-last-email', email); } catch(e){}
+      // If Confirm Email is enabled, the user has to verify before they can sign in
+      showAuthMode('check-email');
+    } else {
+      const { data, error } = await supa.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      // Remember this email so it pre-fills next time
+      try { localStorage.setItem('hti-last-email', email); } catch(e){}
+      // "Stay signed in" toggle: if unchecked, clear session on tab close
+      if (!remember) {
+        // Move the session out of localStorage into sessionStorage so it dies with the tab
+        const session = data.session;
+        if (session) {
+          window.localStorage.removeItem('hti-auth-session');
+          window.sessionStorage.setItem('hti-auth-session', JSON.stringify({ currentSession: session, expiresAt: session.expires_at }));
+        }
+      }
+      // The auth state listener (below) will handle the rest
+    }
+  } catch (err) {
+    errEl.textContent = err.message || String(err);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = authMode === 'signup' ? 'Sign Up' : 'Sign In';
+  }
+}
+
+async function handleSignOut() {
+  // Flush any pending save before signing out
+  if (currentUser) { try { await persistNow(); } catch(e){} }
+  await supa.auth.signOut();
+  currentUser = null;
+  currentProfile = null;
+  _currentDraftId = null;
+  _lastSavedJson = '';
+  window._appInitialized = false;
+  document.getElementById('authPassword').value = '';
+  showAuthMode('signin');
+  document.getElementById('authOverlay').classList.remove('hidden');
+}
+
+// Fetch (or refresh) the profile row for the current user
+async function loadCurrentProfile() {
+  if (!currentUser) return null;
+  const { data, error } = await supa
+    .from('profiles')
+    .select('*')
+    .eq('id', currentUser.id)
+    .single();
+  if (error) {
+    console.error('Failed to load profile:', error);
+    return null;
+  }
+  currentProfile = data;
+  return data;
+}
+
+// Decide what to show based on the current auth state
+async function applyAuthState(session) {
+  const overlay = document.getElementById('authOverlay');
+  if (!session || !session.user) {
+    currentUser = null;
+    currentProfile = null;
+    overlay.classList.remove('hidden');
+    showAuthMode('signin');
+    return;
+  }
+  currentUser = session.user;
+  const profile = await loadCurrentProfile();
+
+  if (!profile) {
+    // Profile row hasn't been created yet (race after signup)
+    overlay.classList.remove('hidden');
+    showAuthMode('pending');
+    return;
+  }
+
+  if (!profile.approved) {
+    overlay.classList.remove('hidden');
+    showAuthMode('pending');
+    return;
+  }
+
+  // Approved! Hide the overlay, init the app
+  overlay.classList.add('hidden');
+  // Show or hide the Admin button based on the profile flag
+  const adminBtn = document.getElementById('adminBtn');
+  if (adminBtn) adminBtn.style.display = profile.is_admin ? '' : 'none';
+  // Only run the regular init the first time we sign in this page-load
+  if (!window._appInitialized) {
+    window._appInitialized = true;
+    // Load the user's saved draft (cloud first, local fallback) before first render
+    await loadUserDraft();
+    // Apply profile defaults to any fields still empty after loading the draft
+    applyProfileDefaults();
+    init();
+  }
+}
+
+// ============================================================
+// ADMIN PANEL
+// ============================================================
+async function openAdminPanel() {
+  const modal = document.getElementById('adminModal');
+  modal.classList.add('active');
+  await renderAdminPanel();
+}
+
+function closeAdminPanel() {
+  document.getElementById('adminModal').classList.remove('active');
+}
+
+async function renderAdminPanel() {
+  const container = document.getElementById('adminPanelContent');
+  container.innerHTML = '<div class="admin-empty">Loading...</div>';
+
+  const { data: profiles, error } = await supa
+    .from('profiles')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    container.innerHTML = '<div class="admin-empty" style="color:#e74c3c;">Error loading profiles: ' + escH(error.message) + '</div>';
+    return;
+  }
+
+  if (!profiles || profiles.length === 0) {
+    container.innerHTML = '<div class="admin-empty">No profiles yet.</div>';
+    return;
+  }
+
+  let html = '<table class="admin-table"><thead><tr><th>Email</th><th>Name</th><th>Status</th><th>Signed Up</th><th>Actions</th></tr></thead><tbody>';
+  profiles.forEach(p => {
+    const isSelf = currentUser && p.id === currentUser.id;
+    const created = new Date(p.created_at).toLocaleString('en-US', { year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
+    const statusBadges = (p.approved
+      ? '<span class="badge badge-approved">Approved</span>'
+      : '<span class="badge badge-pending">Pending</span>')
+      + (p.is_admin ? '<span class="badge badge-admin">Admin</span>' : '');
+
+    let actions = '';
+    if (!isSelf) {
+      if (!p.approved) {
+        actions += `<button class="btn-action btn-approve" onclick="adminApprove('${p.id}')">Approve</button>`;
+      } else {
+        actions += `<button class="btn-action btn-revoke" onclick="adminRevoke('${p.id}')">Revoke</button>`;
+      }
+      if (!p.is_admin) {
+        actions += `<button class="btn-action btn-makeadmin" onclick="adminMakeAdmin('${p.id}')">Make Admin</button>`;
+      } else {
+        actions += `<button class="btn-action btn-revoke" onclick="adminRemoveAdmin('${p.id}')">Remove Admin</button>`;
+      }
+      actions += `<button class="btn-action btn-delete" onclick="adminDeleteProfile('${p.id}', '${escH(p.email)}')">Delete</button>`;
+    } else {
+      actions = '<span style="color:#666; font-size:11px;">(you)</span>';
+    }
+
+    html += `<tr>
+      <td>${escH(p.email || '')}</td>
+      <td>${escH(p.display_name || '')}</td>
+      <td>${statusBadges}</td>
+      <td>${escH(created)}</td>
+      <td><div class="actions">${actions}</div></td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+  container.innerHTML = html;
+}
+
+async function adminApprove(userId) {
+  const { error } = await supa.from('profiles').update({ approved: true }).eq('id', userId);
+  if (error) { alert('Error: ' + error.message); return; }
+  await renderAdminPanel();
+}
+
+async function adminRevoke(userId) {
+  if (!confirm('Revoke this user\'s access? They will no longer be able to use the proposal builder.')) return;
+  const { error } = await supa.from('profiles').update({ approved: false }).eq('id', userId);
+  if (error) { alert('Error: ' + error.message); return; }
+  await renderAdminPanel();
+}
+
+async function adminMakeAdmin(userId) {
+  if (!confirm('Grant admin privileges to this user? They will be able to approve other users.')) return;
+  const { error } = await supa.from('profiles').update({ is_admin: true, approved: true }).eq('id', userId);
+  if (error) { alert('Error: ' + error.message); return; }
+  await renderAdminPanel();
+}
+
+async function adminRemoveAdmin(userId) {
+  if (!confirm('Remove admin privileges from this user?')) return;
+  const { error } = await supa.from('profiles').update({ is_admin: false }).eq('id', userId);
+  if (error) { alert('Error: ' + error.message); return; }
+  await renderAdminPanel();
+}
+
+async function adminDeleteProfile(userId, email) {
+  if (!confirm('Permanently delete the profile for ' + email + '?\n\nNote: This only deletes the profile row. The auth user record will remain — to fully remove them, also delete the user from the Supabase Auth dashboard.')) return;
+  const { error } = await supa.from('profiles').delete().eq('id', userId);
+  if (error) { alert('Error: ' + error.message); return; }
+  await renderAdminPanel();
+}
+
+// ============================================================
+// PROFILE SETTINGS
+// ============================================================
+function openProfilePanel() {
+  if (!currentProfile) return;
+  document.getElementById('profilePmName').value = currentProfile.pm_name || '';
+  document.getElementById('profilePmCell').value = currentProfile.pm_cell || '';
+  document.getElementById('profilePmEmail').value = currentProfile.pm_email || '';
+  document.getElementById('profileSignoffClosing').value = currentProfile.signoff_closing || 'Best regards,';
+  document.getElementById('profileMsg').textContent = '';
+  document.getElementById('profileMsg').className = 'profile-msg';
+  document.getElementById('profileModal').classList.add('active');
+}
+
+function closeProfilePanel() {
+  document.getElementById('profileModal').classList.remove('active');
+}
+
+async function saveProfile() {
+  if (!currentUser) return;
+  const msg = document.getElementById('profileMsg');
+  msg.textContent = 'Saving...';
+  msg.className = 'profile-msg';
+
+  const updates = {
+    pm_name: document.getElementById('profilePmName').value.trim(),
+    pm_cell: document.getElementById('profilePmCell').value.trim(),
+    pm_email: document.getElementById('profilePmEmail').value.trim(),
+    signoff_closing: document.getElementById('profileSignoffClosing').value
+  };
+
+  const { error } = await supa.from('profiles').update(updates).eq('id', currentUser.id);
+  if (error) {
+    msg.textContent = 'Error: ' + error.message;
+    msg.className = 'profile-msg error';
+    return;
+  }
+
+  // Update our cached profile
+  Object.assign(currentProfile, updates);
+  msg.textContent = '✓ Profile saved';
+  msg.className = 'profile-msg success';
+  setTimeout(closeProfilePanel, 800);
+}
+
+// Apply profile defaults to the state where the fields are still empty
+// Called on first load and after Reset
+function applyProfileDefaults() {
+  if (!currentProfile) return;
+  if (!state.pmName && currentProfile.pm_name) state.pmName = currentProfile.pm_name;
+  if (!state.pmCell && currentProfile.pm_cell) state.pmCell = currentProfile.pm_cell;
+  if (!state.pmEmail && currentProfile.pm_email) state.pmEmail = currentProfile.pm_email;
+  // Only replace signoffClosing if it's the default "Best regards,"
+  if ((!state.signoffClosing || state.signoffClosing === 'Best regards,') && currentProfile.signoff_closing) {
+    state.signoffClosing = currentProfile.signoff_closing;
+  }
+}
+
+// Listen for auth state changes (sign-in, sign-out, token refresh)
+supa.auth.onAuthStateChange((event, session) => {
+  console.log('Auth event:', event, !!session);
+  applyAuthState(session);
+});
+
+// Bootstrap: check if there's already a session on page load
+(async function bootstrapAuth() {
+  // Also check sessionStorage in case "stay signed in" was unchecked previously
+  const sessionStorageKey = window.sessionStorage.getItem('hti-auth-session');
+  if (sessionStorageKey && !window.localStorage.getItem('hti-auth-session')) {
+    try {
+      const parsed = JSON.parse(sessionStorageKey);
+      if (parsed && parsed.currentSession) {
+        await supa.auth.setSession({
+          access_token: parsed.currentSession.access_token,
+          refresh_token: parsed.currentSession.refresh_token
+        });
+      }
+    } catch (e) { console.warn('sessionStorage restore failed:', e); }
+  }
+  const { data: { session } } = await supa.auth.getSession();
+  await applyAuthState(session);
+})();
+
+// Allow Enter key to submit auth form
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && !document.getElementById('authOverlay').classList.contains('hidden')) {
+    if (e.target && (e.target.id === 'authEmail' || e.target.id === 'authPassword')) {
+      e.preventDefault();
+      handleAuthSubmit();
+    }
+  }
+});
+
+// NOTE: init() is now called from applyAuthState() once the user is authenticated + approved.
+// We do NOT call init() at page load anymore.
 
 </script>
 

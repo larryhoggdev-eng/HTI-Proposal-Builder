@@ -1,0 +1,17 @@
+{
+  "name": "HTI Proposal Builder",
+  "short_name": "HTI Proposals",
+  "description": "Internal proposal builder for HTI Polymer, Inc.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "landscape-primary",
+  "background_color": "#1a1a2e",
+  "theme_color": "#e2a308",
+  "icons": [
+    {
+      "src": "./logo-notext-small.jpg",
+      "sizes": "800x250",
+      "type": "image/jpeg"
+    }
+  ]
+}
