@@ -1393,15 +1393,16 @@ async function showProjectList() {
     const updated = new Date(p.updated_at).toLocaleString('en-US', { year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
     const isActive = p.id === _currentProjectId;
     return `<li ${isActive ? 'style="border-color:#e2a308;"' : ''}>
-      <div class="proj-info" onclick="openProject('${p.id}')" style="cursor:pointer;">
+      <div class="proj-info">
         <input class="proj-rename" id="proj-name-${p.id}" value="${escH(p.title || 'Untitled Project')}"
           onclick="event.stopPropagation();"
           onblur="finishRenameProject('${p.id}', this.value)"
           onkeydown="if(event.key==='Enter'){this.blur();event.preventDefault();}"
         >
-        <div class="proj-meta">Last edited: ${escH(updated)}${isActive ? ' • Currently open' : ''}</div>
+        <div class="proj-meta" onclick="openProject('${p.id}')" style="cursor:pointer;">Last edited: ${escH(updated)}${isActive ? ' • Currently open' : ''} — <span style="color:#e2a308;">click to open</span></div>
       </div>
       <div class="proj-actions" onclick="event.stopPropagation();">
+        <button class="btn btn-primary" onclick="openProject('${p.id}')">Open</button>
         <button class="btn btn-danger" onclick="confirmDeleteProject('${p.id}', '${escH(p.title || '')}')">Delete</button>
       </div>
     </li>`;
@@ -1412,9 +1413,22 @@ function hideProjectList() {
   document.getElementById('projectsOverlay').classList.add('hidden');
 }
 
-async function openProject(projectId) {
+function openProject(projectId) {
+  // Wrap in a non-async function so onclick handlers work reliably
+  _openProjectAsync(projectId).catch(e => {
+    console.error('Failed to open project:', e);
+    alert('Failed to open project: ' + (e.message || e));
+  });
+}
+
+async function _openProjectAsync(projectId) {
   hideProjectList();
-  await loadProject(projectId);
+
+  try {
+    await loadProject(projectId);
+  } catch (e) {
+    console.warn('Cloud load failed, trying with empty state:', e);
+  }
 
   // If the project has no saved state (brand new), initialize with defaults
   if (!state.clientType) {
@@ -1445,15 +1459,21 @@ async function openProject(projectId) {
     _isLoadingState = false;
   }
 
-  // Ensure jobNumber exists for older projects
+  // Ensure fields exist for older projects
   if (state.jobNumber === undefined) state.jobNumber = '';
+  if (state.inclusions === undefined) state.inclusions = {};
+  if (state.inclusionBold === undefined) state.inclusionBold = {};
+  if (state.inclusionOverrides === undefined) state.inclusionOverrides = {};
 
   applyProfileDefaults();
   INCLUSIONS_MASTER.forEach(inc => {
-    if (state.inclusions === undefined) state.inclusions = {};
     if (state.inclusions[inc.id] === undefined) state.inclusions[inc.id] = inc.default;
   });
+
+  // Make sure the Project tab is active
+  switchTab('project');
   render();
+
   // Update the top bar title
   const titleEl = document.getElementById('topBarTitle');
   if (titleEl) titleEl.textContent = state.projectName || 'HTI Proposal Builder';
