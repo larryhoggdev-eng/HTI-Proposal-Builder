@@ -146,6 +146,12 @@
   .admin-table .btn-delete { background: #c0392b; color: #fff; }
   .admin-table .btn-delete:hover { background: #e74c3c; }
   .admin-empty { padding: 30px; text-align: center; color: #666; }
+  .admin-badge {
+    position: absolute; top: -6px; right: -6px;
+    min-width: 18px; height: 18px; padding: 0 5px;
+    background: #e74c3c; color: #fff; border-radius: 9px;
+    font-size: 11px; font-weight: 700; line-height: 18px; text-align: center;
+  }
 
   /* ============ PROFILE SETTINGS MODAL ============ */
   .profile-modal-overlay {
@@ -496,7 +502,7 @@
     <button class="btn btn-primary" onclick="confirmExportWord()">Export Word</button>
     <button class="btn btn-danger" onclick="resetToDefault()">Reset</button>
     <button class="btn btn-secondary" onclick="openProfilePanel()">Profile</button>
-    <button class="btn btn-secondary" id="adminBtn" style="display:none;" onclick="openAdminPanel()">Admin</button>
+    <button class="btn btn-secondary" id="adminBtn" style="display:none; position:relative;" onclick="openAdminPanel()">Admin<span id="adminBadge" class="admin-badge" style="display:none;"></span></button>
     <button class="btn btn-secondary" onclick="handleSignOut()" title="Sign out">⎋</button>
   </div>
 </div>
@@ -3604,6 +3610,8 @@ async function applyAuthState(session) {
     // Apply profile defaults to any fields still empty after loading the draft
     applyProfileDefaults();
     init();
+    // Check for pending signups (shows badge on Admin button)
+    checkPendingSignups();
   }
 }
 
@@ -3681,6 +3689,7 @@ async function adminApprove(userId) {
   const { error } = await supa.from('profiles').update({ approved: true }).eq('id', userId);
   if (error) { alert('Error: ' + error.message); return; }
   await renderAdminPanel();
+  checkPendingSignups();
 }
 
 async function adminRevoke(userId) {
@@ -3688,6 +3697,7 @@ async function adminRevoke(userId) {
   const { error } = await supa.from('profiles').update({ approved: false }).eq('id', userId);
   if (error) { alert('Error: ' + error.message); return; }
   await renderAdminPanel();
+  checkPendingSignups();
 }
 
 async function adminMakeAdmin(userId) {
@@ -3709,6 +3719,35 @@ async function adminDeleteProfile(userId, email) {
   const { error } = await supa.from('profiles').delete().eq('id', userId);
   if (error) { alert('Error: ' + error.message); return; }
   await renderAdminPanel();
+  checkPendingSignups();
+}
+
+// Check for pending signups and show badge on Admin button
+async function checkPendingSignups() {
+  if (!currentProfile || !currentProfile.is_admin) return;
+  try {
+    const { data, error } = await supa
+      .from('profiles')
+      .select('id', { count: 'exact', head: true })
+      .eq('approved', false);
+    const count = data ? data.length : 0;
+    // Supabase head:true with count returns count in the response
+    const { count: pendingCount } = await supa
+      .from('profiles')
+      .select('*', { count: 'exact', head: true })
+      .eq('approved', false);
+    const badge = document.getElementById('adminBadge');
+    if (badge) {
+      if (pendingCount && pendingCount > 0) {
+        badge.textContent = pendingCount;
+        badge.style.display = '';
+      } else {
+        badge.style.display = 'none';
+      }
+    }
+  } catch (e) {
+    console.warn('Failed to check pending signups:', e);
+  }
 }
 
 // ============================================================
