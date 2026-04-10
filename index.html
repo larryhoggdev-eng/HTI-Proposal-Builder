@@ -4720,7 +4720,7 @@ function filterQuoteMaterials() {
   }
 
   dd.innerHTML = matches.map((p, i) =>
-    `<div class="sys-dropdown-item" onclick="addQuoteMaterial(${p.id})">
+    `<div class="sys-dropdown-item" onclick="addQuoteMaterial('${p.id}')">
       <div class="sys-dropdown-name">${escH(p.product_name || '')}</div>
       <div class="sys-dropdown-tags">${escH(p.vendor || '')} | ${escH(p.category || '')} | ${escH(p.product_number || '')}</div>
       <div class="sys-dropdown-match">${escH(p.color || '')} | ${p.uom || ''} | ${fmtMoney(p.unit_rate)}</div>
