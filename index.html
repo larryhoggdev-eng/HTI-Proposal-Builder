@@ -97,6 +97,56 @@
   }
   .auth-card .btn-signout:hover { background: #3a3a5a; color: #fff; }
 
+  /* ============ PROJECT LIST SCREEN ============ */
+  .projects-overlay {
+    position: fixed; inset: 0; background: #1a1a2e; z-index: 9998;
+    display: flex; align-items: flex-start; justify-content: center; padding: 40px 20px;
+    overflow-y: auto;
+  }
+  .projects-overlay.hidden { display: none; }
+  .projects-card {
+    background: #16213e; border: 1px solid #2a2a4a; border-radius: 12px;
+    padding: 28px 32px; max-width: 700px; width: 100%;
+  }
+  .projects-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 20px; padding-bottom: 12px; border-bottom: 2px solid #e2a308;
+  }
+  .projects-header h1 { color: #e2a308; font-size: 20px; margin: 0; }
+  .projects-header .btn { padding: 10px 18px; font-size: 13px; }
+  .projects-list { list-style: none; padding: 0; margin: 0; }
+  .projects-list li {
+    display: flex; align-items: center; gap: 12px; padding: 14px 16px;
+    background: #0f1d3a; border: 1px solid #2a2a4a; border-radius: 8px;
+    margin-bottom: 8px; cursor: pointer; transition: all 0.15s;
+  }
+  .projects-list li:hover { border-color: #e2a308; background: #142650; }
+  .projects-list .proj-info { flex: 1; min-width: 0; }
+  .projects-list .proj-title {
+    font-size: 14px; font-weight: 600; color: #fff;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .projects-list .proj-meta { font-size: 11px; color: #888; margin-top: 3px; }
+  .projects-list .proj-actions { display: flex; gap: 6px; flex-shrink: 0; }
+  .projects-list .proj-actions .btn {
+    padding: 5px 10px; font-size: 11px;
+  }
+  .projects-list .proj-rename {
+    background: none; border: none; color: #fff; font-size: 14px; font-weight: 600;
+    font-family: inherit; padding: 0; outline: none; width: 100%;
+    border-bottom: 1px dashed transparent;
+  }
+  .projects-list .proj-rename:focus { border-bottom-color: #e2a308; }
+  .projects-empty {
+    text-align: center; padding: 40px; color: #666; font-size: 14px;
+  }
+  .projects-user-bar {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 16px; font-size: 12px; color: #888;
+  }
+  .projects-user-bar .user-name { color: #ccc; font-weight: 600; }
+  .projects-user-bar .btn { padding: 5px 12px; font-size: 11px; }
+
   /* ============ ADMIN MODAL ============ */
   .admin-modal-overlay {
     display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 9999;
@@ -476,8 +526,28 @@
   </div>
 </div>
 
+<!-- ==================== PROJECT LIST OVERLAY ==================== -->
+<div class="projects-overlay hidden" id="projectsOverlay">
+  <div class="projects-card">
+    <div class="projects-user-bar">
+      <span>Signed in as <span class="user-name" id="projectsUserName"></span></span>
+      <span style="display:flex; gap:6px;">
+        <button class="btn btn-secondary" onclick="openProfilePanel()">Profile</button>
+        <button class="btn btn-secondary" id="projectsAdminBtn" style="display:none; position:relative;" onclick="openAdminPanel()">Admin<span id="projectsAdminBadge" class="admin-badge" style="display:none;"></span></button>
+        <button class="btn btn-secondary" onclick="handleSignOut()">Sign Out</button>
+      </span>
+    </div>
+    <div class="projects-header">
+      <h1>My Projects</h1>
+      <button class="btn btn-primary" onclick="createNewProject()">+ New Project</button>
+    </div>
+    <ul class="projects-list" id="projectsList"></ul>
+  </div>
+</div>
+
 <div class="top-bar">
-  <h1>HTI Proposal Builder</h1>
+  <button class="btn btn-secondary" onclick="showProjectList()" style="margin-right:8px;" title="Back to project list">My Projects</button>
+  <h1 id="topBarTitle">HTI Proposal Builder</h1>
 
   <div class="bar-section">
     <label>Start from Previous Project</label>
@@ -1015,154 +1085,279 @@ let state = {
 };
 
 // ============================================================
-// PERSISTENCE: local + cloud sync
+// PERSISTENCE: local + cloud sync (multi-project)
 // ============================================================
-// Strategy:
-//  - Every state mutation triggers a debounced save (~800ms)
-//  - The full state object is serialized to JSON
-//  - Saved to localStorage immediately (per-user key) for instant offline persistence
-//  - Pushed to Supabase as one "current draft" row per user
-//  - On sign-in, we load from cloud first, fall back to local if offline
 const PERSIST_DEBOUNCE_MS = 800;
 let _persistTimer = null;
-let _isLoadingState = false;       // suppresses auto-save while we're loading data into state
-let _lastSavedJson = '';            // avoid unnecessary writes
-let _currentDraftId = null;         // the proposal row id in Supabase for the current user
+let _isLoadingState = false;
+let _lastSavedJson = '';
+let _currentProjectId = null;   // the Supabase proposals.id for the active project
 
-function localDraftKey() {
-  return currentUser ? 'hti-draft-' + currentUser.id : 'hti-draft-anon';
+function localProjectKey() {
+  return _currentProjectId ? 'hti-project-' + _currentProjectId : null;
 }
 
-// Serialize state, but skip ephemeral / undefined fields
-function serializeState() {
-  return JSON.stringify(state);
-}
+function serializeState() { return JSON.stringify(state); }
 
-// Apply a serialized state JSON back into the live state object
 function applyStateJson(json) {
   if (!json) return;
   try {
     const parsed = JSON.parse(json);
     if (parsed && typeof parsed === 'object') {
       _isLoadingState = true;
-      // Replace state contents in-place so other code holding the reference still works
       Object.keys(state).forEach(k => { delete state[k]; });
       Object.assign(state, parsed);
       _isLoadingState = false;
     }
-  } catch (e) {
-    console.warn('Failed to parse stored state:', e);
-  }
+  } catch (e) { console.warn('Failed to parse stored state:', e); }
 }
 
 function schedulePersist() {
   if (_isLoadingState) return;
-  if (!currentUser) return; // never persist for unauthenticated users
+  if (!currentUser || !_currentProjectId) return;
   clearTimeout(_persistTimer);
   _persistTimer = setTimeout(persistNow, PERSIST_DEBOUNCE_MS);
 }
 
 async function persistNow() {
-  if (!currentUser) return;
+  if (!currentUser || !_currentProjectId) return;
   const json = serializeState();
   if (json === _lastSavedJson) return;
   _lastSavedJson = json;
 
-  // 1) Local save (instant, always works)
-  try {
-    localStorage.setItem(localDraftKey(), json);
-    localStorage.setItem(localDraftKey() + '-savedAt', String(Date.now()));
-  } catch (e) {
-    console.warn('localStorage save failed:', e);
+  // Local save
+  const lk = localProjectKey();
+  if (lk) {
+    try {
+      localStorage.setItem(lk, json);
+      localStorage.setItem(lk + '-savedAt', String(Date.now()));
+    } catch (e) {}
   }
 
-  // 2) Cloud save (best-effort, silent failure if offline)
+  // Cloud save
   try {
-    if (_currentDraftId) {
-      // Update existing draft
-      await supa.from('proposals')
-        .update({ state: JSON.parse(json), title: state.projectName || 'Untitled Proposal' })
-        .eq('id', _currentDraftId);
-    } else {
-      // Insert new draft
-      const { data, error } = await supa.from('proposals')
-        .insert({
-          owner_id: currentUser.id,
-          state: JSON.parse(json),
-          title: state.projectName || 'Untitled Proposal'
-        })
-        .select('id')
-        .single();
-      if (error) throw error;
-      if (data && data.id) _currentDraftId = data.id;
-    }
+    await supa.from('proposals')
+      .update({ state: JSON.parse(json), title: state.projectName || 'Untitled Project' })
+      .eq('id', _currentProjectId);
   } catch (e) {
-    console.warn('Cloud save failed (will retry on next change):', e.message || e);
+    console.warn('Cloud save failed:', e.message || e);
   }
 }
 
-// Load the user's draft from cloud (with localStorage fallback)
-async function loadUserDraft() {
-  if (!currentUser) return false;
+// Load a specific project by ID
+async function loadProject(projectId) {
+  _currentProjectId = projectId;
+  _lastSavedJson = '';
 
   // Try cloud first
-  let cloudData = null;
+  let loaded = false;
   try {
     const { data, error } = await supa
       .from('proposals')
-      .select('id, state, updated_at')
-      .eq('owner_id', currentUser.id)
-      .order('updated_at', { ascending: false })
-      .limit(1);
-    if (!error && data && data.length > 0) {
-      cloudData = data[0];
-      _currentDraftId = cloudData.id;
+      .select('id, state, title')
+      .eq('id', projectId)
+      .single();
+    if (!error && data && data.state) {
+      applyStateJson(JSON.stringify(data.state));
+      _lastSavedJson = JSON.stringify(data.state);
+      loaded = true;
+      console.log('Loaded project from cloud:', data.title);
     }
   } catch (e) {
-    console.warn('Cloud load failed, falling back to local:', e.message || e);
+    console.warn('Cloud load failed, trying local:', e.message || e);
   }
 
-  // Compare with local copy and use whichever is newer
-  const localJson = localStorage.getItem(localDraftKey());
-  const localSavedAt = parseInt(localStorage.getItem(localDraftKey() + '-savedAt') || '0', 10);
-  const cloudUpdatedAt = cloudData ? new Date(cloudData.updated_at).getTime() : 0;
-
-  let chosenJson = null;
-  if (cloudData && cloudUpdatedAt >= localSavedAt) {
-    chosenJson = JSON.stringify(cloudData.state);
-    console.log('Loaded draft from cloud');
-  } else if (localJson) {
-    chosenJson = localJson;
-    console.log('Loaded draft from local storage');
+  // Fall back to local
+  if (!loaded) {
+    const lk = localProjectKey();
+    const localJson = lk ? localStorage.getItem(lk) : null;
+    if (localJson) {
+      applyStateJson(localJson);
+      _lastSavedJson = localJson;
+      console.log('Loaded project from local storage');
+    }
   }
-
-  if (chosenJson) {
-    applyStateJson(chosenJson);
-    _lastSavedJson = chosenJson;
-    return true;
-  }
-  return false;
 }
 
-// Clear the user's draft from both local and cloud (called by Reset)
-async function clearUserDraft() {
-  if (!currentUser) return;
+// Create a new project in Supabase and return its ID
+async function createProjectInDB(title) {
+  if (!currentUser) return null;
+  const { data, error } = await supa.from('proposals')
+    .insert({ owner_id: currentUser.id, state: {}, title: title || 'Untitled Project' })
+    .select('id')
+    .single();
+  if (error) { console.error('Failed to create project:', error); return null; }
+  return data.id;
+}
+
+// Delete a project from both local and cloud
+async function deleteProject(projectId) {
   try {
-    localStorage.removeItem(localDraftKey());
-    localStorage.removeItem(localDraftKey() + '-savedAt');
+    localStorage.removeItem('hti-project-' + projectId);
+    localStorage.removeItem('hti-project-' + projectId + '-savedAt');
   } catch (e) {}
   try {
-    if (_currentDraftId) {
-      await supa.from('proposals').delete().eq('id', _currentDraftId);
-      _currentDraftId = null;
-    } else {
-      // Just in case there's an orphan
-      await supa.from('proposals').delete().eq('owner_id', currentUser.id);
-    }
+    await supa.from('proposals').delete().eq('id', projectId);
   } catch (e) {
-    console.warn('Cloud clear failed:', e.message || e);
+    console.warn('Cloud delete failed:', e.message || e);
   }
-  _lastSavedJson = '';
+  if (_currentProjectId === projectId) _currentProjectId = null;
+}
+
+// Rename a project in Supabase
+async function renameProject(projectId, newTitle) {
+  try {
+    await supa.from('proposals')
+      .update({ title: newTitle })
+      .eq('id', projectId);
+  } catch (e) {
+    console.warn('Rename failed:', e.message || e);
+  }
+}
+
+// ============================================================
+// PROJECT LIST
+// ============================================================
+async function showProjectList() {
+  // Save current work first
+  if (_currentProjectId) { try { await persistNow(); } catch(e){} }
+
+  document.getElementById('projectsOverlay').classList.remove('hidden');
+
+  // Set user info
+  const userName = document.getElementById('projectsUserName');
+  if (userName && currentProfile) userName.textContent = currentProfile.pm_name || currentProfile.email || '';
+
+  // Show/hide admin button + badge
+  const adminBtn = document.getElementById('projectsAdminBtn');
+  if (adminBtn) adminBtn.style.display = (currentProfile && currentProfile.is_admin) ? '' : 'none';
+  checkPendingSignupsForProjectList();
+
+  // Fetch all projects for this user
+  const list = document.getElementById('projectsList');
+  list.innerHTML = '<li class="projects-empty">Loading...</li>';
+
+  const { data: projects, error } = await supa
+    .from('proposals')
+    .select('id, title, updated_at, created_at')
+    .eq('owner_id', currentUser.id)
+    .order('updated_at', { ascending: false });
+
+  if (error) {
+    list.innerHTML = '<li class="projects-empty" style="color:#e74c3c;">Error loading projects: ' + escH(error.message) + '</li>';
+    return;
+  }
+
+  if (!projects || projects.length === 0) {
+    list.innerHTML = '<li class="projects-empty">No projects yet. Click <strong>+ New Project</strong> to get started.</li>';
+    return;
+  }
+
+  list.innerHTML = projects.map(p => {
+    const updated = new Date(p.updated_at).toLocaleString('en-US', { year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
+    const isActive = p.id === _currentProjectId;
+    return `<li onclick="openProject('${p.id}')" ${isActive ? 'style="border-color:#e2a308;"' : ''}>
+      <div class="proj-info">
+        <div class="proj-title">${escH(p.title || 'Untitled Project')}</div>
+        <div class="proj-meta">Last edited: ${escH(updated)}${isActive ? ' • Currently open' : ''}</div>
+      </div>
+      <div class="proj-actions" onclick="event.stopPropagation();">
+        <button class="btn btn-secondary" onclick="promptRenameProject('${p.id}', this)">Rename</button>
+        <button class="btn btn-danger" onclick="confirmDeleteProject('${p.id}', '${escH(p.title || '')}')">Delete</button>
+      </div>
+    </li>`;
+  }).join('');
+}
+
+function hideProjectList() {
+  document.getElementById('projectsOverlay').classList.add('hidden');
+}
+
+async function openProject(projectId) {
+  hideProjectList();
+  await loadProject(projectId);
+  applyProfileDefaults();
+  INCLUSIONS_MASTER.forEach(inc => {
+    if (state.inclusions === undefined) state.inclusions = {};
+    if (state.inclusions[inc.id] === undefined) state.inclusions[inc.id] = inc.default;
+  });
+  render();
+  // Update the top bar title
+  const titleEl = document.getElementById('topBarTitle');
+  if (titleEl) titleEl.textContent = state.projectName || 'HTI Proposal Builder';
+}
+
+async function createNewProject() {
+  const projectId = await createProjectInDB('Untitled Project');
+  if (!projectId) { alert('Failed to create project'); return; }
+  _currentProjectId = projectId;
+  // Reset state to defaults
+  _isLoadingState = true;
+  Object.keys(state).forEach(k => { delete state[k]; });
+  Object.assign(state, {
+    clientType: 'gc', laborType: 'open-shop',
+    contactName: '', contactTitle: '', companyName: '', address: '', city: '', state: '', zip: '',
+    projectName: '', projectCity: '', projectState: '',
+    systemDisplayName: '', existingConditions: '',
+    warrantyText: WARRANTIES['standard-1yr'],
+    numMobilizations: '1', numPhases: '',
+    pmName: '', pmCell: '', pmEmail: '', signoffClosing: 'Best regards,',
+    scopeSections: [{ name: 'Installation of SYSTEM', scopes: [{ desc: 'FLOORING SCOPE', qty: '', unit: 'Square Feet' }] }],
+    products: [], procedureSections: [{ header: '', steps: [] }],
+    taxNote: 'not-included', costSections: [{ description: '', value: '' }],
+    addOptions: [
+      { text: "A 480v 3-phase 50-amp generator can be added for an additional $1,850 per week." },
+      { text: "Additional mobilization cost of $2,500 per mobilization." }
+    ],
+    inclusions: {}, inclusionBold: {}, inclusionOverrides: {},
+    workSchedule: 'both', paymentTerms: '', omitPaymentTerms: false,
+    introTemplate: 'Please accept our proposal for the installation of {SYSTEM} at the {PROJECT NAME} project in {CITY}, {STATE}.',
+    costTemplate: 'The lump sum cost for the installation of {SYSTEM} is ${VALUE}.00. {TAX}',
+    mobilizationTemplate: "This proposal is based on {MOBS}, with each mobilization (or phase) area being ready for installation prior to HTI's arrival. If areas are not ready, HTI reserves the right to submit a change order for any cost impacts related to remobilization, loss of efficiency, or non-sequential work. The change order value will be determined case by case, with supporting documentation provided.",
+    omitMobilization: false, _warrantyType: 'standard-1yr'
+  });
+  _isLoadingState = false;
+  INCLUSIONS_MASTER.forEach(inc => { state.inclusions[inc.id] = inc.default; });
+  applyProfileDefaults();
+  hideProjectList();
+  render();
+  // Save the fresh project immediately
+  await persistNow();
+}
+
+async function promptRenameProject(projectId, btnEl) {
+  const newName = prompt('Enter new project name:');
+  if (!newName || !newName.trim()) return;
+  await renameProject(projectId, newName.trim());
+  // If this is the currently open project, update state too
+  if (projectId === _currentProjectId) {
+    state.projectName = newName.trim();
+    const titleEl = document.getElementById('topBarTitle');
+    if (titleEl) titleEl.textContent = newName.trim();
+  }
+  await showProjectList();
+}
+
+async function confirmDeleteProject(projectId, title) {
+  if (!confirm('Delete "' + (title || 'Untitled Project') + '"? This cannot be undone.')) return;
+  await deleteProject(projectId);
+  await showProjectList();
+}
+
+// Badge for projects screen admin button
+async function checkPendingSignupsForProjectList() {
+  if (!currentProfile || !currentProfile.is_admin) return;
+  try {
+    const { count } = await supa
+      .from('profiles')
+      .select('*', { count: 'exact', head: true })
+      .eq('approved', false);
+    const badge = document.getElementById('projectsAdminBadge');
+    if (badge) {
+      if (count && count > 0) { badge.textContent = count; badge.style.display = ''; }
+      else { badge.style.display = 'none'; }
+    }
+  } catch (e) {}
 }
 
 // Track which sections are collapsed (persists across renders).
@@ -1814,12 +2009,11 @@ function init() {
 }
 
 async function resetToDefault() {
-  if (!confirm('Clear everything and return to the blank template?')) return;
+  if (!confirm('Clear all fields and return to the blank template? The project will remain in your list.')) return;
   selectedSystemId = '';
   document.getElementById('sysSearchInput').value = '';
   document.getElementById('sysSelectedTag').innerHTML = '';
   clearPrevProject();
-  await clearUserDraft();
 
   Object.assign(state, {
     clientType: 'gc', laborType: 'open-shop',
@@ -2161,7 +2355,15 @@ function swap(arr, i, dir) {
 let _previewTimer = null;
 function schedulePreviewUpdate() { clearTimeout(_previewTimer); _previewTimer = setTimeout(updateLivePreview, 150); schedulePersist(); }
 
-function syncField(field, val) { state[field] = val; schedulePreviewUpdate(); }
+function syncField(field, val) {
+  state[field] = val;
+  schedulePreviewUpdate();
+  // Keep the top bar title in sync with the project name
+  if (field === 'projectName') {
+    const t = document.getElementById('topBarTitle');
+    if (t) t.textContent = val || 'HTI Proposal Builder';
+  }
+}
 function syncScope(sec, i, key, val) { if (state.scopeSections[sec] && state.scopeSections[sec].scopes[i]) state.scopeSections[sec].scopes[i][key] = val; schedulePreviewUpdate(); }
 function syncProduct(i, val) { if (state.products[i]) state.products[i].text = val; schedulePreviewUpdate(); }
 function syncProcedure(sec, i, val) { if (state.procedureSections[sec] && state.procedureSections[sec].steps[i]) state.procedureSections[sec].steps[i].text = val; schedulePreviewUpdate(); }
@@ -3547,10 +3749,11 @@ async function handleSignOut() {
   await supa.auth.signOut();
   currentUser = null;
   currentProfile = null;
-  _currentDraftId = null;
+  _currentProjectId = null;
   _lastSavedJson = '';
   window._appInitialized = false;
   document.getElementById('authPassword').value = '';
+  document.getElementById('projectsOverlay').classList.add('hidden');
   showAuthMode('signin');
   document.getElementById('authOverlay').classList.remove('hidden');
 }
@@ -3605,13 +3808,8 @@ async function applyAuthState(session) {
   // Only run the regular init the first time we sign in this page-load
   if (!window._appInitialized) {
     window._appInitialized = true;
-    // Load the user's saved draft (cloud first, local fallback) before first render
-    await loadUserDraft();
-    // Apply profile defaults to any fields still empty after loading the draft
-    applyProfileDefaults();
-    init();
-    // Check for pending signups (shows badge on Admin button)
-    checkPendingSignups();
+    // Show the project list — user picks which project to open
+    showProjectList();
   }
 }
 
