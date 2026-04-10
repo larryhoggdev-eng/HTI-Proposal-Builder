@@ -1257,13 +1257,16 @@ async function showProjectList() {
   list.innerHTML = projects.map(p => {
     const updated = new Date(p.updated_at).toLocaleString('en-US', { year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
     const isActive = p.id === _currentProjectId;
-    return `<li onclick="openProject('${p.id}')" ${isActive ? 'style="border-color:#e2a308;"' : ''}>
-      <div class="proj-info">
-        <div class="proj-title">${escH(p.title || 'Untitled Project')}</div>
+    return `<li ${isActive ? 'style="border-color:#e2a308;"' : ''}>
+      <div class="proj-info" onclick="openProject('${p.id}')" style="cursor:pointer;">
+        <input class="proj-rename" id="proj-name-${p.id}" value="${escH(p.title || 'Untitled Project')}"
+          onclick="event.stopPropagation();"
+          onblur="finishRenameProject('${p.id}', this.value)"
+          onkeydown="if(event.key==='Enter'){this.blur();event.preventDefault();}"
+        >
         <div class="proj-meta">Last edited: ${escH(updated)}${isActive ? ' • Currently open' : ''}</div>
       </div>
       <div class="proj-actions" onclick="event.stopPropagation();">
-        <button class="btn btn-secondary" onclick="promptRenameProject('${p.id}', this)">Rename</button>
         <button class="btn btn-danger" onclick="confirmDeleteProject('${p.id}', '${escH(p.title || '')}')">Delete</button>
       </div>
     </li>`;
@@ -1322,25 +1325,28 @@ async function openProject(projectId) {
 }
 
 async function createNewProject() {
-  const name = prompt('Project name:');
-  if (!name || !name.trim()) return;
-  const projectId = await createProjectInDB(name.trim());
+  const projectId = await createProjectInDB('Untitled Project');
   if (!projectId) { alert('Failed to create project'); return; }
-  // Refresh the list — the new project appears, user can click into it
+  // Refresh the list, then auto-focus the new project's name field for renaming
   await showProjectList();
+  setTimeout(() => {
+    const nameInput = document.getElementById('proj-name-' + projectId);
+    if (nameInput) {
+      nameInput.focus();
+      nameInput.select();
+    }
+  }, 100);
 }
 
-async function promptRenameProject(projectId, btnEl) {
-  const newName = prompt('Enter new project name:');
-  if (!newName || !newName.trim()) return;
-  await renameProject(projectId, newName.trim());
-  // If this is the currently open project, update state too
+async function finishRenameProject(projectId, newName) {
+  const trimmed = (newName || '').trim() || 'Untitled Project';
+  await renameProject(projectId, trimmed);
+  // If this is the currently open project, update state + top bar too
   if (projectId === _currentProjectId) {
-    state.projectName = newName.trim();
+    state.projectName = trimmed;
     const titleEl = document.getElementById('topBarTitle');
-    if (titleEl) titleEl.textContent = newName.trim();
+    if (titleEl) titleEl.textContent = trimmed;
   }
-  await showProjectList();
 }
 
 async function confirmDeleteProject(projectId, title) {
