@@ -679,12 +679,11 @@
 </div>
 
 <div class="tab-bar">
-  <button class="tab-btn active" onclick="switchTab('project')">Project</button>
-  <button class="tab-btn" onclick="switchTab('proposal')">Proposal</button>
-  <button class="tab-btn" onclick="switchTab('documents')">Documents</button>
+  <button class="tab-btn active" onclick="switchTab('builder')">Proposal Builder</button>
+  <button class="tab-btn" onclick="switchTab('project')">Project</button>
 </div>
 
-<div class="tab-panel active" id="tabProject">
+<div class="tab-panel active" id="tabBuilder">
   <div class="main-content" style="flex:1;">
     <div class="editor-panel">
       <div class="editor-scroll" id="previewContainer"></div>
@@ -695,68 +694,67 @@
   </div>
 </div>
 
-<div class="tab-panel" id="tabProposal">
-  <div class="preview-panel" style="border:none; flex:1;">
-    <div class="preview-scroll" id="proposalFullPreview"></div>
-  </div>
-</div>
-
-<div class="tab-panel" id="tabDocuments">
-  <div class="docs-panel">
-    <div class="docs-scroll">
-      <div class="doc-category" data-category="takeoffs">
-        <div class="doc-category-header" onclick="toggleDocCategory(this)">
-          <h3>Takeoffs</h3>
-          <span class="file-count" id="count-takeoffs">0 files</span>
-        </div>
-        <div class="doc-category-body">
-          <div class="doc-dropzone" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event,'takeoffs')" onclick="this.querySelector('input').click()">
-            Drop files here or click to browse
-            <input type="file" multiple onchange="handleFileSelect(event,'takeoffs')">
+<div class="tab-panel" id="tabProject">
+  <div class="main-content" style="flex:1;">
+    <div class="editor-panel">
+      <div class="editor-scroll" id="previewContainer2"></div>
+    </div>
+    <div class="docs-panel" style="border-left: 3px solid #e2a308;">
+      <div class="docs-scroll">
+        <div class="doc-category" data-category="takeoffs">
+          <div class="doc-category-header" onclick="toggleDocCategory(this)">
+            <h3>Takeoffs</h3>
+            <span class="file-count" id="count-takeoffs">0 files</span>
           </div>
-          <ul class="doc-file-list" id="files-takeoffs"></ul>
-        </div>
-      </div>
-
-      <div class="doc-category" data-category="specs">
-        <div class="doc-category-header" onclick="toggleDocCategory(this)">
-          <h3>Specs</h3>
-          <span class="file-count" id="count-specs">0 files</span>
-        </div>
-        <div class="doc-category-body">
-          <div class="doc-dropzone" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event,'specs')" onclick="this.querySelector('input').click()">
-            Drop files here or click to browse
-            <input type="file" multiple onchange="handleFileSelect(event,'specs')">
+          <div class="doc-category-body">
+            <div class="doc-dropzone" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event,'takeoffs')" onclick="this.querySelector('input').click()">
+              Drop files here or click to browse
+              <input type="file" multiple onchange="handleFileSelect(event,'takeoffs')">
+            </div>
+            <ul class="doc-file-list" id="files-takeoffs"></ul>
           </div>
-          <ul class="doc-file-list" id="files-specs"></ul>
         </div>
-      </div>
 
-      <div class="doc-category" data-category="additional">
-        <div class="doc-category-header" onclick="toggleDocCategory(this)">
-          <h3>Additional Documents</h3>
-          <span class="file-count" id="count-additional">0 files</span>
-        </div>
-        <div class="doc-category-body">
-          <div class="doc-dropzone" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event,'additional')" onclick="this.querySelector('input').click()">
-            Drop files here or click to browse
-            <input type="file" multiple onchange="handleFileSelect(event,'additional')">
+        <div class="doc-category" data-category="specs">
+          <div class="doc-category-header" onclick="toggleDocCategory(this)">
+            <h3>Specs</h3>
+            <span class="file-count" id="count-specs">0 files</span>
           </div>
-          <ul class="doc-file-list" id="files-additional"></ul>
+          <div class="doc-category-body">
+            <div class="doc-dropzone" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event,'specs')" onclick="this.querySelector('input').click()">
+              Drop files here or click to browse
+              <input type="file" multiple onchange="handleFileSelect(event,'specs')">
+            </div>
+            <ul class="doc-file-list" id="files-specs"></ul>
+          </div>
         </div>
-      </div>
 
-      <div class="doc-category" data-category="proposal">
-        <div class="doc-category-header" onclick="toggleDocCategory(this)">
-          <h3>Proposal</h3>
-          <span class="file-count" id="count-proposal">0 files</span>
-        </div>
-        <div class="doc-category-body">
-          <div class="doc-dropzone" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event,'proposal')" onclick="this.querySelector('input').click()">
-            Drop files here or click to browse
-            <input type="file" multiple onchange="handleFileSelect(event,'proposal')">
+        <div class="doc-category" data-category="additional">
+          <div class="doc-category-header" onclick="toggleDocCategory(this)">
+            <h3>Additional Documents</h3>
+            <span class="file-count" id="count-additional">0 files</span>
           </div>
-          <ul class="doc-file-list" id="files-proposal"></ul>
+          <div class="doc-category-body">
+            <div class="doc-dropzone" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event,'additional')" onclick="this.querySelector('input').click()">
+              Drop files here or click to browse
+              <input type="file" multiple onchange="handleFileSelect(event,'additional')">
+            </div>
+            <ul class="doc-file-list" id="files-additional"></ul>
+          </div>
+        </div>
+
+        <div class="doc-category" data-category="proposal">
+          <div class="doc-category-header" onclick="toggleDocCategory(this)">
+            <h3>Proposal</h3>
+            <span class="file-count" id="count-proposal">0 files</span>
+          </div>
+          <div class="doc-category-body">
+            <div class="doc-dropzone" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event,'proposal')" onclick="this.querySelector('input').click()">
+              Drop files here or click to browse
+              <input type="file" multiple onchange="handleFileSelect(event,'proposal')">
+            </div>
+            <ul class="doc-file-list" id="files-proposal"></ul>
+          </div>
         </div>
       </div>
     </div>
@@ -1470,8 +1468,8 @@ async function _openProjectAsync(projectId) {
     if (state.inclusions[inc.id] === undefined) state.inclusions[inc.id] = inc.default;
   });
 
-  // Make sure the Project tab is active
-  switchTab('project');
+  // Make sure the Proposal Builder tab is active
+  switchTab('builder');
   render();
 
   // Update the top bar title
@@ -2175,30 +2173,17 @@ function escH(str) { return (str || '').replace(/&/g, '&amp;').replace(/</g, '&l
 function switchTab(tabName) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  const tabId = tabName.charAt(0).toUpperCase() + tabName.slice(1);
   document.querySelector(`.tab-btn[onclick*="${tabName}"]`).classList.add('active');
-  document.getElementById('tab' + tabName.charAt(0).toUpperCase() + tabName.slice(1)).classList.add('active');
-  // When switching to proposal tab, render a fresh full preview
-  if (tabName === 'proposal') updateProposalFullPreview();
-  // When switching to documents, refresh file lists
-  if (tabName === 'documents') refreshAllFileLists();
-}
+  document.getElementById('tab' + tabId).classList.add('active');
 
-function updateProposalFullPreview() {
-  const el = document.getElementById('proposalFullPreview');
-  if (!el) return;
-  // Reuse the same pagination pipeline as the live preview
-  const { hdr, sections, footC, footF } = buildExportSections();
-  const footMeasurer = document.createElement('div');
-  footMeasurer.className = 'proposal-page export-page';
-  footMeasurer.style.cssText = 'position:absolute;left:-9999px;top:0;';
-  footMeasurer.innerHTML = footC;
-  document.body.appendChild(footMeasurer);
-  const footerEl = footMeasurer.querySelector('.page-footer');
-  const FOOTER_H = footerEl ? footerEl.offsetHeight : 60;
-  document.body.removeChild(footMeasurer);
-  _exportUsable = 42 * 16;
-  _exportHdrH = 0;
-  el.innerHTML = smartPaginate(hdr, sections, footC, footF);
+  // When switching to Project tab, mirror the editor content and refresh file lists
+  if (tabName === 'project') {
+    const src = document.getElementById('previewContainer');
+    const dest = document.getElementById('previewContainer2');
+    if (src && dest) dest.innerHTML = src.innerHTML;
+    refreshAllFileLists();
+  }
 }
 
 // ============================================================
