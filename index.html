@@ -1061,6 +1061,7 @@ let state = {
   warrantyText: WARRANTIES['standard-1yr'],
   numMobilizations: '1', numPhases: '',
   pmName: '', pmCell: '', pmEmail: '', signoffClosing: 'Best regards,',
+  jobNumber: '',
 
   scopeSections: [{ name: 'Installation of SYSTEM', scopes: [{ desc: 'FLOORING SCOPE', qty: '', unit: 'Square Feet' }] }],
   products: [],
@@ -1276,6 +1277,39 @@ function hideProjectList() {
 async function openProject(projectId) {
   hideProjectList();
   await loadProject(projectId);
+
+  // If the project has no saved state (brand new), initialize with defaults
+  if (!state.clientType) {
+    _isLoadingState = true;
+    Object.assign(state, {
+      clientType: 'gc', laborType: 'open-shop',
+      contactName: '', contactTitle: '', companyName: '', address: '', city: '', state: '', zip: '',
+      projectName: '', projectCity: '', projectState: '',
+      systemDisplayName: '', existingConditions: '',
+      warrantyText: WARRANTIES['standard-1yr'],
+      numMobilizations: '1', numPhases: '',
+      pmName: '', pmCell: '', pmEmail: '', signoffClosing: 'Best regards,',
+      jobNumber: '',
+      scopeSections: [{ name: 'Installation of SYSTEM', scopes: [{ desc: 'FLOORING SCOPE', qty: '', unit: 'Square Feet' }] }],
+      products: [], procedureSections: [{ header: '', steps: [] }],
+      taxNote: 'not-included', costSections: [{ description: '', value: '' }],
+      addOptions: [
+        { text: "A 480v 3-phase 50-amp generator can be added for an additional $1,850 per week." },
+        { text: "Additional mobilization cost of $2,500 per mobilization." }
+      ],
+      inclusions: {}, inclusionBold: {}, inclusionOverrides: {},
+      workSchedule: 'both', paymentTerms: '', omitPaymentTerms: false,
+      introTemplate: 'Please accept our proposal for the installation of {SYSTEM} at the {PROJECT NAME} project in {CITY}, {STATE}.',
+      costTemplate: 'The lump sum cost for the installation of {SYSTEM} is ${VALUE}.00. {TAX}',
+      mobilizationTemplate: "This proposal is based on {MOBS}, with each mobilization (or phase) area being ready for installation prior to HTI's arrival. If areas are not ready, HTI reserves the right to submit a change order for any cost impacts related to remobilization, loss of efficiency, or non-sequential work. The change order value will be determined case by case, with supporting documentation provided.",
+      omitMobilization: false, _warrantyType: 'standard-1yr'
+    });
+    _isLoadingState = false;
+  }
+
+  // Ensure jobNumber exists for older projects
+  if (state.jobNumber === undefined) state.jobNumber = '';
+
   applyProfileDefaults();
   INCLUSIONS_MASTER.forEach(inc => {
     if (state.inclusions === undefined) state.inclusions = {};
@@ -1288,41 +1322,12 @@ async function openProject(projectId) {
 }
 
 async function createNewProject() {
-  const projectId = await createProjectInDB('Untitled Project');
+  const name = prompt('Project name:');
+  if (!name || !name.trim()) return;
+  const projectId = await createProjectInDB(name.trim());
   if (!projectId) { alert('Failed to create project'); return; }
-  _currentProjectId = projectId;
-  // Reset state to defaults
-  _isLoadingState = true;
-  Object.keys(state).forEach(k => { delete state[k]; });
-  Object.assign(state, {
-    clientType: 'gc', laborType: 'open-shop',
-    contactName: '', contactTitle: '', companyName: '', address: '', city: '', state: '', zip: '',
-    projectName: '', projectCity: '', projectState: '',
-    systemDisplayName: '', existingConditions: '',
-    warrantyText: WARRANTIES['standard-1yr'],
-    numMobilizations: '1', numPhases: '',
-    pmName: '', pmCell: '', pmEmail: '', signoffClosing: 'Best regards,',
-    scopeSections: [{ name: 'Installation of SYSTEM', scopes: [{ desc: 'FLOORING SCOPE', qty: '', unit: 'Square Feet' }] }],
-    products: [], procedureSections: [{ header: '', steps: [] }],
-    taxNote: 'not-included', costSections: [{ description: '', value: '' }],
-    addOptions: [
-      { text: "A 480v 3-phase 50-amp generator can be added for an additional $1,850 per week." },
-      { text: "Additional mobilization cost of $2,500 per mobilization." }
-    ],
-    inclusions: {}, inclusionBold: {}, inclusionOverrides: {},
-    workSchedule: 'both', paymentTerms: '', omitPaymentTerms: false,
-    introTemplate: 'Please accept our proposal for the installation of {SYSTEM} at the {PROJECT NAME} project in {CITY}, {STATE}.',
-    costTemplate: 'The lump sum cost for the installation of {SYSTEM} is ${VALUE}.00. {TAX}',
-    mobilizationTemplate: "This proposal is based on {MOBS}, with each mobilization (or phase) area being ready for installation prior to HTI's arrival. If areas are not ready, HTI reserves the right to submit a change order for any cost impacts related to remobilization, loss of efficiency, or non-sequential work. The change order value will be determined case by case, with supporting documentation provided.",
-    omitMobilization: false, _warrantyType: 'standard-1yr'
-  });
-  _isLoadingState = false;
-  INCLUSIONS_MASTER.forEach(inc => { state.inclusions[inc.id] = inc.default; });
-  applyProfileDefaults();
-  hideProjectList();
-  render();
-  // Save the fresh project immediately
-  await persistNow();
+  // Refresh the list — the new project appears, user can click into it
+  await showProjectList();
 }
 
 async function promptRenameProject(projectId, btnEl) {
@@ -2018,7 +2023,7 @@ async function resetToDefault() {
   Object.assign(state, {
     clientType: 'gc', laborType: 'open-shop',
     contactName: '', contactTitle: '', companyName: '', address: '', city: '', state: '', zip: '',
-    projectName: '', projectCity: '', projectState: '',
+    projectName: '', projectCity: '', projectState: '', jobNumber: '',
     systemDisplayName: '',
     existingConditions: '',
     warrantyText: WARRANTIES['standard-1yr'],
@@ -2388,7 +2393,10 @@ function render() {
   const wType = s._warrantyType || 'standard-1yr';
 
   let h = `<div class="form-card">${cardHeader('project-info','Project Info')}
-    <div class="form-row"><label>Project Name</label><input value="${esc(s.projectName)}" onblur="syncField('projectName',this.value)" placeholder="e.g. Continental Place Loading Dock"></div>
+    <div class="form-row-inline">
+      <div class="form-row"><label>Project Name</label><input value="${esc(s.projectName)}" onblur="syncField('projectName',this.value)" placeholder="e.g. Continental Place Loading Dock"></div>
+      <div class="form-row" style="flex:0 0 120px;"><label>Job Number</label><input value="${esc(s.jobNumber||'')}" onblur="syncField('jobNumber',this.value)" placeholder="e.g. 2026-042"></div>
+    </div>
     <div class="form-row"><label>System Display Name</label><input value="${esc(s.systemDisplayName)}" onblur="syncField('systemDisplayName',this.value)" placeholder="e.g. Performance HTS Flooring System"></div>
     <div class="form-row-inline">
       <div class="form-row"><label>Project City</label><input value="${esc(s.projectCity)}" onblur="syncField('projectCity',this.value)" placeholder="City"></div>
