@@ -196,6 +196,43 @@
   .admin-table .btn-delete { background: #c0392b; color: #fff; }
   .admin-table .btn-delete:hover { background: #e74c3c; }
   .admin-empty { padding: 30px; text-align: center; color: #666; }
+  .admin-catalog-controls { display: flex; gap: 8px; align-items: center; margin-bottom: 12px; flex-wrap: wrap; }
+  .admin-catalog-controls select, .admin-catalog-controls input {
+    padding: 6px 8px; background: #0f3460; border: 1px solid #333; border-radius: 4px;
+    color: #fff; font-size: 12px;
+  }
+  .admin-catalog-controls input { flex: 1; min-width: 150px; }
+  .admin-catalog-controls select:focus, .admin-catalog-controls input:focus { border-color: #e2a308; outline: none; }
+  .admin-product-card {
+    background: #0f1d3a; border: 1px solid #2a2a4a; border-radius: 8px; margin-bottom: 8px; overflow: hidden;
+  }
+  .admin-product-header {
+    display: flex; align-items: center; gap: 8px; padding: 10px 12px; cursor: pointer;
+  }
+  .admin-product-header:hover { background: #142650; }
+  .admin-product-name { flex: 1; font-size: 13px; color: #fff; font-weight: 600; }
+  .admin-product-vendor { font-size: 10px; color: #000; background: #e2a308; padding: 2px 6px; border-radius: 3px; font-weight: 600; }
+  .admin-product-cat { font-size: 11px; color: #888; }
+  .admin-product-count { font-size: 11px; color: #888; }
+  .admin-variant-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .admin-variant-table th {
+    padding: 6px 8px; text-align: left; color: #888; font-size: 10px; text-transform: uppercase;
+    letter-spacing: 0.5px; background: #12122a; border-bottom: 1px solid #2a2a4a;
+  }
+  .admin-variant-table td { padding: 6px 8px; border-bottom: 1px solid #1a1a2e; }
+  .admin-variant-table input {
+    width: 100%; padding: 4px 6px; background: #0f3460; border: 1px solid #333; border-radius: 3px;
+    color: #fff; font-size: 12px;
+  }
+  .admin-variant-table input:focus { border-color: #e2a308; outline: none; }
+  .admin-variant-actions { padding: 8px 12px; display: flex; gap: 6px; background: #0a0a1a; }
+  .admin-new-product { background: #12122a; border: 2px dashed #333; border-radius: 8px; padding: 16px; margin-bottom: 12px; }
+  .admin-new-product h4 { color: #e2a308; font-size: 12px; text-transform: uppercase; margin-bottom: 10px; }
+  .admin-new-product .form-row-inline { display: flex; gap: 8px; margin-bottom: 8px; }
+  .admin-new-product .form-row-inline input, .admin-new-product .form-row-inline select {
+    flex: 1; padding: 7px 9px; background: #0f3460; border: 1px solid #333; border-radius: 4px;
+    color: #fff; font-size: 12px;
+  }
   .admin-badge {
     position: absolute; top: -6px; right: -6px;
     min-width: 18px; height: 18px; padding: 0 5px;
@@ -745,12 +782,19 @@
 <div class="admin-modal-overlay" id="adminModal">
   <div class="admin-modal">
     <div class="admin-modal-header">
-      <h2>User Administration</h2>
+      <h2>Administration</h2>
       <button class="admin-modal-close" onclick="closeAdminPanel()">Close</button>
     </div>
-    <div id="adminPanelContent">
-      <div class="admin-empty">Loading...</div>
+    <div class="quote-subtab-bar" style="padding:0 0; margin-bottom:12px;">
+      <button class="quote-subtab active" onclick="switchAdminTab('users')">Users</button>
+      <button class="quote-subtab" onclick="switchAdminTab('catalog')">Product Catalog</button>
+      <button class="quote-subtab" onclick="switchAdminTab('rates')">Rate Card</button>
     </div>
+    <div id="adminUsersPanel">
+      <div id="adminPanelContent"><div class="admin-empty">Loading...</div></div>
+    </div>
+    <div id="adminCatalogPanel" style="display:none;"></div>
+    <div id="adminRatesPanel" style="display:none;"></div>
   </div>
 </div>
 
@@ -4509,6 +4553,256 @@ async function adminDeleteProfile(userId, email) {
   if (error) { alert('Error: ' + error.message); return; }
   await renderAdminPanel();
   checkPendingSignups();
+}
+
+// ============================================================
+// ADMIN TABS
+// ============================================================
+function switchAdminTab(tab) {
+  document.querySelectorAll('#adminModal .quote-subtab').forEach(b => b.classList.remove('active'));
+  document.querySelector(`#adminModal .quote-subtab[onclick*="${tab}"]`).classList.add('active');
+  document.getElementById('adminUsersPanel').style.display = tab === 'users' ? '' : 'none';
+  document.getElementById('adminCatalogPanel').style.display = tab === 'catalog' ? '' : 'none';
+  document.getElementById('adminRatesPanel').style.display = tab === 'rates' ? '' : 'none';
+  if (tab === 'catalog') renderAdminCatalog();
+  if (tab === 'rates') renderAdminRates();
+}
+
+// ============================================================
+// ADMIN: PRODUCT CATALOG
+// ============================================================
+let _adminCatalogData = [];
+let _adminCatalogFilter = { vendor: '', search: '' };
+
+async function renderAdminCatalog() {
+  const panel = document.getElementById('adminCatalogPanel');
+  panel.innerHTML = '<div class="admin-empty">Loading catalog...</div>';
+
+  const { data, error } = await supa.from('products_catalog').select('*').order('vendor').order('category').order('product_name');
+  if (error) { panel.innerHTML = '<div class="admin-empty" style="color:#e74c3c;">Error: ' + escH(error.message) + '</div>'; return; }
+  _adminCatalogData = data || [];
+
+  renderAdminCatalogUI();
+}
+
+function renderAdminCatalogUI() {
+  const panel = document.getElementById('adminCatalogPanel');
+  const v = _adminCatalogFilter.vendor;
+  const q = _adminCatalogFilter.search.toLowerCase();
+
+  // Filter
+  let filtered = _adminCatalogData.filter(p => {
+    if (v && p.vendor !== v) return false;
+    if (q && !(p.product_name || '').toLowerCase().includes(q) && !(p.product_number || '').toLowerCase().includes(q) && !(p.category || '').toLowerCase().includes(q)) return false;
+    return true;
+  });
+
+  // Group by product_name + vendor (so variants are together)
+  const groups = {};
+  filtered.forEach(p => {
+    const key = p.vendor + '||' + p.product_name;
+    if (!groups[key]) groups[key] = { vendor: p.vendor, name: p.product_name, category: p.category || '', variants: [] };
+    groups[key].variants.push(p);
+  });
+
+  const groupList = Object.values(groups).sort((a, b) => {
+    if (a.vendor !== b.vendor) return a.vendor.localeCompare(b.vendor);
+    if (a.category !== b.category) return a.category.localeCompare(b.category);
+    return a.name.localeCompare(b.name);
+  });
+
+  let html = `
+    <div class="admin-catalog-controls">
+      <select onchange="_adminCatalogFilter.vendor=this.value; renderAdminCatalogUI();">
+        <option value="">All Vendors</option>
+        <option value="SW" ${v==='SW'?'selected':''}>SW</option>
+        <option value="SGC" ${v==='SGC'?'selected':''}>SGC</option>
+        <option value="SIKA" ${v==='SIKA'?'selected':''}>SIKA</option>
+        <option value="Other" ${v==='Other'?'selected':''}>Other</option>
+      </select>
+      <input type="text" placeholder="Search products..." value="${escH(_adminCatalogFilter.search)}" oninput="_adminCatalogFilter.search=this.value; renderAdminCatalogUI();">
+      <button class="btn btn-primary btn-sm" onclick="showNewProductForm()">+ Add Product</button>
+    </div>
+    <div id="adminNewProductArea"></div>
+    <div style="font-size:11px; color:#888; margin-bottom:8px;">${groupList.length} products (${filtered.length} variants)</div>
+  `;
+
+  groupList.forEach(g => {
+    const isExpanded = g.variants.length > 1 || g._expanded;
+    html += `<div class="admin-product-card">
+      <div class="admin-product-header" onclick="toggleAdminProduct(this)">
+        <span class="admin-product-vendor">${escH(g.vendor)}</span>
+        <span class="admin-product-name">${escH(g.name)}</span>
+        <span class="admin-product-cat">${escH(g.category)}</span>
+        <span class="admin-product-count">${g.variants.length} variant${g.variants.length > 1 ? 's' : ''}</span>
+      </div>
+      <div style="display:none;">
+        <table class="admin-variant-table">
+          <thead><tr><th>Prod #</th><th>Color</th><th>UOM</th><th>Unit Rate</th><th>Category</th><th style="width:60px"></th></tr></thead>
+          <tbody>`;
+
+    g.variants.forEach(v => {
+      html += `<tr>
+        <td><input value="${escH(v.product_number || '')}" onblur="updateCatalogField('${v.id}','product_number',this.value)"></td>
+        <td><input value="${escH(v.color || '')}" onblur="updateCatalogField('${v.id}','color',this.value)"></td>
+        <td><input value="${escH(v.uom || '')}" onblur="updateCatalogField('${v.id}','uom',this.value)"></td>
+        <td><input type="number" step="0.01" value="${v.unit_rate || 0}" onblur="updateCatalogField('${v.id}','unit_rate',parseFloat(this.value)||0)" style="width:90px;"></td>
+        <td><input value="${escH(v.category || '')}" onblur="updateCatalogField('${v.id}','category',this.value)"></td>
+        <td><button class="btn btn-danger btn-sm" onclick="deleteCatalogVariant('${v.id}')">×</button></td>
+      </tr>`;
+    });
+
+    html += `</tbody></table>
+        <div class="admin-variant-actions">
+          <button class="btn btn-secondary btn-sm" onclick="addCatalogVariant('${escH(g.vendor)}','${escH(g.name)}','${escH(g.category)}')">+ Add Variant</button>
+          <button class="btn btn-secondary btn-sm" onclick="renameCatalogProduct('${escH(g.vendor)}','${escH(g.name)}')">Rename Product</button>
+        </div>
+      </div>
+    </div>`;
+  });
+
+  panel.innerHTML = html;
+}
+
+function toggleAdminProduct(headerEl) {
+  const body = headerEl.nextElementSibling;
+  body.style.display = body.style.display === 'none' ? '' : 'none';
+}
+
+async function updateCatalogField(id, field, value) {
+  const update = {};
+  update[field] = value;
+  const { error } = await supa.from('products_catalog').update(update).eq('id', id);
+  if (error) { alert('Error: ' + error.message); return; }
+  // Update local cache
+  const item = _adminCatalogData.find(p => p.id === id);
+  if (item) item[field] = value;
+  // Refresh the products catalog cache for the quote tool
+  _productsCatalogCache = [];
+  _quoteInitialized = false;
+}
+
+async function deleteCatalogVariant(id) {
+  if (!confirm('Delete this variant?')) return;
+  const { error } = await supa.from('products_catalog').delete().eq('id', id);
+  if (error) { alert('Error: ' + error.message); return; }
+  _adminCatalogData = _adminCatalogData.filter(p => p.id !== id);
+  renderAdminCatalogUI();
+  _productsCatalogCache = [];
+  _quoteInitialized = false;
+}
+
+async function addCatalogVariant(vendor, productName, category) {
+  const { data, error } = await supa.from('products_catalog').insert({
+    vendor, product_name: productName, category,
+    product_number: '', color: 'N/A', uom: '', unit_rate: 0
+  }).select('*').single();
+  if (error) { alert('Error: ' + error.message); return; }
+  _adminCatalogData.push(data);
+  renderAdminCatalogUI();
+  _productsCatalogCache = [];
+  _quoteInitialized = false;
+}
+
+async function renameCatalogProduct(vendor, oldName) {
+  const newName = prompt('New product name:', oldName);
+  if (!newName || !newName.trim() || newName.trim() === oldName) return;
+  const { error } = await supa.from('products_catalog')
+    .update({ product_name: newName.trim() })
+    .eq('vendor', vendor)
+    .eq('product_name', oldName);
+  if (error) { alert('Error: ' + error.message); return; }
+  _adminCatalogData.forEach(p => {
+    if (p.vendor === vendor && p.product_name === oldName) p.product_name = newName.trim();
+  });
+  renderAdminCatalogUI();
+  _productsCatalogCache = [];
+  _quoteInitialized = false;
+}
+
+function showNewProductForm() {
+  const area = document.getElementById('adminNewProductArea');
+  area.innerHTML = `<div class="admin-new-product">
+    <h4>New Product</h4>
+    <div class="form-row-inline">
+      <select id="newProdVendor"><option value="SW">SW</option><option value="SGC">SGC</option><option value="SIKA">SIKA</option><option value="Other">Other</option></select>
+      <input id="newProdCategory" placeholder="Category (e.g. Primers)">
+    </div>
+    <div class="form-row-inline">
+      <input id="newProdName" placeholder="Product Name" style="flex:2;">
+      <input id="newProdNumber" placeholder="Prod #" style="flex:1;">
+    </div>
+    <div class="form-row-inline">
+      <input id="newProdColor" placeholder="Color" value="N/A">
+      <input id="newProdUom" placeholder="UOM (e.g. 3 GAL)">
+      <input id="newProdRate" type="number" step="0.01" placeholder="Unit Rate" style="width:100px;">
+    </div>
+    <div style="display:flex; gap:6px; margin-top:8px;">
+      <button class="btn btn-primary btn-sm" onclick="saveNewProduct()">Save</button>
+      <button class="btn btn-secondary btn-sm" onclick="document.getElementById('adminNewProductArea').innerHTML='';">Cancel</button>
+    </div>
+  </div>`;
+}
+
+async function saveNewProduct() {
+  const vendor = document.getElementById('newProdVendor').value;
+  const category = document.getElementById('newProdCategory').value.trim();
+  const name = document.getElementById('newProdName').value.trim();
+  const number = document.getElementById('newProdNumber').value.trim();
+  const color = document.getElementById('newProdColor').value.trim() || 'N/A';
+  const uom = document.getElementById('newProdUom').value.trim();
+  const rate = parseFloat(document.getElementById('newProdRate').value) || 0;
+
+  if (!name) { alert('Product name is required'); return; }
+
+  const { data, error } = await supa.from('products_catalog').insert({
+    vendor, category, product_number: number, product_name: name,
+    color, uom, unit_rate: rate
+  }).select('*').single();
+
+  if (error) { alert('Error: ' + error.message); return; }
+  _adminCatalogData.push(data);
+  document.getElementById('adminNewProductArea').innerHTML = '';
+  renderAdminCatalogUI();
+  _productsCatalogCache = [];
+  _quoteInitialized = false;
+}
+
+// ============================================================
+// ADMIN: RATE CARD
+// ============================================================
+async function renderAdminRates() {
+  const panel = document.getElementById('adminRatesPanel');
+  panel.innerHTML = '<div class="admin-empty">Loading rates...</div>';
+
+  const { data, error } = await supa.from('rate_card').select('*').order('cost_code');
+  if (error) { panel.innerHTML = '<div class="admin-empty" style="color:#e74c3c;">Error: ' + escH(error.message) + '</div>'; return; }
+
+  let html = '<table class="admin-table"><thead><tr><th>Code</th><th>Description</th><th style="width:100px">Rate</th><th>Unit</th><th>Notes</th></tr></thead><tbody>';
+  (data || []).forEach(r => {
+    html += `<tr>
+      <td style="font-weight:600; color:#e2a308;">${escH(r.cost_code)}</td>
+      <td>${escH(r.description)}</td>
+      <td><input type="number" step="0.01" value="${r.default_rate || 0}" style="width:90px; padding:4px 6px; background:#0f3460; border:1px solid #333; border-radius:3px; color:#fff; font-size:12px;"
+        onblur="updateRateCard('${r.id}','default_rate',parseFloat(this.value)||0)"></td>
+      <td><input value="${escH(r.unit || '')}" style="width:100px; padding:4px 6px; background:#0f3460; border:1px solid #333; border-radius:3px; color:#fff; font-size:12px;"
+        onblur="updateRateCard('${r.id}','unit',this.value)"></td>
+      <td><input value="${escH(r.notes || '')}" style="width:100%; padding:4px 6px; background:#0f3460; border:1px solid #333; border-radius:3px; color:#fff; font-size:12px;"
+        onblur="updateRateCard('${r.id}','notes',this.value)"></td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+  panel.innerHTML = html;
+}
+
+async function updateRateCard(id, field, value) {
+  const update = {};
+  update[field] = value;
+  const { error } = await supa.from('rate_card').update(update).eq('id', id);
+  if (error) alert('Error: ' + error.message);
+  // Clear rate card cache so it reloads fresh
+  _rateCardCache = [];
+  _quoteInitialized = false;
 }
 
 // Check for pending signups and show badge on Admin button
