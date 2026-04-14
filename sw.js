@@ -9,7 +9,7 @@
 // ============================================================
 
 // Bump this version string whenever you want the browser to force-refresh the cache
-const CACHE_VERSION = 'hti-proposal-builder-v1';
+const CACHE_VERSION = 'hti-proposal-builder-v14';
 
 // Files to cache on install (the "app shell")
 const APP_SHELL = [
@@ -18,7 +18,8 @@ const APP_SHELL = [
   'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js',
   'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js',
   'https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js',
-  'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2'
+  'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2',
+  'https://cdn.jsdelivr.net/npm/@azure/msal-browser@3.27.0/lib/msal-browser.min.js'
 ];
 
 // Install: pre-cache the app shell
