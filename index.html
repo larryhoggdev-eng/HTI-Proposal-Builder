@@ -236,6 +236,14 @@
   .admin-subsection { margin-top: 10px; }
   .admin-subhead { font-size: 10px; color: #e2a308; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; font-weight: 700; }
   .uom-list { display: flex; flex-direction: column; gap: 4px; margin-bottom: 6px; }
+  .copy-colors-item { padding: 10px 12px; border-bottom: 1px solid #2a2a4a; cursor: pointer; transition: background 0.1s; }
+  .copy-colors-item:last-child { border-bottom: none; }
+  .copy-colors-item:hover { background: #1a1a3a; }
+  .copy-colors-head { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+  .copy-colors-vendor { color: #e2a308; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; background: #0f3460; padding: 2px 6px; border-radius: 3px; }
+  .copy-colors-name { color: #fff; font-size: 13px; font-weight: 600; flex: 1; }
+  .copy-colors-count { color: #888; font-size: 11px; }
+  .copy-colors-list { color: #aaa; font-size: 11px; line-height: 1.4; }
   .uom-row { display: flex; align-items: center; gap: 6px; background: #12122a; padding: 6px 8px; border-radius: 4px; border: 1px solid #2a2a4a; }
   .uom-row input.uom-name { flex: 1; padding: 4px 6px; background: #0f3460; border: 1px solid #333; border-radius: 3px; color: #fff; font-size: 12px; }
   .uom-row input.uom-rate { width: 90px; padding: 4px 6px; background: #0f3460; border: 1px solid #333; border-radius: 3px; color: #fff; font-size: 12px; }
@@ -541,14 +549,29 @@
   /* Project Info tab */
   .pi-sub { display: block; font-size: 13px; color: #e2a308; text-transform: uppercase; letter-spacing: 0.5px; margin: 18px 0 10px; padding-top: 12px; border-top: 1px solid #333; font-weight: 700; }
   .pi-sub:first-of-type { border-top: none; padding-top: 4px; margin-top: 6px; }
-  .pi-scope-block { background: #12122a; border: 1px solid #2a2a4a; border-radius: 6px; padding: 10px 12px; margin-bottom: 8px; position: relative; }
+  .pi-scope-block { background: transparent; border: 1px solid #2a2a4a; border-radius: 6px; padding: 10px 12px; margin-bottom: 8px; position: relative; }
   .pi-scope-block .pi-scope-remove { position: absolute; top: 8px; right: 8px; background: #e74c3c; color: #fff; border: none; border-radius: 50%; width: 22px; height: 22px; font-size: 12px; font-weight: 700; cursor: pointer; line-height: 1; }
   .pi-scope-block .pi-scope-remove:hover { background: #c0392b; }
   .pi-check-row { display: flex; align-items: center; gap: 8px; margin: 8px 0; font-size: 12px; color: #ddd; }
-  .pi-check-row input[type="checkbox"] { accent-color: #e2a308; width: 15px; height: 15px; cursor: pointer; }
   .pi-check-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px 18px; margin: 6px 0 10px; }
   .pi-check-grid label { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #ddd; cursor: pointer; }
-  .pi-check-grid label input[type="checkbox"] { accent-color: #e2a308; width: 15px; height: 15px; cursor: pointer; }
+  .pi-check-row input[type="checkbox"],
+  .pi-check-grid label input[type="checkbox"] {
+    -webkit-appearance: none; appearance: none;
+    width: 15px; height: 15px; cursor: pointer;
+    background: #0f3460; border: 1px solid #2a4a7a; border-radius: 3px;
+    position: relative; margin: 0;
+  }
+  .pi-check-row input[type="checkbox"]:checked,
+  .pi-check-grid label input[type="checkbox"]:checked {
+    background: #e2a308; border-color: #e2a308;
+  }
+  .pi-check-row input[type="checkbox"]:checked::after,
+  .pi-check-grid label input[type="checkbox"]:checked::after {
+    content: ''; position: absolute; left: 4px; top: 0px;
+    width: 4px; height: 9px; border: solid #12122a;
+    border-width: 0 2px 2px 0; transform: rotate(45deg);
+  }
   .pi-shipto { background: #12122a; border: 1px dashed #e2a308; border-radius: 6px; padding: 10px 12px; margin: 6px 0 10px; }
   .pi-shipto-label { font-size: 11px; color: #e2a308; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; font-weight: 600; }
   .pi-placeholder { background: #12122a; border: 1px dashed #444; border-radius: 6px; padding: 14px; color: #888; font-style: italic; font-size: 12px; text-align: center; }
@@ -760,20 +783,20 @@
     text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #2a2a4a;
   }
   .catalogue-item {
-    display: flex; align-items: center; gap: 4px; padding: 5px 8px;
-    border-bottom: 1px solid #1a1a2e; font-size: 11px; color: #ccc;
+    display: flex; align-items: center; gap: 4px; padding: 2px 8px;
+    border-bottom: 1px solid #1a1a2e; font-size: 13px; color: #ccc; line-height: 1.2;
   }
   .catalogue-item:last-child { border-bottom: none; }
-  .catalogue-item .cat-name { flex: 1; min-width: 0; font-size: 11px; }
-  .catalogue-item .cat-color { color: #888; font-size: 10px; flex: 0 0 80px; }
-  .catalogue-item .cat-uom { color: #888; font-size: 10px; flex: 0 0 60px; text-align: center; }
-  .catalogue-item .cat-price { color: #e2a308; font-size: 10px; flex: 0 0 65px; text-align: right; font-weight: 600; }
+  .catalogue-item .cat-name { flex: 1; min-width: 0; font-size: 13px; }
+  .catalogue-item .cat-color { color: #888; font-size: 12px; flex: 0 0 100px; width: 100px; min-width: 100px; max-width: 100px; text-align: left; padding-left: 5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .catalogue-item .cat-uom { color: #888; font-size: 12px; flex: 0 0 90px; width: 90px; min-width: 90px; max-width: 90px; text-align: left; padding-left: 5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .catalogue-item .cat-price { color: #ccc; font-size: 12px; flex: 0 0 70px; text-align: right; font-weight: 600; }
   .catalogue-item .cat-input {
-    width: 55px; padding: 3px 4px; background: #0f3460; border: 1px solid #333; border-radius: 3px;
-    color: #fff; font-size: 10px; text-align: center; flex: 0 0 55px;
+    width: 60px; padding: 1px 5px; background: #0f3460; border: 1px solid #333; border-radius: 3px;
+    color: #fff; font-size: 12px; text-align: center; flex: 0 0 60px;
   }
   .catalogue-item .cat-input:focus { border-color: #e2a308; outline: none; }
-  .catalogue-item .cat-ext { color: #27ae60; font-size: 10px; flex: 0 0 70px; text-align: right; font-weight: 600; }
+  .catalogue-item .cat-ext { color: #27ae60; font-size: 12px; flex: 0 0 75px; text-align: right; font-weight: 600; }
   .catalogue-item.highlight { background: rgba(226,163,8,0.18); box-shadow: inset 3px 0 0 #e2a308; }
   .catalogue-item.highlight .cat-name { color: #fff; font-weight: 600; }
   .catalogue-item { position: relative; }
@@ -785,8 +808,17 @@
   .catalogue-custom-new .cat-name { font-style: italic; color: #888; }
   .custom-add-row-btn { margin-left: 8px; background: transparent; color: #e2a308; border: 1px solid #e2a308; border-radius: 3px; font-size: 10px; font-weight: 600; padding: 2px 8px; cursor: pointer; text-transform: uppercase; letter-spacing: 0.3px; }
   .custom-add-row-btn:hover { background: #e2a308; color: #000; }
-  .cat-color-select { background: #0f3460; border: 1px solid #333; border-radius: 3px; color: #fff; font-size: 10px; padding: 2px 4px; flex: 0 0 95px; max-width: 95px; cursor: pointer; }
+  .cat-color-select { background: transparent; border: 1px solid #2a2a4a; border-radius: 3px; color: #888; font-size: 12px; padding: 1px 4px; flex: 0 0 100px; width: 100px; min-width: 100px; max-width: 100px; cursor: pointer; text-align: left; -webkit-appearance: none; -moz-appearance: none; appearance: none; background-image: none; }
+  .cat-color-select::-ms-expand { display: none; }
+  .cat-color-select option { background: #12122a; color: #ccc; }
   .cat-color-select:focus { border-color: #e2a308; outline: none; }
+  .cat-uom-select { background: transparent; border: 1px solid #2a2a4a; border-radius: 3px; color: #888; font-size: 12px; padding: 1px 4px; flex: 0 0 90px; width: 90px; min-width: 90px; max-width: 90px; cursor: pointer; text-align: left; -webkit-appearance: none; -moz-appearance: none; appearance: none; background-image: none; }
+  .cat-uom-select::-ms-expand { display: none; }
+  .cat-uom-select option { background: #12122a; color: #ccc; }
+  .cat-uom-select:focus { border-color: #e2a308; outline: none; }
+  .cat-input-norate { -moz-appearance: textfield; }
+  .cat-input-norate::-webkit-outer-spin-button,
+  .cat-input-norate::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
   .cat-dup-btn { flex: 0 0 22px; width: 22px; height: 22px; border-radius: 50%; background: transparent; color: #888; border: 1px solid #2a2a4a; font-size: 14px; font-weight: 700; cursor: pointer; padding: 0; line-height: 1; opacity: 0; transition: opacity 0.12s, background 0.12s; margin-left: 4px; }
   .catalogue-item:hover .cat-dup-btn { opacity: 1; }
   .cat-dup-btn:hover { background: #e2a308; color: #000; border-color: #e2a308; }
@@ -1095,44 +1127,43 @@
 <!-- Labor tab -->
 <div class="tab-panel" id="tabLabor" style="flex-direction:column;">
     <div class="quote-panel">
-      <div class="quote-scroll">
-        <div class="quote-section" id="quoteLaborSection">
-          <h3>Labor</h3>
-          <table class="quote-table">
-            <thead>
-              <tr><th>Activity</th><th style="width:70px">Men</th><th style="width:70px">Days</th><th style="width:90px">Rate</th><th style="width:100px">Extension</th><th style="width:30px"></th></tr>
-            </thead>
-            <tbody id="quoteLaborBody"></tbody>
-          </table>
-          <button class="btn btn-secondary btn-sm" onclick="addQuoteLaborRow()" style="margin-top:6px;">+ Add Labor Row</button>
-          <div class="quote-total-row" id="quoteLaborTotal">Labor Total: $0.00</div>
-        </div>
-
-        <div class="quote-section" id="quoteTravelSection">
-          <h3>Travel &amp; Expenses</h3>
-          <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
-            <label style="font-size:11px; color:#aaa; text-transform:uppercase; letter-spacing:0.5px;">Crew Size</label>
-            <input type="number" id="quoteCrewSize" value="1" min="1" step="1" style="width:80px; padding:6px 8px; background:#0f3460; border:1px solid #333; border-radius:4px; color:#fff; font-size:13px;" oninput="onCrewSizeChange(this.value)">
-            <span style="font-size:11px; color:#888;">Rows marked with a crew count multiply Qty &times; Rate &times; Crew.</span>
+      <div class="quote-scroll" style="display:flex; gap:18px; align-items:flex-start;">
+        <div style="flex:1; min-width:0; display:flex; flex-direction:column; gap:18px;">
+          <div class="quote-section" id="quoteLaborSection">
+            <h3>Labor</h3>
+            <table class="quote-table">
+              <thead>
+                <tr><th>Activity</th><th style="width:70px">Men</th><th style="width:70px">Days</th><th style="width:90px">Rate</th><th style="width:100px">Extension</th><th style="width:30px"></th></tr>
+              </thead>
+              <tbody id="quoteLaborBody"></tbody>
+            </table>
+            <button class="btn btn-secondary btn-sm" onclick="addQuoteLaborRow()" style="margin-top:6px;">+ Add Labor Row</button>
+            <div class="quote-total-row" id="quoteLaborTotal">Labor Total: $0.00</div>
           </div>
-          <table class="quote-table">
-            <thead>
-              <tr><th>Cost Code</th><th>Description</th><th style="width:60px">Crew</th><th style="width:70px">Qty</th><th style="width:90px">Rate</th><th style="width:100px">Extension</th></tr>
-            </thead>
-            <tbody id="quoteTravelBody"></tbody>
-          </table>
-          <div class="quote-total-row" id="quoteTravelTotal">Travel Total: $0.00</div>
+
+          <div class="quote-section" id="quoteAdditionalSection">
+            <h3>Additional Costs</h3>
+            <table class="quote-table">
+              <thead>
+                <tr><th>Cost Code</th><th>Description</th><th style="width:120px">Amount</th><th>Notes</th></tr>
+              </thead>
+              <tbody id="quoteAdditionalBody"></tbody>
+            </table>
+            <div class="quote-total-row" id="quoteAdditionalTotal">Additional Total: $0.00</div>
+          </div>
         </div>
 
-        <div class="quote-section" id="quoteAdditionalSection">
-          <h3>Additional Costs</h3>
-          <table class="quote-table">
-            <thead>
-              <tr><th>Cost Code</th><th>Description</th><th style="width:120px">Amount</th><th>Notes</th></tr>
-            </thead>
-            <tbody id="quoteAdditionalBody"></tbody>
-          </table>
-          <div class="quote-total-row" id="quoteAdditionalTotal">Additional Total: $0.00</div>
+        <div style="flex:1; min-width:0;">
+          <div class="quote-section" id="quoteTravelSection">
+            <h3>Travel &amp; Expenses</h3>
+            <table class="quote-table">
+              <thead>
+                <tr><th>Cost Code</th><th>Description</th><th style="width:60px">Crew</th><th style="width:70px">Qty</th><th style="width:90px">Rate</th><th style="width:100px">Extension</th></tr>
+              </thead>
+              <tbody id="quoteTravelBody"></tbody>
+            </table>
+            <div class="quote-total-row" id="quoteTravelTotal">Travel Total: $0.00</div>
+          </div>
         </div>
 
       </div>
@@ -2697,6 +2728,31 @@ async function setProjectOneDriveMeta(projectId, meta) {
   } catch (e) { console.warn('[OneDrive] Failed to write meta:', e); }
 }
 
+async function linkProjectToOneDrive(projectId) {
+  if (!ONEDRIVE.isLinked()) {
+    alert('Please link OneDrive first using the button in the top bar.');
+    return;
+  }
+  try {
+    const { data, error } = await supa.from('proposals').select('title, state').eq('id', projectId).single();
+    if (error) { alert('Could not load project: ' + error.message); return; }
+    const existing = data && data.state && data.state.oneDrive;
+    if (existing && existing.folderId) {
+      alert('This project is already linked to a OneDrive folder.');
+      refreshProjectList();
+      return;
+    }
+    const projectName = (data && data.title) || 'Untitled Project';
+    if (!confirm(`Create a OneDrive folder for "${projectName}"?`)) return;
+    const meta = await ONEDRIVE.createProjectFolder(projectName);
+    await setProjectOneDriveMeta(projectId, meta);
+    refreshProjectList();
+  } catch (e) {
+    console.error('[OneDrive] link failed', e);
+    alert('Failed to link project: ' + (e.message || e));
+  }
+}
+
 function refreshOneDriveUI() {
   const btn = document.getElementById('onedriveLinkBtn');
   if (!btn) return;
@@ -2926,9 +2982,12 @@ async function showProjectList() {
     const updated = new Date(p.updated_at).toLocaleString('en-US', { year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
     const isActive = p.id === _currentProjectId;
     const odMeta = (p.state && p.state.oneDrive) || null;
-    const odBtn = odMeta && odMeta.webUrl
-      ? `<button class="btn btn-secondary" title="Open OneDrive folder" onclick="window.open('${escH(odMeta.webUrl)}','_blank')">\u2601 Folder</button>`
-      : '';
+    let odBtn = '';
+    if (odMeta && odMeta.webUrl) {
+      odBtn = `<button class="btn btn-secondary" title="Open OneDrive folder" onclick="window.open('${escH(odMeta.webUrl)}','_blank')">\u2601 Folder</button>`;
+    } else if (ONEDRIVE.isLinked()) {
+      odBtn = `<button class="btn btn-secondary" title="Create a OneDrive folder for this project" onclick="linkProjectToOneDrive('${p.id}')">\u2601 Link</button>`;
+    }
     return `<li ${isActive ? 'style="border-color:#e2a308;"' : ''}>
       <div class="proj-info">
         <input class="proj-rename" id="proj-name-${p.id}" value="${escH(p.title || 'Untitled Project')}"
@@ -8300,7 +8359,7 @@ function ensureProjectInfoState() {
   const s = state;
   if (!s.pi) s.pi = {};
   const pi = s.pi;
-  if (pi.country == null) pi.country = '';
+  if (!pi.country) pi.country = 'USA';
   if (pi.projectManager == null) pi.projectManager = '';
   if (pi.superForeman == null) pi.superForeman = '';
   if (!Array.isArray(pi.scopes) || pi.scopes.length === 0) {
@@ -8365,7 +8424,7 @@ function renderProjectTab() {
         <div class="form-row"><label>Installed System</label><input value="${esc(sc.installedSystem)}" oninput="piSyncScope(${i},'installedSystem',this.value)"></div>
         <div class="form-row" style="flex:0 0 100px;"><label>Sq. Ft.</label><input value="${esc(sc.sqFt)}" oninput="piSyncScope(${i},'sqFt',this.value)"></div>
         <div class="form-row" style="flex:0 0 100px;"><label>Ln. Ft.</label><input value="${esc(sc.lnFt)}" oninput="piSyncScope(${i},'lnFt',this.value)"></div>
-        <div class="form-row" style="flex:0 0 120px;"><label>Ln. Ft. Joints</label><input value="${esc(sc.lnFtJoints)}" oninput="piSyncScope(${i},'lnFtJoints',this.value)"></div>
+        <div class="form-row" style="flex:0 0 100px;"><label>Ln. Ft. Joints</label><input value="${esc(sc.lnFtJoints)}" oninput="piSyncScope(${i},'lnFtJoints',this.value)"></div>
       </div>
       <div class="form-row-inline">
         <div class="form-row"><label>Material Delivery Date</label><input type="date" value="${esc(sc.materialDelivery)}" oninput="piSyncScope(${i},'materialDelivery',this.value)"></div>
@@ -8384,7 +8443,6 @@ function renderProjectTab() {
 
       <div class="form-row-inline">
         <div class="form-row"><label>Project Name</label><input value="${esc(s.projectName)}" oninput="piSyncTop('projectName',this.value)"></div>
-        <div class="form-row" style="flex:0 0 160px;"><label>Country</label><input value="${esc(pi.country)}" oninput="piSync('country',this.value)"></div>
         <div class="form-row" style="flex:0 0 140px;"><label>Job #</label><input value="${esc(s.jobNumber||'')}" oninput="piSyncTop('jobNumber',this.value)"></div>
       </div>
 
@@ -8399,6 +8457,7 @@ function renderProjectTab() {
         <div class="form-row"><label>City</label><input value="${esc(js.installAddress.city)}" oninput="piSyncJobsite('installAddress.city',this.value)"></div>
         <div class="form-row" style="flex:0 0 100px;"><label>State</label><input value="${esc(js.installAddress.state)}" oninput="piSyncJobsite('installAddress.state',this.value)"></div>
         <div class="form-row" style="flex:0 0 120px;"><label>Zip</label><input value="${esc(js.installAddress.zip)}" oninput="piSyncJobsite('installAddress.zip',this.value)"></div>
+        <div class="form-row" style="flex:0 0 140px;"><label>Country</label><input value="${esc(pi.country)}" oninput="piSync('country',this.value)"></div>
       </div>
 
       <div class="pi-check-row"><input type="checkbox" id="piShipDifferent" ${js.shipDifferent ? 'checked' : ''} onchange="piToggleShipTo(this.checked)"><label for="piShipDifferent">Ship to Different Address</label></div>
@@ -8419,9 +8478,6 @@ function renderProjectTab() {
       </div>
 
       <div class="pi-sub">Scope / Schedule</div>
-      <div id="piScopeBreakdowns">${scopeHtml}</div>
-      <button class="pi-add-btn" onclick="piAddScope()">+ Add Scope Breakdown</button>
-
       <div class="form-row-inline">
         <div class="form-row" style="flex:0 0 200px;"><label>Labor Type</label>
           <select onchange="piSyncJobsite('laborType',this.value)">
@@ -8429,12 +8485,15 @@ function renderProjectTab() {
             <option value="non-union" ${js.laborType==='non-union'?'selected':''}>Non-Union</option>
           </select>
         </div>
-        <div class="form-row" style="display:flex; align-items:flex-end;">
-          <label style="display:flex; align-items:center; gap:8px; text-transform:none; color:#ddd; font-size:12px; margin:0;">
-            <input type="checkbox" ${js.prevailingWage?'checked':''} onchange="piSyncJobsite('prevailingWage',this.checked)" style="accent-color:#e2a308; width:15px; height:15px;"> Prevailing Wage
-          </label>
+        <div class="form-row" style="flex:0 0 200px;"><label>Prevailing Wage</label>
+          <select onchange="piSyncJobsite('prevailingWage',this.value==='yes')">
+            <option value="no" ${!js.prevailingWage?'selected':''}>No</option>
+            <option value="yes" ${js.prevailingWage?'selected':''}>Yes</option>
+          </select>
         </div>
       </div>
+      <div id="piScopeBreakdowns">${scopeHtml}</div>
+      <button class="pi-add-btn" onclick="piAddScope()">+ Add Scope</button>
 
       <div class="pi-sub">Pre-Job Checklist</div>
       <div class="pi-check-grid">
@@ -9916,7 +9975,7 @@ function renderProductCard(g) {
       body += `<div class="uom-row">
         <input class="uom-name" value="${escH(u)}" onblur="renameUom('${escH(g.vendor)}','${escH(g.name)}','${escH(u)}',this.value)">
         <span class="uom-dollar">$</span>
-        <input type="number" step="0.01" class="uom-rate" value="${uomRates[u] || 0}" onblur="setUomRate('${escH(g.vendor)}','${escH(g.name)}','${escH(u)}',parseFloat(this.value)||0)">
+        <input type="number" step="0.01" class="uom-rate" value="${(uomRates[u] || 0).toFixed(2)}" onblur="setUomRate('${escH(g.vendor)}','${escH(g.name)}','${escH(u)}',parseFloat(this.value)||0)">
         <button class="btn-mini-x" onclick="removeUom('${escH(g.vendor)}','${escH(g.name)}','${escH(u)}')" title="Remove this UOM">&times;</button>
       </div>`;
     });
@@ -9933,6 +9992,7 @@ function renderProductCard(g) {
     });
     body += `</div>
       <button class="btn btn-secondary btn-sm" onclick="addColorPrompt('${escH(g.vendor)}','${escH(g.name)}')">+ Add Color</button>
+      <button class="btn btn-secondary btn-sm" onclick="copyColorsFromPrompt('${escH(g.vendor)}','${escH(g.name)}')" title="Copy the color set from another product">Copy Colors From…</button>
     </div>`;
   } else {
     // Rate grid: rows=UOM, cols=Color, cells=rate
@@ -9946,14 +10006,15 @@ function renderProductCard(g) {
       body += `<tr><td class="uom-cell"><input value="${escH(u)}" onblur="renameUom('${escH(g.vendor)}','${escH(g.name)}','${escH(u)}',this.value)"></td>`;
       g.colorList.forEach(c => {
         const rate = getCellRate(g, u, c);
-        body += `<td><input type="number" step="0.01" value="${rate}" onblur="setCellRate('${escH(g.vendor)}','${escH(g.name)}','${escH(u)}','${escH(c)}',parseFloat(this.value)||0)"></td>`;
+        body += `<td><input type="number" step="0.01" value="${rate.toFixed(2)}" onblur="setCellRate('${escH(g.vendor)}','${escH(g.name)}','${escH(u)}','${escH(c)}',parseFloat(this.value)||0)"></td>`;
       });
       body += `<td><button class="btn-mini-x" onclick="removeUom('${escH(g.vendor)}','${escH(g.name)}','${escH(u)}')">&times;</button></td></tr>`;
     });
     body += `</tbody></table></div>
-      <div style="display:flex; gap:6px; margin-top:8px;">
+      <div style="display:flex; gap:6px; margin-top:8px; flex-wrap:wrap;">
         <button class="btn btn-secondary btn-sm" onclick="addUomPrompt('${escH(g.vendor)}','${escH(g.name)}')">+ Add UOM</button>
         <button class="btn btn-secondary btn-sm" onclick="addColorPrompt('${escH(g.vendor)}','${escH(g.name)}')">+ Add Color</button>
+        <button class="btn btn-secondary btn-sm" onclick="copyColorsFromPrompt('${escH(g.vendor)}','${escH(g.name)}')" title="Copy the color set from another product">Copy Colors From…</button>
       </div>
     </div>`;
   }
@@ -10138,6 +10199,80 @@ async function addColorPrompt(vendor, name) {
     const base = group.find(r => r.uom === u);
     const rate = base ? parseFloat(base.unit_rate) || 0 : 0;
     await addRowForCombo(vendor, name, u, c, rate);
+  }
+  _invalidateCatalogCaches();
+  renderAdminCatalogUI();
+}
+
+function copyColorsFromPrompt(vendor, name) {
+  try {
+    console.log('copyColorsFromPrompt called', vendor, name, 'rows:', (_adminCatalogData||[]).length);
+  } catch (_) {}
+  if (!Array.isArray(_adminCatalogData) || !_adminCatalogData.length) {
+    alert('Catalog data not loaded yet.');
+    return;
+  }
+  const sourceGroups = Object.values(buildProductGroups(_adminCatalogData))
+    .filter(g => !(g.vendor === vendor && g.name === name) && g.colorList.length > 0)
+    .sort((a, b) => ((a.vendor || '') + (a.name || '')).localeCompare((b.vendor || '') + (b.name || '')));
+  if (!sourceGroups.length) { alert('No other products with colors to copy from.'); return; }
+
+  let existing = document.getElementById('copyColorsModal');
+  if (existing) existing.remove();
+
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.id = 'copyColorsModal';
+  overlay.setAttribute('style', 'position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.7); display:flex; align-items:center; justify-content:center; z-index:99999;');
+  overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+
+  const items = sourceGroups.map((g, i) => `
+    <div class="copy-colors-item" onclick="copyColorsFromChosen('${escH(vendor)}','${escH(name)}',${i})">
+      <div class="copy-colors-head">
+        <span class="copy-colors-vendor">${escH(g.vendor)}</span>
+        <span class="copy-colors-name">${escH(g.name)}</span>
+        <span class="copy-colors-count">${g.colorList.length} colors</span>
+      </div>
+      <div class="copy-colors-list">${g.colorList.map(c => escH(c)).join(', ')}</div>
+    </div>
+  `).join('');
+
+  overlay.innerHTML = `<div class="modal-card" style="max-width:640px; max-height:80vh; display:flex; flex-direction:column;">
+    <h2 style="margin:0 0 4px;">Copy Colors From…</h2>
+    <p class="modal-sub" style="margin:0 0 12px;">Click a product to copy its colors into <b>${escH(name)}</b>.</p>
+    <div style="overflow-y:auto; flex:1; border:1px solid #2a2a4a; border-radius:6px;">${items}</div>
+    <div class="modal-actions" style="margin-top:12px;">
+      <button class="btn btn-secondary" onclick="document.getElementById('copyColorsModal').remove()">Cancel</button>
+    </div>
+  </div>`;
+  document.body.appendChild(overlay);
+  _copyColorsSourceGroups = sourceGroups;
+}
+
+let _copyColorsSourceGroups = [];
+
+async function copyColorsFromChosen(vendor, name, sourceIdx) {
+  const source = _copyColorsSourceGroups[sourceIdx];
+  if (!source) return;
+  const modal = document.getElementById('copyColorsModal');
+  if (modal) modal.remove();
+
+  const target = rowsOfProduct(vendor, name);
+  const existing = new Set(target.map(r => r.color));
+  const toAdd = source.colorList.filter(c => !existing.has(c));
+  if (!toAdd.length) { alert('This product already has all of those colors.'); return; }
+
+  const targetUoms = Array.from(new Set(target.map(r => r.uom))).filter(Boolean);
+  if (targetUoms.length === 0) { alert('Add a UOM to this product first.'); return; }
+
+  if (!confirm(`Add ${toAdd.length} color(s) from "${source.name}" to this product?\n\n${toAdd.join(', ')}`)) return;
+
+  for (const c of toAdd) {
+    for (const u of targetUoms) {
+      const base = target.find(r => r.uom === u);
+      const rate = base ? parseFloat(base.unit_rate) || 0 : 0;
+      await addRowForCombo(vendor, name, u, c, rate);
+    }
   }
   _invalidateCatalogCaches();
   renderAdminCatalogUI();
@@ -10639,15 +10774,19 @@ function makeLineKey(vendor, name, uom, dupIndex) {
   return vendor + '|' + name + '|' + uom + '|' + (dupIndex || 0);
 }
 
-function findMaterialEntries(vendor, name, uom) {
+function findProductEntries(vendor, name) {
   return state.quote.materials
     .map((m, i) => ({ m, i }))
-    .filter(x => x.m.vendor === vendor && x.m.productName === name && x.m.uom === uom)
+    .filter(x => x.m.vendor === vendor && x.m.productName === name)
     .sort((a, b) => (a.m.dupIndex || 0) - (b.m.dupIndex || 0));
 }
 
-function nextDupIndex(vendor, name, uom) {
-  const existing = findMaterialEntries(vendor, name, uom);
+function findEntryByProductDup(vendor, name, dupIndex) {
+  return state.quote.materials.findIndex(m => m.vendor === vendor && m.productName === name && (m.dupIndex || 0) === (dupIndex || 0));
+}
+
+function nextDupIndex(vendor, name) {
+  const existing = findProductEntries(vendor, name);
   let max = -1;
   existing.forEach(x => { if ((x.m.dupIndex || 0) > max) max = x.m.dupIndex || 0; });
   return max + 1;
@@ -10695,41 +10834,48 @@ function renderCatalogueView() {
   const col1Cats = catNames.filter((_, i) => i % 2 === 0);
   const col2Cats = catNames.filter((_, i) => i % 2 === 1);
 
-  function renderLineRow(g, uom, entry, isDuplicate) {
-    const qty = entry ? (entry.m.qty || '') : '';
+  function renderLineRow(g, entry, dupIdx, isDuplicate) {
+    const uom = entry ? entry.m.uom : (g.uoms[0] || '');
     const color = entry ? entry.m.color : (g.colors[0] || '');
+    const qty = entry ? (entry.m.qty || '') : '';
     const rate = entry && entry.m.quotedRate != null ? entry.m.quotedRate : rateForCombo(g, uom, color);
-    const qr = entry && entry.m.quotedRate != null ? entry.m.quotedRate : '';
+    const qr = entry && entry.m.quotedRate != null ? parseFloat(entry.m.quotedRate).toFixed(2) : '';
     const ext = qty ? (parseFloat(qty) * rate) : 0;
-    const lineKey = entry ? entry.m.lineKey : makeLineKey(g.vendor, g.name, uom, 0);
-    const dupIdx = entry ? (entry.m.dupIndex || 0) : 0;
 
-    // Product-match for highlight: any row in the group matches the query
     const isMatch = _catalogueSearchQuery && g.rows.some(r => productMatchesQuery(r, _catalogueSearchQuery));
 
-    // Color cell: dropdown if >1 color, static text otherwise
     let colorCell;
     if (g.colors.length > 1) {
-      colorCell = `<select class="cat-color-select" onchange="onLineColorChange('${escH(g.vendor)}','${escH(g.name)}','${escH(uom)}',${dupIdx},this.value)">
+      colorCell = `<select class="cat-color-select" onchange="onLineColorChange('${escH(g.vendor)}','${escH(g.name)}',${dupIdx},this.value)">
         ${g.colors.map(c => `<option value="${escH(c)}" ${c === color ? 'selected' : ''}>${escH(c)}</option>`).join('')}
       </select>`;
     } else {
       colorCell = `<span class="cat-color">${escH(g.colors[0] || 'N/A')}</span>`;
     }
 
-    const dupBtn = !isDuplicate
-      ? `<button class="cat-dup-btn" onclick="duplicateCatalogueLine('${escH(g.vendor)}','${escH(g.name)}','${escH(uom)}')" title="Duplicate this line">+</button>`
-      : `<button class="cat-dup-btn remove" onclick="removeCatalogueLine('${escH(g.vendor)}','${escH(g.name)}','${escH(uom)}',${dupIdx})" title="Remove duplicate">&times;</button>`;
+    let uomCell;
+    if (g.uoms.length > 1) {
+      uomCell = `<select class="cat-uom-select" onchange="onLineUomChange('${escH(g.vendor)}','${escH(g.name)}',${dupIdx},this.value)">
+        ${g.uoms.map(u => `<option value="${escH(u)}" ${u === uom ? 'selected' : ''}>${escH(u)}</option>`).join('')}
+      </select>`;
+    } else {
+      uomCell = `<span class="cat-uom">${escH(uom || 'N/A')}</span>`;
+    }
 
-    return `<div class="catalogue-item${isMatch ? ' highlight' : ''}${isDuplicate ? ' catalogue-dup' : ''}">
+    const dupBtn = !isDuplicate
+      ? `<button class="cat-dup-btn" onclick="duplicateCatalogueLine('${escH(g.vendor)}','${escH(g.name)}')" title="Duplicate this line">+</button>`
+      : `<button class="cat-dup-btn remove" onclick="removeCatalogueLine('${escH(g.vendor)}','${escH(g.name)}',${dupIdx})" title="Remove duplicate">&times;</button>`;
+
+    const rowKey = g.vendor + '|' + g.name + '|' + dupIdx;
+    return `<div class="catalogue-item${isMatch ? ' highlight' : ''}${isDuplicate ? ' catalogue-dup' : ''}" data-line-row="${escH(rowKey)}">
       <span class="cat-name">${isDuplicate ? '↳ ' : ''}${escH(g.name)}</span>
       ${colorCell}
-      <span class="cat-uom">${escH(uom)}</span>
+      ${uomCell}
       <span class="cat-price">${fmtMoney(rateForCombo(g, uom, color))}</span>
       <input class="cat-input" type="number" min="0" placeholder="—" value="${qty || ''}"
-        onchange="onLineQtyChange('${escH(g.vendor)}','${escH(g.name)}','${escH(uom)}',${dupIdx},this.value)" title="Quantity">
-      <input class="cat-input" type="number" min="0" step="0.01" placeholder="—" value="${qr}"
-        onchange="onLineRateChange('${escH(g.vendor)}','${escH(g.name)}','${escH(uom)}',${dupIdx},this.value)" title="Quoted Rate Override">
+        onchange="onLineQtyChange('${escH(g.vendor)}','${escH(g.name)}',${dupIdx},this.value)" title="Quantity">
+      <input class="cat-input cat-input-norate" type="number" min="0" step="0.01" placeholder="—" value="${qr}"
+        onchange="onLineRateChange('${escH(g.vendor)}','${escH(g.name)}',${dupIdx},this.value)" title="Quoted Rate Override">
       <span class="cat-ext">${ext > 0 ? fmtMoney(ext) : ''}</span>
       ${dupBtn}
     </div>`;
@@ -10746,25 +10892,23 @@ function renderCatalogueView() {
 
     // Column headers
     html += `<div class="catalogue-item catalogue-item-head">
-      <span class="cat-name" style="font-size:9px; color:#888; text-transform:uppercase; letter-spacing:0.5px;">Product</span>
-      <span class="cat-color" style="font-size:9px; color:#888; text-transform:uppercase;">Color</span>
-      <span class="cat-uom" style="font-size:9px; color:#888; text-transform:uppercase;">UOM</span>
-      <span class="cat-price" style="font-size:9px; color:#888; text-transform:uppercase;">List Rate</span>
-      <span style="flex:0 0 55px; font-size:9px; color:#888; text-transform:uppercase; text-align:center;">Qty</span>
-      <span style="flex:0 0 55px; font-size:9px; color:#888; text-transform:uppercase; text-align:center;">Qt Rate</span>
-      <span style="flex:0 0 70px; font-size:9px; color:#888; text-transform:uppercase; text-align:right;">Extension</span>
+      <span class="cat-name" style="font-size:11px; color:#888; text-transform:uppercase; letter-spacing:0.5px;">Product</span>
+      <span class="cat-color" style="font-size:11px; color:#888; text-transform:uppercase;">Color</span>
+      <span class="cat-uom" style="font-size:11px; color:#888; text-transform:uppercase;">UOM</span>
+      <span class="cat-price" style="font-size:11px; color:#888; text-transform:uppercase;">List Rate</span>
+      <span style="flex:0 0 60px; font-size:11px; color:#888; text-transform:uppercase; text-align:center;">Qty</span>
+      <span style="flex:0 0 60px; font-size:11px; color:#888; text-transform:uppercase; text-align:center;">Qt Rate</span>
+      <span style="flex:0 0 75px; font-size:11px; color:#888; text-transform:uppercase; text-align:right;">Extension</span>
       <span style="flex:0 0 22px;"></span>
     </div>`;
 
     prods.sort((a, b) => a.name.localeCompare(b.name));
     prods.forEach(g => {
-      g.uoms.forEach(uom => {
-        const entries = findMaterialEntries(g.vendor, g.name, uom);
-        const base = entries.find(e => (e.m.dupIndex || 0) === 0) || null;
-        html += renderLineRow(g, uom, base, false);
-        entries.filter(e => (e.m.dupIndex || 0) > 0).forEach(dup => {
-          html += renderLineRow(g, uom, dup, true);
-        });
+      const entries = findProductEntries(g.vendor, g.name);
+      const base = entries.find(e => (e.m.dupIndex || 0) === 0) || null;
+      html += renderLineRow(g, base, 0, false);
+      entries.filter(e => (e.m.dupIndex || 0) > 0).forEach(dup => {
+        html += renderLineRow(g, dup, dup.m.dupIndex || 0, true);
       });
     });
 
@@ -10784,15 +10928,16 @@ function renderCatalogueView() {
   updateCatalogueMaterialsTotal();
 }
 
-// Find (or optionally create) a material entry for a given line key
-function findOrCreateLineEntry(vendor, name, uom, dupIndex, createWithColor) {
+// Find (or create) a material entry for (vendor, name, dupIndex). UOM/color are
+// only used when creating a new entry; existing entries keep their stored values.
+function findOrCreateLineEntry(vendor, name, dupIndex, defaultUom, defaultColor) {
   ensureQuoteState();
-  let idx = state.quote.materials.findIndex(m => m.vendor === vendor && m.productName === name && m.uom === uom && (m.dupIndex || 0) === dupIndex);
+  let idx = findEntryByProductDup(vendor, name, dupIndex);
   if (idx >= 0) return idx;
-  if (createWithColor == null) return -1;
   const group = buildQuoteProductGroups()[vendor + '||' + name];
   if (!group) return -1;
-  const color = createWithColor || group.colors[0] || 'N/A';
+  const uom = defaultUom || group.uoms[0] || '';
+  const color = defaultColor || group.colors[0] || 'N/A';
   state.quote.materials.push({
     lineKey: makeLineKey(vendor, name, uom, dupIndex),
     catalogId: null,
@@ -10805,62 +10950,90 @@ function findOrCreateLineEntry(vendor, name, uom, dupIndex, createWithColor) {
   return state.quote.materials.length - 1;
 }
 
-function onLineQtyChange(vendor, name, uom, dupIndex, val) {
-  ensureQuoteState();
-  const qty = parseFloat(val) || 0;
-  let idx = state.quote.materials.findIndex(m => m.vendor === vendor && m.productName === name && m.uom === uom && (m.dupIndex || 0) === dupIndex);
-  if (qty > 0 && idx === -1) idx = findOrCreateLineEntry(vendor, name, uom, dupIndex);
-  if (idx >= 0) {
-    if (qty === 0 && (dupIndex || 0) === 0) {
-      // Keep the base entry but zero it out (so the row stays visible with saved color)
-      state.quote.materials[idx].qty = 0;
-    } else if (qty === 0) {
-      // Duplicate with qty 0 → remove
-      state.quote.materials.splice(idx, 1);
-    } else {
-      state.quote.materials[idx].qty = qty;
-    }
+function updateRowExtInPlace(vendor, name, dupIndex) {
+  const idx = findEntryByProductDup(vendor, name, dupIndex);
+  if (idx < 0) return;
+  const m = state.quote.materials[idx];
+  const rate = m.quotedRate != null ? m.quotedRate : m.unitRate;
+  const ext = (parseFloat(m.qty) || 0) * (parseFloat(rate) || 0);
+  const rowKey = vendor + '|' + name + '|' + (dupIndex || 0);
+  const row = document.querySelector('[data-line-row="' + CSS.escape(rowKey) + '"]');
+  if (row) {
+    const extCell = row.querySelector('.cat-ext');
+    if (extCell) extCell.textContent = ext > 0 ? fmtMoney(ext) : '';
   }
-  schedulePersist();
-  renderCatalogueView();
 }
 
-function onLineRateChange(vendor, name, uom, dupIndex, val) {
+function onLineQtyChange(vendor, name, dupIndex, val) {
   ensureQuoteState();
-  let idx = state.quote.materials.findIndex(m => m.vendor === vendor && m.productName === name && m.uom === uom && (m.dupIndex || 0) === dupIndex);
-  if (idx === -1) idx = findOrCreateLineEntry(vendor, name, uom, dupIndex);
+  const qty = parseFloat(val) || 0;
+  let idx = findEntryByProductDup(vendor, name, dupIndex);
+  if (idx === -1) idx = findOrCreateLineEntry(vendor, name, dupIndex);
+  if (idx < 0) return;
+  const structural = qty === 0 && (dupIndex || 0) > 0;
+  if (structural) {
+    state.quote.materials.splice(idx, 1);
+    schedulePersist();
+    renderCatalogueView();
+    return;
+  }
+  state.quote.materials[idx].qty = qty;
+  schedulePersist();
+  updateRowExtInPlace(vendor, name, dupIndex);
+  updateCatalogueMaterialsTotal();
+}
+
+function onLineRateChange(vendor, name, dupIndex, val) {
+  ensureQuoteState();
+  let idx = findEntryByProductDup(vendor, name, dupIndex);
+  if (idx === -1) idx = findOrCreateLineEntry(vendor, name, dupIndex);
   if (idx >= 0) {
     state.quote.materials[idx].quotedRate = val === '' ? null : (parseFloat(val) || 0);
   }
   schedulePersist();
+  updateRowExtInPlace(vendor, name, dupIndex);
   updateCatalogueMaterialsTotal();
 }
 
-function onLineColorChange(vendor, name, uom, dupIndex, newColor) {
+function onLineColorChange(vendor, name, dupIndex, newColor) {
   ensureQuoteState();
-  let idx = state.quote.materials.findIndex(m => m.vendor === vendor && m.productName === name && m.uom === uom && (m.dupIndex || 0) === dupIndex);
-  if (idx === -1) idx = findOrCreateLineEntry(vendor, name, uom, dupIndex, newColor);
+  let idx = findEntryByProductDup(vendor, name, dupIndex);
+  if (idx === -1) idx = findOrCreateLineEntry(vendor, name, dupIndex, null, newColor);
   if (idx >= 0) {
     state.quote.materials[idx].color = newColor;
-    // If the underlying rate depends on color (color_pricing ON), refresh unitRate
     const group = buildQuoteProductGroups()[vendor + '||' + name];
-    if (group) state.quote.materials[idx].unitRate = rateForCombo(group, uom, newColor);
+    if (group) state.quote.materials[idx].unitRate = rateForCombo(group, state.quote.materials[idx].uom, newColor);
   }
   schedulePersist();
   renderCatalogueView();
 }
 
-function duplicateCatalogueLine(vendor, name, uom) {
+function onLineUomChange(vendor, name, dupIndex, newUom) {
   ensureQuoteState();
-  const dup = nextDupIndex(vendor, name, uom);
+  let idx = findEntryByProductDup(vendor, name, dupIndex);
+  if (idx === -1) idx = findOrCreateLineEntry(vendor, name, dupIndex, newUom);
+  if (idx >= 0) {
+    state.quote.materials[idx].uom = newUom;
+    const group = buildQuoteProductGroups()[vendor + '||' + name];
+    if (group) state.quote.materials[idx].unitRate = rateForCombo(group, newUom, state.quote.materials[idx].color);
+    state.quote.materials[idx].lineKey = makeLineKey(vendor, name, newUom, dupIndex);
+  }
+  schedulePersist();
+  renderCatalogueView();
+}
+
+function duplicateCatalogueLine(vendor, name) {
+  ensureQuoteState();
+  const dup = nextDupIndex(vendor, name);
   const group = buildQuoteProductGroups()[vendor + '||' + name];
   const baseColor = group ? (group.colors[1] || group.colors[0]) : 'N/A';
+  const baseUom = group ? (group.uoms[0] || '') : '';
   state.quote.materials.push({
-    lineKey: makeLineKey(vendor, name, uom, dup),
+    lineKey: makeLineKey(vendor, name, baseUom, dup),
     catalogId: null,
-    vendor, productName: name, color: baseColor, uom,
+    vendor, productName: name, color: baseColor, uom: baseUom,
     qty: 0,
-    unitRate: group ? rateForCombo(group, uom, baseColor) : 0,
+    unitRate: group ? rateForCombo(group, baseUom, baseColor) : 0,
     quotedRate: null,
     dupIndex: dup
   });
@@ -10868,9 +11041,9 @@ function duplicateCatalogueLine(vendor, name, uom) {
   renderCatalogueView();
 }
 
-function removeCatalogueLine(vendor, name, uom, dupIndex) {
+function removeCatalogueLine(vendor, name, dupIndex) {
   ensureQuoteState();
-  const idx = state.quote.materials.findIndex(m => m.vendor === vendor && m.productName === name && m.uom === uom && (m.dupIndex || 0) === dupIndex);
+  const idx = findEntryByProductDup(vendor, name, dupIndex);
   if (idx >= 0) {
     state.quote.materials.splice(idx, 1);
     schedulePersist();
@@ -11113,17 +11286,20 @@ function onQuoteTravelChange(code, field, val) {
   if (!state.quote.travel[code]) state.quote.travel[code] = { qty: 0, rate: 0 };
   if (field === 'qty') state.quote.travel[code].qty = parseFloat(val) || 0;
   if (field === 'rate') state.quote.travel[code].rate = parseFloat(val) || 0;
+  if (field === 'crew') state.quote.travel[code].crew = Math.max(1, parseFloat(val) || 1);
   schedulePersist();
   renderQuoteTravel();
   recalcQuoteSummary();
 }
 
-function onCrewSizeChange(val) {
-  ensureQuoteState();
-  state.quote.crewSize = Math.max(1, parseFloat(val) || 1);
-  schedulePersist();
-  renderQuoteTravel();
-  recalcQuoteSummary();
+// Legacy: migrate global state.quote.crewSize to per-row crew on first access, then
+// return the crew count for a specific travel code.
+function crewForTravelCode(code) {
+  if (!TRAVEL_CREW_MULT_CODES.has(code)) return 1;
+  const t = state.quote.travel[code];
+  if (t && t.crew != null) return Math.max(1, parseFloat(t.crew) || 1);
+  const legacy = parseFloat(state.quote.crewSize);
+  return legacy > 0 ? legacy : 1;
 }
 
 // ---- Equipment (own tab) ----
@@ -11160,20 +11336,23 @@ function renderQuoteEquipment() {
 function renderQuoteTravel() {
   ensureQuoteState();
   const tbody = document.getElementById('quoteTravelBody');
-  const crewSize = parseFloat(state.quote.crewSize) || 1;
   let total = 0;
   tbody.innerHTML = QUOTE_TRAVEL_CODES.map(code => {
     const t = state.quote.travel[code] || { qty: 0, rate: 0 };
     const info = getRateByCode(code);
     const label = QUOTE_TRAVEL_LABELS[code] || info.description;
     const multByCrew = TRAVEL_CREW_MULT_CODES.has(code);
-    const mult = multByCrew ? crewSize : 1;
+    const crew = crewForTravelCode(code);
+    const mult = multByCrew ? crew : 1;
     const ext = (t.qty || 0) * (t.rate || 0) * mult;
     total += ext;
+    const crewCell = multByCrew
+      ? `<td><input type="number" class="narrow" value="${crew}" min="1" step="1" onchange="onQuoteTravelChange('${code}','crew',this.value)" title="Crew size for this line"></td>`
+      : `<td style="text-align:center; color:#555; font-weight:600;">—</td>`;
     return `<tr>
       <td>${escH(code)}</td>
       <td>${escH(label)}</td>
-      <td style="text-align:center; color:${multByCrew ? '#e2a308' : '#555'}; font-weight:600;">${multByCrew ? crewSize : '—'}</td>
+      ${crewCell}
       <td><input type="number" class="narrow" value="${t.qty || ''}" min="0" step="1" onchange="onQuoteTravelChange('${code}','qty',this.value)"></td>
       <td><input type="number" class="narrow" value="${t.rate || ''}" min="0" step="0.01" onchange="onQuoteTravelChange('${code}','rate',this.value)"></td>
       <td style="text-align:right; font-weight:600;">${fmtMoney(ext)}</td>
@@ -11243,11 +11422,10 @@ function calcQuoteTotals() {
   let laborTotal = 0;
   state.quote.labor.forEach(r => { laborTotal += (r.men || 0) * (r.days || 0) * (r.rate || 0); });
 
-  const crewSize = parseFloat(state.quote.crewSize) || 1;
   let travelTotal = 0;
   QUOTE_TRAVEL_CODES.forEach(code => {
     const t = state.quote.travel[code] || { qty: 0, rate: 0 };
-    const mult = TRAVEL_CREW_MULT_CODES.has(code) ? crewSize : 1;
+    const mult = TRAVEL_CREW_MULT_CODES.has(code) ? crewForTravelCode(code) : 1;
     travelTotal += (t.qty || 0) * (t.rate || 0) * mult;
   });
 
@@ -11293,9 +11471,6 @@ function renderQuoteTool() {
   if (taxEl) taxEl.value = state.quote.taxRate;
   const markupEl = document.getElementById('quoteMarkupPct');
   if (markupEl) markupEl.value = state.quote.markupPct;
-  const crewEl = document.getElementById('quoteCrewSize');
-  if (crewEl) crewEl.value = state.quote.crewSize != null ? state.quote.crewSize : 1;
-
   renderCatalogueView();
   renderCustomProducts();
   renderQuoteLabor();
