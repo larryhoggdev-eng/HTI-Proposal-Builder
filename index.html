@@ -343,14 +343,14 @@
   .editor-scroll { max-width: 700px; margin: 0 auto; }
   .form-section { background: #1a1a2e; border-radius: 8px; padding: 12px; margin-bottom: 10px; border: 1px solid #2a2a4a; }
   .form-section h3 { color: #e2a308; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; border-bottom: 1px solid #333; padding-bottom: 6px; }
-  .form-row { margin-bottom: 8px; }
-  .form-row label { display: block; font-size: 11px; color: #aaa; margin-bottom: 3px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .form-row { margin-bottom: 5px; }
+  .form-row label { display: block; font-size: 11px; color: #aaa; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.5px; }
   .form-row input, .form-row select, .form-row textarea {
-    width: 100%; padding: 7px 9px; background: #0f3460; border: 1px solid #333; border-radius: 4px;
+    width: 100%; padding: 5px 8px; background: #0f3460; border: 1px solid #333; border-radius: 4px;
     color: #fff; font-size: 13px; font-family: inherit;
   }
   .form-row input:focus, .form-row select:focus, .form-row textarea:focus { border-color: #e2a308; outline: none; }
-  .form-row textarea { resize: vertical; min-height: 50px; }
+  .form-row textarea { resize: vertical; min-height: 36px; }
   .form-row select { cursor: pointer; }
   .form-row-inline { display: flex; gap: 8px; }
   .form-row-inline .form-row { flex: 1; }
@@ -419,7 +419,52 @@
   .preview-panel { flex: 1; overflow-y: auto; background: #3a3a3a; padding: 20px; display: flex; justify-content: center; border-left: 3px solid #e2a308; }
 
   /* ============ DOCUMENTS PANEL ============ */
-  .docs-panel { flex: 1; overflow-y: auto; background: #2d2d2d; padding: 20px; }
+  /* Global app sidebar — fixed to the right edge across all tabs */
+  .docs-panel { position: fixed; top: 98px; right: 0; bottom: 0; width: 440px; overflow-y: auto; background: #2d2d2d; padding: 16px; border-left: 3px solid #e2a308; box-shadow: -4px 0 14px rgba(0,0,0,0.35); transition: width 0.2s ease, padding 0.2s ease; z-index: 900; }
+  .docs-panel.collapsed { width: 52px; padding: 12px 6px; box-shadow: -2px 0 6px rgba(0,0,0,0.25); }
+  .docs-panel.collapsed .docs-scroll > *:not(.docs-toggle-wrap) { display: none; }
+  .docs-panel.collapsed .docs-toggle-wrap { justify-content: center; }
+  .docs-panel.collapsed .docs-toggle-label { display: none; }
+  /* Reserve ≥ 52px on right so the collapsed rail never overlaps content; expanded rail overlays content intentionally */
+  .tab-panel { margin-right: 52px; }
+  .docs-toggle-wrap { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; margin-bottom: 12px; }
+  .docs-toggle-btn { background:#0f3460; border:1px solid #e2a308; color:#e2a308; padding:6px 10px; border-radius:4px; cursor:pointer; font-size:13px; display:inline-flex; align-items:center; gap:6px; }
+  .docs-toggle-btn:hover { background:#163b6b; }
+
+  /* ============ SCRATCHPAD POPUP ============ */
+  .scratchpad-modal { position: fixed; top: 104px; right: 76px; width: 460px; max-height: calc(100vh - 130px); background: #1a1a2e; border: 2px solid #e2a308; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); z-index: 9999; display: none; flex-direction: column; }
+  .scratchpad-modal.open { display: flex; }
+  .scratchpad-header { display:flex; align-items:center; justify-content:space-between; padding:10px 14px; background:#0f1d3a; border-bottom:1px solid #2a2a4a; border-radius:6px 6px 0 0; flex-shrink: 0; }
+  .scratchpad-header h4 { margin:0; color:#e2a308; font-size:14px; }
+  .scratchpad-close { background:transparent; border:none; color:#ccc; font-size:20px; cursor:pointer; line-height:1; }
+  .scratchpad-body { padding:14px 16px; display:flex; flex-direction:column; gap:14px; overflow-y: auto; }
+  .calc-display { background:#0f3460; border:1px solid #333; border-radius:4px; color:#fff; padding:10px 12px; font-size:20px; text-align:right; font-family:monospace; min-height:26px; }
+  .calc-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; }
+  .calc-btn { background:#2a2a4a; border:1px solid #333; color:#fff; padding:12px 0; border-radius:4px; cursor:pointer; font-size:15px; }
+  .calc-btn:hover { background:#3a3a5a; }
+  .calc-btn.op { background:#0f3460; color:#e2a308; }
+  .calc-btn.eq { background:#e2a308; color:#1a1a2e; font-weight:700; }
+  .calc-btn.clr { background:#5a2a2a; color:#fff; }
+  .scratch-notes { width:100%; background:#0f3460; border:1px solid #333; border-radius:4px; color:#fff; padding:10px 12px; font-size:13px; resize:vertical; min-height:220px; font-family:inherit; box-sizing: border-box; }
+
+  /* Engineering Request modal (reuses scratchpad-modal shell) */
+  .engineering-modal { width: 520px; }
+  .er-label { font-size: 11px; color: #e2a308; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; margin-bottom: 4px; }
+  .er-divider { height: 1px; background: #333; margin: 2px 0; }
+  .er-new .scratch-notes { min-height: 90px; }
+  .er-list-wrap { display: flex; flex-direction: column; gap: 8px; }
+  .er-item { background: #15152a; border: 1px solid #2a2a4a; border-radius: 6px; padding: 10px 12px; }
+  .er-item .er-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+  .er-item .er-status { font-size: 10px; text-transform: uppercase; padding: 2px 8px; border-radius: 10px; letter-spacing: 0.4px; }
+  .er-status.open { background: #5a4a1a; color: #e2a308; }
+  .er-status.responded { background: #1a4a2a; color: #5acc72; }
+  .er-item .er-date { font-size: 11px; color: #888; }
+  .er-item .er-text { font-size: 12px; color: #ddd; white-space: pre-wrap; word-wrap: break-word; }
+  .er-item .er-response { margin-top: 6px; padding: 6px 8px; background: #0f1d3a; border-left: 3px solid #5acc72; font-size: 11px; color: #bde3c9; white-space: pre-wrap; word-wrap: break-word; }
+  .er-item .er-response.empty { color: #666; border-left-color: #333; font-style: italic; }
+  .er-item .er-actions { display: flex; gap: 6px; margin-top: 6px; }
+  .er-item .er-del { background: #5a2a2a; color: #fff; border: 1px solid #7a3a3a; border-radius: 3px; padding: 3px 8px; font-size: 10px; cursor: pointer; }
+  .er-item .er-del:hover { background: #7a3a3a; }
   .docs-scroll { max-width: 1100px; margin: 0 auto; }
   .docs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: start; }
   /* When a file preview is open inside a doc-category, let the card span both columns and double its body height */
@@ -431,6 +476,73 @@
   .team-docs-title { color: #e2a308; font-size: 26px; margin: 0 0 6px; }
   .team-docs-sub { color: #888; font-size: 13px; margin: 0 0 28px; }
   .team-docs-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; max-width: 1000px; }
+
+  /* ============ FIELD TAB / SITE SURVEY VIEW ============ */
+  .field-tab-view { flex: 1; overflow: hidden; display: none; flex-direction: column; background: #2d2d2d; }
+  .field-tab-view.active { display: flex; }
+  .ft-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 18px; background: #0f1d3a; border-bottom: 2px solid #e2a308; flex-shrink: 0; }
+  .ft-header h2 { color: #e2a308; margin: 0; font-size: 16px; }
+  .ft-split { flex: 1; display: flex; overflow: hidden; }
+  .ft-form-col { flex: 1; overflow-y: auto; padding: 14px 18px; background: #1e1e3a; border-right: 2px solid #2a2a4a; }
+  .ft-preview-col { flex: 1; overflow-y: auto; padding: 24px 0; background: #3a3a3a; display: flex; flex-direction: column; align-items: center; gap: 14px; }
+  .ft-page { width: 8.5in; min-height: 11in; background: #fff; color: #222; padding: 0.4in 0.5in; box-sizing: border-box; box-shadow: 0 4px 20px rgba(0,0,0,0.55); position: relative; }
+  .ft-page::after { content: ''; position: absolute; inset: 0; pointer-events: none; }
+  .ft-page-label { font-size: 10px; color: #888; letter-spacing: 0.5px; text-transform: uppercase; margin: 6px 0 -8px; }
+  .ft-page-break { width: 8.5in; height: 0; border-top: 1px dashed #666; position: relative; }
+  .ft-page-break::before { content: 'Page Break'; position: absolute; top: -8px; left: 50%; transform: translateX(-50%); background: #3a3a3a; color: #888; padding: 0 8px; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .ft-form-col h4 { color: #e2a308; font-size: 12px; margin: 14px 0 6px; border-bottom: 1px solid #333; padding-bottom: 3px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .ft-form-col h4:first-child { margin-top: 0; }
+  .ft-row { margin-bottom: 5px; }
+  .ft-row label { display: block; font-size: 10px; color: #aaa; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 2px; }
+  .ft-row input, .ft-row textarea { width: 100%; padding: 5px 8px; background: #0f3460; border: 1px solid #333; border-radius: 3px; color: #fff; font-size: 12px; font-family: inherit; box-sizing: border-box; }
+  .ft-row input:focus, .ft-row textarea:focus { outline: none; border-color: #e2a308; }
+  .ft-row textarea { min-height: 70px; resize: vertical; }
+  .ft-row-inline { display: flex; gap: 8px; }
+  .ft-row-inline .ft-row { flex: 1; }
+  .ft-scope-block { border: 1px solid #2a2a4a; border-radius: 4px; padding: 6px 8px; margin-bottom: 6px; background: #15152a; }
+  .ft-add-btn { background: #0f3460; color: #e2a308; border: 1px solid #e2a308; border-radius: 4px; padding: 5px 12px; font-size: 11px; font-weight: 600; cursor: pointer; margin: 4px 0 8px; }
+  .ft-add-btn:hover { background: #163b6b; }
+  .ft-row-del { width: 22px; height: 26px; background: #5a2a2a; color: #fff; border: 1px solid #7a3a3a; border-radius: 3px; font-size: 14px; cursor: pointer; margin-left: 4px; padding: 0; line-height: 1; flex-shrink: 0; }
+  .ft-row-del:hover { background: #7a3a3a; }
+  .ft-page h4 { background: #d5d5d5; color: #333; padding: 3px 8px; margin: 10px 0 4px; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; border: 1px solid #aaa; page-break-after: avoid; break-after: avoid; }
+  .ft-page h4:first-child { margin-top: 0; }
+  .ft-page .ft-kv { display: grid; grid-template-columns: 160px 1fr; font-size: 11px; gap: 3px 10px; margin-bottom: 4px; page-break-inside: avoid; break-inside: avoid; }
+  .ft-page .ft-kv strong { color: #555; font-weight: 600; }
+  .ft-page table { width: 100%; border-collapse: collapse; font-size: 10px; margin: 3px 0 6px; table-layout: fixed; page-break-inside: auto; }
+  .ft-page thead { display: table-header-group; }
+  .ft-page tr { page-break-inside: avoid; break-inside: avoid; }
+  .ft-page th, .ft-page td { border: 1px solid #bbb; padding: 3px 5px; text-align: left; vertical-align: top; word-wrap: break-word; overflow-wrap: break-word; }
+  .ft-page th { background: #e6e6e6; color: #333; font-size: 9px; text-transform: uppercase; font-weight: 600; }
+  .ft-page .ft-general-box { font-size: 11px; white-space: pre-wrap; word-wrap: break-word; overflow-wrap: break-word; border: 1px solid #bbb; padding: 6px 8px; background: #f8f8f8; page-break-inside: avoid; break-inside: avoid; }
+  .ft-page-section { page-break-inside: avoid; break-inside: avoid; }
+  .ft-page table.ft-scope-table col.c-phase { width: 22%; }
+  .ft-page table.ft-scope-table col.c-system { width: 22%; }
+  .ft-page table.ft-scope-table col.c-num { width: 7%; }
+  .ft-page table.ft-scope-table col.c-date { width: 11%; }
+  .ft-page table.ft-scope-table col.c-time { width: 9%; }
+  .ft-page table.ft-labor-table col.c-activity { width: 60%; }
+  .ft-page table.ft-labor-table col.c-narrow { width: 10%; }
+  .ft-page table.ft-travel-table col.c-expense { width: 60%; }
+  .ft-page table.ft-travel-table col.c-narrow { width: 10%; }
+  .ft-page table.po-table { font-size: 9px; }
+  .ft-page table.po-table th { padding: 3px 4px; }
+  .ft-page table.po-table td { padding: 2px 4px; }
+  .ft-page table.po-table tfoot tr.po-total-row td { background: #f0f0f0; border-top: 2px solid #888; }
+  .ft-header .btn { padding: 6px 14px; font-size: 12px; font-weight: 600; border-radius: 4px; cursor: pointer; border: 1px solid #e2a308; }
+  .ft-header .btn-back { background: transparent; color: #e2a308; }
+  .ft-header .btn-back:hover { background: rgba(226,163,8,0.15); }
+  .ft-header .btn-export { background: #e2a308; color: #1a1a2e; }
+  .ft-header .btn-export:hover { background: #f0b520; }
+  @media print {
+    @page { size: letter portrait; margin: 0; }
+    html, body { background: #fff !important; }
+    body * { visibility: hidden !important; }
+    .ft-preview-col, .ft-preview-col * { visibility: visible !important; }
+    .ft-preview-col { position: absolute !important; left: 0; top: 0; width: 100%; padding: 0 !important; background: #fff !important; color: #000 !important; overflow: visible !important; display: block !important; }
+    .ft-page { box-shadow: none !important; width: 100% !important; min-height: 0 !important; padding: 0.4in 0.5in !important; page-break-after: always; break-after: page; }
+    .ft-page:last-child { page-break-after: auto; break-after: auto; }
+    .ft-page-break, .ft-page-label { display: none !important; }
+  }
   .team-doc-box { background: #1e1e3a; border: 1px solid #2a2a4a; border-radius: 10px; padding: 28px 20px; text-align: center; cursor: pointer; transition: all 0.15s; color: #fff; }
   .team-doc-box:hover { border-color: #e2a308; transform: translateY(-2px); }
   .team-doc-box.active { background: rgba(226,163,8,0.15); border-color: #e2a308; box-shadow: 0 0 0 2px rgba(226,163,8,0.4); }
@@ -496,10 +608,10 @@
   .field-highlight { animation: field-pulse 1.5s ease; }
   @keyframes field-pulse { 0%,30% { background: #e2a30855; border-color: #e2a308; } 100% { background: transparent; } }
 
-  .form-card { background: #1e1e3a; border-radius: 8px; padding: 16px 20px; margin-bottom: 12px; border: 1px solid #2a2a4a; }
+  .form-card { background: #1e1e3a; border-radius: 8px; padding: 10px 14px; margin-bottom: 8px; border: 1px solid #2a2a4a; }
   .form-card h3 {
-    color: #e2a308; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px;
-    border-bottom: 1px solid #333; padding-bottom: 6px; cursor: pointer; display: flex; align-items: center;
+    color: #e2a308; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px;
+    border-bottom: 1px solid #333; padding-bottom: 4px; cursor: pointer; display: flex; align-items: center;
     user-select: none;
   }
   .form-card h3 .collapse-arrow { margin-right: 8px; font-size: 10px; transition: transform 0.2s; display: inline-block; }
@@ -510,13 +622,13 @@
   .form-card.has-warning h3 { border-bottom-color: rgba(226,163,8,0.4); }
   .form-card .card-body { overflow: hidden; transition: max-height 0.3s ease; }
   .form-card .card-body.collapsed { max-height: 0 !important; overflow: hidden; padding: 0; margin: 0; }
-  .form-card .form-row label { display: block; font-size: 11px; color: #aaa; margin-bottom: 3px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .form-card .form-row label { display: block; font-size: 11px; color: #aaa; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.5px; }
   .form-card .form-row input, .form-card .form-row select, .form-card .form-row textarea {
-    width: 100%; padding: 7px 9px; background: #0f3460; border: 1px solid #333; border-radius: 4px;
+    width: 100%; padding: 5px 8px; background: #0f3460; border: 1px solid #333; border-radius: 4px;
     color: #fff; font-size: 13px; font-family: inherit;
   }
   .form-card .form-row input:focus, .form-card .form-row select:focus, .form-card .form-row textarea:focus { border-color: #e2a308; outline: none; }
-  .form-card .form-row textarea { resize: vertical; min-height: 50px; }
+  .form-card .form-row textarea { resize: vertical; min-height: 36px; }
   .form-card .form-row select { cursor: pointer; }
   .form-card .form-row-inline { display: flex; gap: 8px; }
   .form-card .form-row-inline .form-row { flex: 1; }
@@ -547,13 +659,17 @@
   .subsection-label { display: block; font-size: 12px; color: #e2a308; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 14px; margin-bottom: 8px; padding-top: 10px; border-top: 1px solid #333; font-weight: 600; }
 
   /* Project Info tab */
-  .pi-sub { display: block; font-size: 13px; color: #e2a308; text-transform: uppercase; letter-spacing: 0.5px; margin: 18px 0 10px; padding-top: 12px; border-top: 1px solid #333; font-weight: 700; }
-  .pi-sub:first-of-type { border-top: none; padding-top: 4px; margin-top: 6px; }
-  .pi-scope-block { background: transparent; border: 1px solid #2a2a4a; border-radius: 6px; padding: 10px 12px; margin-bottom: 8px; position: relative; }
+  .pi-sub { display: block; font-size: 12px; color: #e2a308; text-transform: uppercase; letter-spacing: 0.5px; margin: 10px 0 6px; padding-top: 8px; border-top: 1px solid #333; font-weight: 700; }
+  .pi-sub:first-of-type { border-top: none; padding-top: 2px; margin-top: 2px; }
+  .pi-scope-block { background: transparent; border: 1px solid #2a2a4a; border-radius: 6px; padding: 6px 10px; margin-bottom: 5px; position: relative; }
   .pi-scope-block .pi-scope-remove { position: absolute; top: 8px; right: 8px; background: #e74c3c; color: #fff; border: none; border-radius: 50%; width: 22px; height: 22px; font-size: 12px; font-weight: 700; cursor: pointer; line-height: 1; }
   .pi-scope-block .pi-scope-remove:hover { background: #c0392b; }
-  .pi-check-row { display: flex; align-items: center; gap: 8px; margin: 8px 0; font-size: 12px; color: #ddd; }
-  .pi-check-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px 18px; margin: 6px 0 10px; }
+  .scope-weather { display: flex; gap: 10px; margin-top: 8px; }
+  .scope-weather-cell { flex: 1; background: #0f1d3a; border: 1px solid #2a2a4a; border-radius: 4px; padding: 6px 10px; display: flex; flex-direction: column; gap: 2px; }
+  .scope-weather-cell .wx-label { font-size: 10px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; }
+  .scope-weather-cell .wx-value { font-size: 12px; color: #e2e2e2; }
+  .pi-check-row { display: flex; align-items: center; gap: 8px; margin: 4px 0; font-size: 12px; color: #ddd; }
+  .pi-check-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px 18px; margin: 4px 0 6px; }
   .pi-check-grid label { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #ddd; cursor: pointer; }
   .pi-check-row input[type="checkbox"],
   .pi-check-grid label input[type="checkbox"] {
@@ -572,7 +688,7 @@
     width: 4px; height: 9px; border: solid #12122a;
     border-width: 0 2px 2px 0; transform: rotate(45deg);
   }
-  .pi-shipto { background: #12122a; border: 1px dashed #e2a308; border-radius: 6px; padding: 10px 12px; margin: 6px 0 10px; }
+  .pi-shipto { background: #12122a; border: 1px dashed #e2a308; border-radius: 6px; padding: 6px 10px; margin: 4px 0 6px; }
   .pi-shipto-label { font-size: 11px; color: #e2a308; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; font-weight: 600; }
   .pi-placeholder { background: #12122a; border: 1px dashed #444; border-radius: 6px; padding: 14px; color: #888; font-style: italic; font-size: 12px; text-align: center; }
   .pi-add-btn { background: #0f3460; color: #e2a308; border: 1px solid #e2a308; border-radius: 4px; padding: 6px 12px; font-size: 12px; font-weight: 600; cursor: pointer; margin-top: 4px; }
@@ -723,25 +839,29 @@
   ::-webkit-scrollbar-thumb { background: #e2a308; border-radius: 4px; }
 
   /* ============ QUOTE TOOL ============ */
-  .quote-panel { flex: 1; overflow-y: auto; background: #2d2d2d; padding: 20px; }
+  .quote-panel { flex: 1; overflow-y: auto; background: #2d2d2d; padding: 12px 16px; }
   .quote-scroll { max-width: 100%; margin: 0 auto; }
-  .quote-section { background: #1e1e3a; border-radius: 8px; padding: 16px 20px; margin-bottom: 12px; border: 1px solid #2a2a4a; }
+  .quote-section { background: #1e1e3a; border-radius: 8px; padding: 10px 14px; margin-bottom: 8px; border: 1px solid #2a2a4a; }
   .quote-section h3 {
-    color: #e2a308; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px;
-    border-bottom: 1px solid #333; padding-bottom: 6px;
+    color: #e2a308; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; margin: 0 0 6px;
+    border-bottom: 1px solid #333; padding-bottom: 4px;
   }
-  .quote-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 8px; }
+  .quote-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 4px; }
   .quote-table th {
-    text-align: left; padding: 6px 8px; color: #e2a308; font-size: 10px; text-transform: uppercase;
+    text-align: left; padding: 4px 6px; color: #e2a308; font-size: 10px; text-transform: uppercase;
     letter-spacing: 0.5px; border-bottom: 1px solid #333; background: #0f1d3a;
   }
-  .quote-table td { padding: 6px 8px; color: #ccc; border-bottom: 1px solid #2a2a4a; vertical-align: middle; }
+  .quote-table td { padding: 3px 6px; color: #ccc; border-bottom: 1px solid #2a2a4a; vertical-align: middle; }
   .quote-table input {
-    width: 100%; padding: 5px 7px; background: #0f3460; border: 1px solid #333; border-radius: 3px;
+    width: 100%; padding: 4px 6px; background: #0f3460; border: 1px solid #333; border-radius: 3px;
     color: #fff; font-size: 12px; font-family: inherit;
   }
   .quote-table input:focus { border-color: #e2a308; outline: none; }
   .quote-table input.narrow { width: 80px; }
+  /* Hide number-input spin arrows app-wide */
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
   .quote-table .btn-remove {
     width: 24px; height: 24px; background: #e74c3c; color: #fff; border: none; border-radius: 50%;
     font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center;
@@ -752,9 +872,9 @@
     display: inline-block; padding: 2px 6px; border-radius: 3px; font-size: 10px; font-weight: 600;
     background: rgba(226,163,8,0.2); color: #e2a308; white-space: nowrap;
   }
-  .quote-total-row { text-align: right; font-size: 14px; font-weight: 700; color: #e2a308; padding: 8px 0; }
-  .quote-summary-table { width: 100%; border-collapse: collapse; font-size: 14px; }
-  .quote-summary-table td { padding: 8px 12px; border-bottom: 1px solid #2a2a4a; }
+  .quote-total-row { text-align: right; font-size: 13px; font-weight: 700; color: #e2a308; padding: 4px 0; }
+  .quote-summary-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .quote-summary-table td { padding: 4px 10px; border-bottom: 1px solid #2a2a4a; }
   .quote-summary-table td:first-child { color: #ccc; }
   .quote-summary-table td:last-child { text-align: right; color: #fff; font-weight: 600; }
   .quote-summary-table tr.grand-total td { color: #e2a308; font-size: 18px; font-weight: 700; border-top: 2px solid #e2a308; }
@@ -799,6 +919,15 @@
   .catalogue-item .cat-ext { color: #27ae60; font-size: 12px; flex: 0 0 75px; text-align: right; font-weight: 600; }
   .catalogue-item.highlight { background: rgba(226,163,8,0.18); box-shadow: inset 3px 0 0 #e2a308; }
   .catalogue-item.highlight .cat-name { color: #fff; font-weight: 600; }
+  .catalogue-vendor-tabs .cat-vendor-tab {
+    padding: 6px 12px; background: #0f3460; border: 1px solid #333; border-bottom: none;
+    border-radius: 4px 4px 0 0; color: #aaa; font-size: 12px; font-weight: 600;
+    cursor: pointer; transition: background 0.15s, color 0.15s;
+  }
+  .catalogue-vendor-tabs .cat-vendor-tab:hover { background: #16406b; color: #fff; }
+  .catalogue-vendor-tabs .cat-vendor-tab.active {
+    background: #e2a308; color: #1a1a2e; border-color: #e2a308;
+  }
   .catalogue-item { position: relative; }
   .catalogue-item.catalogue-dup { background: #0c0c1c; }
   .catalogue-item.catalogue-dup .cat-name { color: #aaa; font-style: italic; }
@@ -969,12 +1098,14 @@
       <button class="quote-subtab active" onclick="switchAdminTab('users')">Users</button>
       <button class="quote-subtab" onclick="switchAdminTab('catalog')">Product Catalog</button>
       <button class="quote-subtab" onclick="switchAdminTab('rates')">Rate Card</button>
+      <button class="quote-subtab" onclick="switchAdminTab('engineering')">Engineering Requests</button>
     </div>
     <div id="adminUsersPanel">
       <div id="adminPanelContent"><div class="admin-empty">Loading...</div></div>
     </div>
     <div id="adminCatalogPanel" style="display:none;"></div>
     <div id="adminRatesPanel" style="display:none;"></div>
+    <div id="adminEngineeringPanel" style="display:none;"></div>
   </div>
 </div>
 
@@ -983,7 +1114,6 @@
   <button class="tab-btn" onclick="switchTab('teamdocs')">Team Docs</button>
   <button class="tab-btn" onclick="switchTab('material')">Material</button>
   <button class="tab-btn" onclick="switchTab('labor')">Labor, Travel &amp; Misc</button>
-  <button class="tab-btn" onclick="switchTab('equipment')">Equipment</button>
   <button class="tab-btn" onclick="switchTab('summary')">Cost Summary</button>
   <button class="tab-btn" onclick="switchTab('builder')">Proposal Builder</button>
 </div>
@@ -1053,28 +1183,102 @@
 
 <div class="tab-panel active" id="tabProject">
   <div class="main-content" style="flex:1;">
-    <div class="editor-panel">
+    <div class="editor-panel" style="flex:1;">
       <div class="editor-scroll" id="previewContainer2"></div>
-    </div>
-    <div class="docs-panel" style="border-left: 3px solid #e2a308;">
-      <div class="docs-scroll">
-        <div class="docs-grid" id="docsGrid"></div>
-      </div>
     </div>
   </div>
 </div>
 
-<!-- Team Docs tab (placeholder) -->
+<!-- ==================== GLOBAL APP SIDEBAR (docs / calc / engineering) ==================== -->
+<div class="docs-panel collapsed" id="appSidebar">
+  <div class="docs-scroll">
+    <div class="docs-toggle-wrap">
+      <button class="docs-toggle-btn" onclick="toggleDocsPanel()" title="Toggle Documents">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="2" y1="13" x2="22" y2="13"/></svg>
+        <span class="docs-toggle-label">Hide Documents</span>
+      </button>
+      <button class="docs-toggle-btn" onclick="toggleScratchpad()" title="Calculator &amp; Notes">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="8" y2="10"/><line x1="12" y1="10" x2="12" y2="10"/><line x1="16" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="8" y2="14"/><line x1="12" y1="14" x2="12" y2="14"/><line x1="16" y1="14" x2="16" y2="14"/><line x1="8" y1="18" x2="8" y2="18"/><line x1="12" y1="18" x2="12" y2="18"/><line x1="16" y1="18" x2="16" y2="18"/></svg>
+        <span class="docs-toggle-label">Calc &amp; Notes</span>
+      </button>
+      <button class="docs-toggle-btn" onclick="toggleEngineeringRequest()" title="Engineering Request">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+        <span class="docs-toggle-label">Engineering Request</span>
+      </button>
+    </div>
+    <div class="docs-grid" id="docsGrid"></div>
+  </div>
+</div>
+
+<div id="scratchpadModal" class="scratchpad-modal">
+  <div class="scratchpad-header">
+    <h4>Calculator &amp; Notes</h4>
+    <button class="scratchpad-close" onclick="toggleScratchpad()" title="Close">&times;</button>
+  </div>
+  <div class="scratchpad-body">
+    <div id="calcDisplay" class="calc-display">0</div>
+    <div class="calc-grid">
+      <button class="calc-btn clr" onclick="calcPress('C')">C</button>
+      <button class="calc-btn clr" onclick="calcPress('back')">⌫</button>
+      <button class="calc-btn op" onclick="calcPress('%')">%</button>
+      <button class="calc-btn op" onclick="calcPress('/')">÷</button>
+      <button class="calc-btn" onclick="calcPress('7')">7</button>
+      <button class="calc-btn" onclick="calcPress('8')">8</button>
+      <button class="calc-btn" onclick="calcPress('9')">9</button>
+      <button class="calc-btn op" onclick="calcPress('*')">×</button>
+      <button class="calc-btn" onclick="calcPress('4')">4</button>
+      <button class="calc-btn" onclick="calcPress('5')">5</button>
+      <button class="calc-btn" onclick="calcPress('6')">6</button>
+      <button class="calc-btn op" onclick="calcPress('-')">−</button>
+      <button class="calc-btn" onclick="calcPress('1')">1</button>
+      <button class="calc-btn" onclick="calcPress('2')">2</button>
+      <button class="calc-btn" onclick="calcPress('3')">3</button>
+      <button class="calc-btn op" onclick="calcPress('+')">+</button>
+      <button class="calc-btn" onclick="calcPress('0')" style="grid-column:span 2;">0</button>
+      <button class="calc-btn" onclick="calcPress('.')">.</button>
+      <button class="calc-btn eq" onclick="calcPress('=')">=</button>
+    </div>
+    <textarea id="scratchNotes" class="scratch-notes" placeholder="Notes..." oninput="onScratchNotesChange(this.value)"></textarea>
+  </div>
+</div>
+
+<!-- Engineering Request modal -->
+<div id="engineeringModal" class="scratchpad-modal engineering-modal">
+  <div class="scratchpad-header">
+    <h4>Engineering Request</h4>
+    <button class="scratchpad-close" onclick="toggleEngineeringRequest()" title="Close">&times;</button>
+  </div>
+  <div class="scratchpad-body">
+    <div class="er-new">
+      <div class="er-label">New Request</div>
+      <textarea id="erNewText" class="scratch-notes" placeholder="Describe what you need from engineering..." style="min-height:80px;"></textarea>
+      <div style="display:flex; gap:8px; align-items:flex-end; margin-top:6px;">
+        <div style="flex:1;">
+          <div class="er-label" style="font-size:10px; color:#aaa; text-transform:uppercase;">Needed By</div>
+          <input type="date" id="erNewDate" style="width:100%; padding:6px 8px; background:#0f3460; border:1px solid #333; border-radius:3px; color:#fff; font-size:12px;">
+        </div>
+        <button class="ft-add-btn" style="margin:0;" onclick="submitEngineeringRequest()">Submit Request</button>
+      </div>
+    </div>
+    <div class="er-divider"></div>
+    <div class="er-list-wrap">
+      <div class="er-label">Your Requests</div>
+      <div id="erList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Team Docs tab -->
 <div class="tab-panel" id="tabTeamDocs" style="flex-direction:column;">
-  <div class="team-docs-wrap">
+  <div class="team-docs-wrap" id="teamDocsGrid">
     <h2 class="team-docs-title">Team Docs</h2>
-    <p class="team-docs-sub">Quick-access documents for the crew. (Feature in progress — boxes are placeholders.)</p>
+    <p class="team-docs-sub">Quick-access documents for the crew. Click a card to open the editor.</p>
     <div class="team-docs-grid">
-      <button class="team-doc-box" onclick="this.classList.toggle('active')">
+      <button class="team-doc-box" onclick="openPurchaseOrder()">
         <div class="team-doc-icon">&#128195;</div>
         <div class="team-doc-label">Purchase Order</div>
       </button>
-      <button class="team-doc-box" onclick="this.classList.toggle('active')">
+      <button class="team-doc-box" onclick="openFieldTabSurvey()">
         <div class="team-doc-icon">&#128205;</div>
         <div class="team-doc-label">Field (Site Survey)</div>
       </button>
@@ -1092,6 +1296,30 @@
       </button>
     </div>
   </div>
+
+  <div class="field-tab-view" id="fieldTabView">
+    <div class="ft-header">
+      <button class="btn btn-back" onclick="closeFieldTabSurvey()">&larr; Back to Team Docs</button>
+      <h2>Field Tab / Site Survey</h2>
+      <button class="btn btn-export" onclick="printFieldTab()">Export / Print</button>
+    </div>
+    <div class="ft-split">
+      <div class="ft-form-col" id="ftForm"></div>
+      <div class="ft-preview-col" id="ftPreview"></div>
+    </div>
+  </div>
+
+  <div class="field-tab-view" id="purchaseOrderView">
+    <div class="ft-header">
+      <button class="btn btn-back" onclick="closePurchaseOrder()">&larr; Back to Team Docs</button>
+      <h2>Purchase Order</h2>
+      <button class="btn btn-export" onclick="printPurchaseOrder()">Export / Print</button>
+    </div>
+    <div class="ft-split">
+      <div class="ft-form-col" id="poForm"></div>
+      <div class="ft-preview-col" id="poPreview"></div>
+    </div>
+  </div>
 </div>
 
 <!-- Material tab -->
@@ -1099,16 +1327,16 @@
   <div class="quote-panel">
     <div class="quote-scroll">
       <div class="quote-section">
-        <div style="display:flex; align-items:center; gap:12px; margin-bottom:12px;">
+        <div style="display:flex; align-items:center; gap:12px; margin-bottom:12px; flex-wrap:wrap;">
           <h3 style="margin:0;">Material</h3>
-          <select id="catalogueVendorFilter" onchange="renderCatalogueView()" style="padding:6px 8px; background:#0f3460; border:1px solid #333; border-radius:4px; color:#fff; font-size:12px;">
-            <option value="__ALL__">All Vendors</option>
-            <option value="SW">Sherwin Williams (SW)</option>
-            <option value="SGC">SGC / Rio</option>
-            <option value="SIKA">Sika</option>
-          </select>
-          <div style="flex:1;">
-            <input type="text" class="sys-search-input" id="quoteMaterialSearch" placeholder="Search products (matches highlight in the catalogue)..." oninput="filterQuoteMaterials()" style="font-size:12px; width:100%;">
+          <div id="catalogueVendorTabs" class="catalogue-vendor-tabs" style="display:flex; gap:4px;">
+            <button type="button" class="cat-vendor-tab" data-vendor="__ALL__" onclick="setCatalogueVendor('__ALL__')">All Vendors</button>
+            <button type="button" class="cat-vendor-tab" data-vendor="SW" onclick="setCatalogueVendor('SW')">Sherwin Williams</button>
+            <button type="button" class="cat-vendor-tab" data-vendor="SGC" onclick="setCatalogueVendor('SGC')">SGC / Rio</button>
+            <button type="button" class="cat-vendor-tab" data-vendor="SIKA" onclick="setCatalogueVendor('SIKA')">Sika</button>
+          </div>
+          <div style="flex:1; min-width:200px;">
+            <input type="text" class="sys-search-input" id="quoteMaterialSearch" placeholder="Search products — filters catalogue in real time..." oninput="filterQuoteMaterials()" style="font-size:12px; width:100%;">
           </div>
         </div>
         <div class="catalogue-columns" id="catalogueContainer"></div>
@@ -1153,16 +1381,42 @@
           </div>
         </div>
 
-        <div style="flex:1; min-width:0;">
+        <div style="flex:1; min-width:0; display:flex; flex-direction:column; gap:18px;">
           <div class="quote-section" id="quoteTravelSection">
             <h3>Travel &amp; Expenses</h3>
             <table class="quote-table">
               <thead>
-                <tr><th>Cost Code</th><th>Description</th><th style="width:60px">Crew</th><th style="width:70px">Qty</th><th style="width:90px">Rate</th><th style="width:100px">Extension</th></tr>
+                <tr><th>Cost Code</th><th>Description</th><th style="width:60px">Crew</th><th style="width:70px">Days</th><th style="width:90px">Rate</th><th style="width:100px">Extension</th></tr>
               </thead>
               <tbody id="quoteTravelBody"></tbody>
             </table>
             <div class="quote-total-row" id="quoteTravelTotal">Travel Total: $0.00</div>
+          </div>
+
+          <div class="quote-section" id="quoteEquipmentSection">
+            <h3>Equipment</h3>
+
+            <h4 style="margin:6px 0; font-size:13px; color:#ccc;">Equipment Rental <span style="font-size:12px; color:#888; font-weight:normal;">(Cost Code 5-300)</span></h4>
+            <table class="quote-table">
+              <thead>
+                <tr><th>Name</th><th style="width:90px;">Days</th><th style="width:110px;">Rate</th><th style="width:110px;">Extension</th><th style="width:30px;"></th></tr>
+              </thead>
+              <tbody id="quoteEquipmentRentalBody"></tbody>
+            </table>
+            <button class="btn btn-secondary btn-sm" onclick="addEquipmentRow('rentalItems')" style="margin-top:6px;">+ Add Rental Item</button>
+            <div class="quote-total-row" id="quoteEquipmentRentalTotal" style="font-size:13px;">Rental Total: $0.00</div>
+
+            <h4 style="margin:14px 0 6px; font-size:13px; color:#ccc;">In-House Equipment <span style="font-size:12px; color:#888; font-weight:normal;">(Cost Code 5-600)</span></h4>
+            <table class="quote-table">
+              <thead>
+                <tr><th>Name</th><th style="width:90px;">Days</th><th style="width:110px;">Rate</th><th style="width:110px;">Extension</th><th style="width:30px;"></th></tr>
+              </thead>
+              <tbody id="quoteEquipmentInHouseBody"></tbody>
+            </table>
+            <button class="btn btn-secondary btn-sm" onclick="addEquipmentRow('inHouseItems')" style="margin-top:6px;">+ Add In-House Item</button>
+            <div class="quote-total-row" id="quoteEquipmentInHouseTotal" style="font-size:13px;">In-House Total: $0.00</div>
+
+            <div class="quote-total-row" id="quoteEquipmentTotal" style="margin-top:12px; border-top:2px solid #444; padding-top:10px;">Equipment Total: $0.00</div>
           </div>
         </div>
 
@@ -1170,34 +1424,26 @@
     </div>
 </div>
 
-<!-- Equipment tab -->
-<div class="tab-panel" id="tabEquipment" style="flex-direction:column;">
-  <div class="quote-panel">
-    <div class="quote-scroll">
-      <div class="quote-section">
-        <h3>Equipment</h3>
-        <table class="quote-table">
-          <thead>
-            <tr><th style="width:90px;">Cost Code</th><th>Description</th><th style="width:130px;">Amount</th><th>Notes</th></tr>
-          </thead>
-          <tbody id="quoteEquipmentBody"></tbody>
-        </table>
-        <div class="quote-total-row" id="quoteEquipmentTotal">Equipment Total: $0.00</div>
-      </div>
-    </div>
-  </div>
-</div>
-
 <!-- Cost Summary tab -->
 <div class="tab-panel" id="tabSummary" style="flex-direction:column;">
     <div class="quote-panel">
       <div class="quote-scroll">
         <div class="quote-section" id="quoteTaxSection">
-          <h3>Tax</h3>
-          <div style="display:flex; align-items:center; gap:12px;">
-            <label style="font-size:12px; color:#aaa;">Tax Rate %</label>
-            <input type="number" id="quoteTaxRate" value="10" step="0.01" min="0" max="100" style="width:100px; padding:7px 9px; background:#0f3460; border:1px solid #333; border-radius:4px; color:#fff; font-size:13px;" oninput="onQuoteTaxChange(this.value)">
-            <span style="font-size:14px; color:#ccc;" id="quoteTaxAmount">Tax on Materials: $0.00</span>
+          <h3>Tax Rates</h3>
+          <div style="display:flex; align-items:flex-end; gap:18px; flex-wrap:wrap;">
+            <div>
+              <div style="font-size:11px; color:#aaa; text-transform:uppercase; letter-spacing:0.5px;">Material Tax %</div>
+              <input type="number" id="quoteTaxMaterial" value="10" step="0.01" min="0" max="100" style="width:110px; padding:7px 9px; background:#0f3460; border:1px solid #333; border-radius:4px; color:#fff; font-size:13px; margin-top:3px;" oninput="onQuoteTaxChange('material', this.value)">
+            </div>
+            <div>
+              <div style="font-size:11px; color:#aaa; text-transform:uppercase; letter-spacing:0.5px;">Equipment Rental Tax %</div>
+              <input type="number" id="quoteTaxRental" value="0" step="0.01" min="0" max="100" style="width:110px; padding:7px 9px; background:#0f3460; border:1px solid #333; border-radius:4px; color:#fff; font-size:13px; margin-top:3px;" oninput="onQuoteTaxChange('rental', this.value)">
+            </div>
+            <div>
+              <div style="font-size:11px; color:#aaa; text-transform:uppercase; letter-spacing:0.5px;">Freight Tax %</div>
+              <input type="number" id="quoteTaxFreight" value="0" step="0.01" min="0" max="100" style="width:110px; padding:7px 9px; background:#0f3460; border:1px solid #333; border-radius:4px; color:#fff; font-size:13px; margin-top:3px;" oninput="onQuoteTaxChange('freight', this.value)">
+            </div>
+            <span style="font-size:13px; color:#ccc;" id="quoteTaxAmount">Total Tax: $0.00</span>
           </div>
         </div>
 
@@ -1210,7 +1456,10 @@
               <tr><td>Travel &amp; Expenses Subtotal</td><td id="sumTravel">$0.00</td></tr>
               <tr><td>Equipment Subtotal</td><td id="sumEquipment">$0.00</td></tr>
               <tr><td>Additional Costs Subtotal</td><td id="sumAdditional">$0.00</td></tr>
-              <tr><td>Tax</td><td id="sumTax">$0.00</td></tr>
+              <tr><td>Material Tax</td><td id="sumTaxMaterial">$0.00</td></tr>
+              <tr><td>Equipment Rental Tax</td><td id="sumTaxRental">$0.00</td></tr>
+              <tr><td>Freight Tax</td><td id="sumTaxFreight">$0.00</td></tr>
+              <tr><td>Total Tax</td><td id="sumTax">$0.00</td></tr>
               <tr class="grand-total"><td>Grand Total (Cost)</td><td id="sumGrandTotal">$0.00</td></tr>
             </tbody>
           </table>
@@ -2371,7 +2620,7 @@ let state = {
 // ============================================================
 // Project-level keys live at the top of `state` and are shared across drafts.
 // Everything else in state is draft-level and swapped when the active draft changes.
-const PROJECT_LEVEL_KEYS = new Set(['projectName','jobNumber','pi','drafts','activeDraftId','oneDrive']);
+const PROJECT_LEVEL_KEYS = new Set(['projectName','jobNumber','pi','quote','scratchpadNotes','drafts','activeDraftId','oneDrive']);
 
 function genDraftId() { return 'd_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2,7); }
 
@@ -7062,10 +7311,140 @@ const TAB_PANEL_IDS = {
   teamdocs: 'tabTeamDocs',
   material: 'tabMaterial',
   labor: 'tabLabor',
-  equipment: 'tabEquipment',
   summary: 'tabSummary',
   builder: 'tabBuilder'
 };
+
+function toggleScratchpad() {
+  const modal = document.getElementById('scratchpadModal');
+  if (!modal) return;
+  const opening = !modal.classList.contains('open');
+  if (opening) {
+    const er = document.getElementById('engineeringModal');
+    if (er) er.classList.remove('open');
+  }
+  modal.classList.toggle('open');
+  if (opening) {
+    const notesEl = document.getElementById('scratchNotes');
+    if (notesEl) notesEl.value = (state && state.scratchpadNotes) || '';
+  }
+}
+
+let _calcExpr = '';
+function _calcRender() {
+  const d = document.getElementById('calcDisplay');
+  if (d) d.textContent = _calcExpr || '0';
+}
+function calcPress(key) {
+  if (key === 'C') { _calcExpr = ''; _calcRender(); return; }
+  if (key === 'back') { _calcExpr = _calcExpr.slice(0, -1); _calcRender(); return; }
+  if (key === '=') {
+    try {
+      if (!/^[-+*/%.\d\s()]*$/.test(_calcExpr)) return;
+      const result = Function('"use strict";return (' + _calcExpr + ')')();
+      if (result !== undefined && !Number.isNaN(result)) {
+        _calcExpr = String(Math.round(result * 1e10) / 1e10);
+      }
+    } catch (e) { /* ignore */ }
+    _calcRender();
+    return;
+  }
+  _calcExpr += key;
+  _calcRender();
+}
+
+function onScratchNotesChange(val) {
+  if (!state) return;
+  state.scratchpadNotes = val;
+  if (typeof schedulePersist === 'function') schedulePersist();
+}
+
+function toggleDocsPanel() {
+  const panel = document.getElementById('appSidebar');
+  if (!panel) return;
+  const collapsed = panel.classList.toggle('collapsed');
+  const label = panel.querySelector('.docs-toggle-btn[title="Toggle Documents"] .docs-toggle-label');
+  if (label) label.textContent = collapsed ? 'Show Documents' : 'Hide Documents';
+  document.body.classList.toggle('app-sidebar-open', !collapsed);
+}
+
+// ---- Engineering Request ----
+function toggleEngineeringRequest() {
+  ensureProjectInfoState();
+  if (!Array.isArray(state.pi.engineeringRequests)) state.pi.engineeringRequests = [];
+  const modal = document.getElementById('engineeringModal');
+  if (!modal) return;
+  const opening = !modal.classList.contains('open');
+  // Close other modals for clarity
+  if (opening) {
+    const scratch = document.getElementById('scratchpadModal');
+    if (scratch) scratch.classList.remove('open');
+  }
+  modal.classList.toggle('open');
+  if (opening) renderEngineeringRequests();
+}
+
+function renderEngineeringRequests() {
+  ensureProjectInfoState();
+  const list = document.getElementById('erList');
+  if (!list) return;
+  const reqs = (state.pi.engineeringRequests || []).slice().sort((a,b) => (b.createdAt||0) - (a.createdAt||0));
+  if (!reqs.length) {
+    list.innerHTML = '<div style="color:#888; font-size:12px; padding:10px 2px;">No engineering requests yet. Submit one above.</div>';
+    return;
+  }
+  list.innerHTML = reqs.map(r => {
+    const statusClass = r.response ? 'responded' : 'open';
+    const statusText = r.response ? 'Responded' : 'Open';
+    const dateLabel = r.neededBy ? ('Needed by ' + r.neededBy) : 'No date';
+    const respBlock = r.response
+      ? `<div class="er-response"><strong>Engineering Response:</strong><br>${esc(r.response)}</div>`
+      : `<div class="er-response empty">Awaiting engineering response…</div>`;
+    return `<div class="er-item">
+      <div class="er-top">
+        <span class="er-date">${esc(dateLabel)}</span>
+        <span class="er-status ${statusClass}">${statusText}</span>
+      </div>
+      <div class="er-text">${esc(r.text||'')}</div>
+      ${respBlock}
+      <div class="er-actions">
+        <button class="er-del" onclick="deleteEngineeringRequest('${esc(r.id)}')">Delete</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function submitEngineeringRequest() {
+  ensureProjectInfoState();
+  if (!Array.isArray(state.pi.engineeringRequests)) state.pi.engineeringRequests = [];
+  const textEl = document.getElementById('erNewText');
+  const dateEl = document.getElementById('erNewDate');
+  const text = (textEl && textEl.value || '').trim();
+  if (!text) { alert('Please describe the request before submitting.'); return; }
+  const req = {
+    id: 'er_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2,7),
+    text,
+    neededBy: (dateEl && dateEl.value) || '',
+    createdAt: Date.now(),
+    response: '',
+    respondedAt: null,
+    projectId: (typeof _currentProjectId !== 'undefined' ? _currentProjectId : null),
+    projectName: state.projectName || ''
+  };
+  state.pi.engineeringRequests.push(req);
+  schedulePersist();
+  if (textEl) textEl.value = '';
+  if (dateEl) dateEl.value = '';
+  renderEngineeringRequests();
+}
+
+function deleteEngineeringRequest(id) {
+  ensureProjectInfoState();
+  if (!Array.isArray(state.pi.engineeringRequests)) return;
+  state.pi.engineeringRequests = state.pi.engineeringRequests.filter(r => r.id !== id);
+  schedulePersist();
+  renderEngineeringRequests();
+}
 
 function closeAllDocPreviews() {
   document.querySelectorAll('.doc-category.preview-expanded').forEach(card => {
@@ -7095,17 +7474,19 @@ function switchTab(tabName) {
     renderProjectTab();
     // Force-refresh from OneDrive so files added directly in OneDrive show up here
     refreshAllFileLists({ forceRefresh: true });
+    initQuoteTool();
+    recalcQuoteSummary();
   }
   if (tabName === 'builder') {
     showBuilderView();
   }
-  if (tabName === 'material' || tabName === 'labor' || tabName === 'summary' || tabName === 'equipment') {
+  if (tabName === 'material' || tabName === 'labor' || tabName === 'summary') {
     initQuoteTool();
     if (tabName === 'material') { renderCatalogueView(); renderActiveMaterials(); renderCustomProducts(); }
-    if (tabName === 'equipment') renderQuoteEquipment();
     if (tabName === 'labor') {
       const csEl = document.getElementById('quoteCrewSize');
       if (csEl) csEl.value = state.quote && state.quote.crewSize != null ? state.quote.crewSize : 1;
+      renderQuoteEquipment();
     }
     if (tabName === 'summary') recalcQuoteSummary();
   }
@@ -8360,7 +8741,7 @@ function ensureProjectInfoState() {
   if (!s.pi) s.pi = {};
   const pi = s.pi;
   if (!pi.country) pi.country = 'USA';
-  if (pi.projectManager == null) pi.projectManager = '';
+  if (!pi.projectManager) pi.projectManager = (typeof currentProfile !== 'undefined' && currentProfile && currentProfile.pm_name) || '';
   if (pi.superForeman == null) pi.superForeman = '';
   if (!Array.isArray(pi.scopes) || pi.scopes.length === 0) {
     pi.scopes = [{ phaseName: '', installedSystem: '', sqFt: '', lnFt: '', lnFtJoints: '', materialDelivery: '', startTime: '', installStart: '', installEnd: '' }];
@@ -8383,11 +8764,815 @@ function ensureProjectInfoState() {
       notes: ''
     };
   }
+  if (!pi.fieldTab) pi.fieldTab = { generalInfo: '' };
+  if (!Array.isArray(pi.engineeringRequests)) pi.engineeringRequests = [];
+}
+
+// ---- Field Tab / Site Survey ----
+function openFieldTabSurvey() {
+  ensureProjectInfoState();
+  ensureQuoteState();
+  const grid = document.getElementById('teamDocsGrid');
+  const view = document.getElementById('fieldTabView');
+  if (grid) grid.style.display = 'none';
+  if (view) view.classList.add('active');
+  renderFieldTabForm();
+  updateFieldTabPreview();
+  setTimeout(() => ftAutoSize(document.getElementById('ftGeneralInfo')), 0);
+}
+function closeFieldTabSurvey() {
+  const grid = document.getElementById('teamDocsGrid');
+  const view = document.getElementById('fieldTabView');
+  if (grid) grid.style.display = '';
+  if (view) view.classList.remove('active');
+}
+function printFieldTab() { window.print(); }
+
+function renderFieldTabForm() {
+  const host = document.getElementById('ftForm');
+  if (!host) return;
+  const s = state;
+  const pi = s.pi;
+  const js = pi.jobsite;
+  const ft = pi.fieldTab;
+  const sc = js.siteContact || { name:'', phone:'', email:'' };
+
+  const scopeBlocks = (pi.scopes || []).map((sco, i) => `
+    <div class="ft-scope-block">
+      <div class="ft-row-inline">
+        <div class="ft-row" style="flex:2;"><label>Phase / Scope / COP</label><input value="${esc(sco.phaseName||'')}" oninput="ftEditScope(${i},'phaseName',this.value)"></div>
+        <div class="ft-row" style="flex:2;"><label>Installed System</label><input value="${esc(sco.installedSystem||'')}" oninput="ftEditScope(${i},'installedSystem',this.value)"></div>
+        <div class="ft-row" style="flex:0 0 58px;"><label>SQ FT</label><input value="${esc(sco.sqFt||'')}" oninput="ftEditScope(${i},'sqFt',this.value)"></div>
+        <div class="ft-row" style="flex:0 0 58px;"><label>LF Cove</label><input value="${esc(sco.lnFt||'')}" oninput="ftEditScope(${i},'lnFt',this.value)"></div>
+        <div class="ft-row" style="flex:0 0 58px;"><label>LF Joints</label><input value="${esc(sco.lnFtJoints||'')}" oninput="ftEditScope(${i},'lnFtJoints',this.value)"></div>
+      </div>
+      <div class="ft-row-inline">
+        <div class="ft-row" style="flex:0 0 140px;"><label>Material Delivery</label><input type="date" value="${esc(sco.materialDelivery||'')}" oninput="ftEditScope(${i},'materialDelivery',this.value)"></div>
+        <div class="ft-row" style="flex:0 0 110px;"><label>Start Time</label><input type="time" value="${esc(sco.startTime||'')}" oninput="ftEditScope(${i},'startTime',this.value)"></div>
+        <div class="ft-row" style="flex:0 0 140px;"><label>Install Start</label><input type="date" value="${esc(sco.installStart||'')}" oninput="ftEditScope(${i},'installStart',this.value)"></div>
+        <div class="ft-row" style="flex:0 0 140px;"><label>Install End</label><input type="date" value="${esc(sco.installEnd||'')}" oninput="ftEditScope(${i},'installEnd',this.value)"></div>
+        <div style="flex:1;"></div>
+      </div>
+    </div>`).join('');
+
+  const laborRows = ((s.quote && s.quote.labor) || []).map((r, i) => `
+    <div class="ft-row-inline" style="align-items:flex-end;">
+      <div class="ft-row" style="flex:3;"><label>Activity</label><input value="${esc(r.activity||'')}" oninput="ftEditLabor(${i},'activity',this.value)"></div>
+      <div class="ft-row" style="flex:0 0 54px;"><label>Crew</label><input type="number" value="${r.men||0}" oninput="ftEditLabor(${i},'men',this.value)"></div>
+      <div class="ft-row" style="flex:0 0 54px;"><label>Days</label><input type="number" value="${r.days||0}" oninput="ftEditLabor(${i},'days',this.value)"></div>
+      <div class="ft-row" style="flex:0 0 84px;"><label>Rate/Day</label><input type="number" value="${r.rate||0}" oninput="ftEditLabor(${i},'rate',this.value)"></div>
+      <button class="ft-row-del" title="Remove row" onclick="ftRemoveLabor(${i})">&times;</button>
+    </div>`).join('');
+
+  // Travel rows (excluding PM entries)
+  const travelInputRows = ((typeof QUOTE_TRAVEL_CODES !== 'undefined' ? QUOTE_TRAVEL_CODES : [])).map(code => {
+    const label = ftTravelLabel(code);
+    if (/^PM\b/i.test(label)) return '';
+    const t = (s.quote && s.quote.travel && s.quote.travel[code]) || { qty: 0, rate: 0 };
+    const multByCrew = (typeof TRAVEL_CREW_MULT_CODES !== 'undefined' && TRAVEL_CREW_MULT_CODES.has(code));
+    const crew = (typeof crewForTravelCode === 'function') ? crewForTravelCode(code) : 1;
+    const crewInput = multByCrew
+      ? `<div class="ft-row" style="flex:0 0 54px;"><label>Crew</label><input type="number" value="${crew}" min="1" oninput="ftEditTravel('${code}','crew',this.value)"></div>`
+      : `<div class="ft-row" style="flex:0 0 54px;"><label>Crew</label><input value="—" disabled style="text-align:center;"></div>`;
+    return `<div class="ft-row-inline">
+      <div class="ft-row" style="flex:3;"><label>${esc(label)}</label><input value="${esc(label)}" disabled style="opacity:0.65;"></div>
+      ${crewInput}
+      <div class="ft-row" style="flex:0 0 54px;"><label>Qty/Days</label><input type="number" value="${t.qty||0}" oninput="ftEditTravel('${code}','qty',this.value)"></div>
+      <div class="ft-row" style="flex:0 0 84px;"><label>Rate</label><input type="number" value="${t.rate||0}" oninput="ftEditTravel('${code}','rate',this.value)"></div>
+    </div>`;
+  }).join('');
+
+  // Equipment rows
+  const eq = (s.quote && s.quote.equipment) || { rentalItems: [], inHouseItems: [] };
+  const eqRows = (listKey, title) => (eq[listKey] || []).map((it, i) => `
+    <div class="ft-row-inline" style="align-items:flex-end;">
+      <div class="ft-row" style="flex:3;"><label>${esc(title)} — Item ${i+1}</label><input value="${esc(it.name||'')}" placeholder="Item name" oninput="ftEditEquip('${listKey}',${i},'name',this.value)"></div>
+      <div class="ft-row" style="flex:0 0 54px;"><label>Days</label><input type="number" value="${it.qty||0}" oninput="ftEditEquip('${listKey}',${i},'qty',this.value)"></div>
+      <div class="ft-row" style="flex:0 0 84px;"><label>Rate</label><input type="number" value="${it.rate||0}" oninput="ftEditEquip('${listKey}',${i},'rate',this.value)"></div>
+      <button class="ft-row-del" title="Remove row" onclick="ftRemoveEquip('${listKey}',${i})">&times;</button>
+    </div>`).join('');
+  const rentalBlock = eqRows('rentalItems', 'Rental');
+  const inHouseBlock = eqRows('inHouseItems', 'In-House');
+
+  host.innerHTML = `
+    <h4>Project Info</h4>
+    <div class="ft-row-inline">
+      <div class="ft-row"><label>Project Name</label><input value="${esc(s.projectName||'')}" oninput="ftEditTop('projectName',this.value)"></div>
+      <div class="ft-row" style="flex:0 0 120px;"><label>Job #</label><input value="${esc(s.jobNumber||'')}" oninput="ftEditTop('jobNumber',this.value)"></div>
+    </div>
+    <div class="ft-row-inline">
+      <div class="ft-row"><label>Project Manager</label><input value="${esc(pi.projectManager||'')}" oninput="ftEditPi('projectManager',this.value)"></div>
+      <div class="ft-row"><label>Super / Foreman</label><input value="${esc(pi.superForeman||'')}" oninput="ftEditPi('superForeman',this.value)"></div>
+    </div>
+
+    <h4>Scope / Schedule</h4>
+    ${scopeBlocks || '<div style="color:#888; font-size:11px;">No scopes — add them on the Project Info tab.</div>'}
+
+    <h4>Install Address</h4>
+    <div class="ft-row"><label>Street</label><input value="${esc(js.installAddress.line1||'')}" oninput="ftEditJs('installAddress.line1',this.value)"></div>
+    <div class="ft-row-inline">
+      <div class="ft-row"><label>City</label><input value="${esc(js.installAddress.city||'')}" oninput="ftEditJs('installAddress.city',this.value)"></div>
+      <div class="ft-row" style="flex:0 0 70px;"><label>State</label><input value="${esc(js.installAddress.state||'')}" oninput="ftEditJs('installAddress.state',this.value)"></div>
+      <div class="ft-row" style="flex:0 0 100px;"><label>Zip</label><input value="${esc(js.installAddress.zip||'')}" oninput="ftEditJs('installAddress.zip',this.value)"></div>
+    </div>
+
+    <h4>Ship To Address</h4>
+    <div class="ft-row"><label>Street</label><input value="${esc((js.shipAddress&&js.shipAddress.line1)||'')}" oninput="ftEditJs('shipAddress.line1',this.value)"></div>
+    <div class="ft-row-inline">
+      <div class="ft-row"><label>City</label><input value="${esc((js.shipAddress&&js.shipAddress.city)||'')}" oninput="ftEditJs('shipAddress.city',this.value)"></div>
+      <div class="ft-row" style="flex:0 0 70px;"><label>State</label><input value="${esc((js.shipAddress&&js.shipAddress.state)||'')}" oninput="ftEditJs('shipAddress.state',this.value)"></div>
+      <div class="ft-row" style="flex:0 0 100px;"><label>Zip</label><input value="${esc((js.shipAddress&&js.shipAddress.zip)||'')}" oninput="ftEditJs('shipAddress.zip',this.value)"></div>
+    </div>
+
+    <h4>Site Contact</h4>
+    <div class="ft-row-inline">
+      <div class="ft-row"><label>Name</label><input value="${esc(sc.name||'')}" oninput="ftEditJs('siteContact.name',this.value)"></div>
+      <div class="ft-row"><label>Phone</label><input value="${esc(sc.phone||'')}" oninput="ftEditJs('siteContact.phone',this.value)"></div>
+    </div>
+
+    <h4>General Project &amp; Flooring System Info</h4>
+    <div class="ft-row"><textarea id="ftGeneralInfo" style="overflow:hidden;" oninput="ftAutoSize(this); ftEditFieldTab('generalInfo',this.value)">${esc(ft.generalInfo||'')}</textarea></div>
+
+    <h4>Labor Budget</h4>
+    ${laborRows}
+    <button class="ft-add-btn" onclick="ftAddLaborRow()">+ Add Labor Row</button>
+
+    <h4>Travel &amp; Expenses</h4>
+    ${travelInputRows || '<div style="color:#888; font-size:11px;">No travel lines.</div>'}
+
+    <h4>Equipment Rental</h4>
+    ${rentalBlock}
+    <button class="ft-add-btn" onclick="ftAddEquipRow('rentalItems')">+ Add Rental Item</button>
+
+    <h4>In-House Equipment</h4>
+    ${inHouseBlock}
+    <button class="ft-add-btn" onclick="ftAddEquipRow('inHouseItems')">+ Add In-House Item</button>
+  `;
+}
+
+const TRAVEL_CODE_NAMES = {
+  '7-100': 'Airline Expenses',
+  '7-200': 'Hotel Expenses',
+  '7-300': 'Auto Rental',
+  '7-400': 'Parking / Tolls',
+  '7-600': 'Travel Pay',
+  '7-770': 'Mileage',
+  '7-810': 'Per Diem — Work Days',
+  '7-820': 'Per Diem — Travel Days',
+  '7-910': 'Other Travel',
+  '7-920': 'Other Travel',
+  '7-930': 'Other Travel',
+  '7-940': 'Other Travel',
+  '7-950': 'Other Travel',
+  '7-960': 'Other Travel'
+};
+function ftTravelLabel(code) {
+  try {
+    if (typeof getRateByCode === 'function' && typeof _rateCardCache !== 'undefined' && _rateCardCache) {
+      const info = getRateByCode(code);
+      if (info && info.description && info.description !== code) return info.description;
+    }
+  } catch (e) {}
+  return TRAVEL_CODE_NAMES[code] || code;
+}
+
+function updateFieldTabPreview() {
+  const host = document.getElementById('ftPreview');
+  if (!host) return;
+  const s = state;
+  const pi = s.pi || {};
+  const js = pi.jobsite || {};
+  const pj = pi.preJob || {};
+  const ft = pi.fieldTab || {};
+  const fmtAddr = (a) => !a ? '' : [a.line1, [a.city, a.state, a.zip].filter(Boolean).join(' ')].filter(Boolean).join(', ');
+  const shipSame = !js.shipDifferent;
+
+  const scopeRows = (pi.scopes || []).map(sco => `
+    <tr>
+      <td>${esc(sco.phaseName||'')}</td>
+      <td>${esc(sco.installedSystem||'')}</td>
+      <td>${esc(sco.sqFt||'')}</td>
+      <td>${esc(sco.lnFt||'')}</td>
+      <td>${esc(sco.lnFtJoints||'')}</td>
+      <td>${esc(sco.materialDelivery||'')}</td>
+      <td>${esc(sco.startTime||'')}</td>
+      <td>${esc(sco.installStart||'')}</td>
+      <td>${esc(sco.installEnd||'')}</td>
+    </tr>`).join('');
+
+  const laborRows = ((s.quote && s.quote.labor) || []).map(r => {
+    const men = parseFloat(r.men)||0;
+    const days = parseFloat(r.days)||0;
+    const md = men * days;
+    if (md <= 0) return '';
+    return `<tr>
+      <td>${esc(r.activity||'')}</td>
+      <td>${men}</td>
+      <td>${days}</td>
+      <td>$${(parseFloat(r.rate)||0).toFixed(2)}</td>
+      <td>${md}</td>
+    </tr>`;
+  }).join('');
+
+  const crewSize = (s.quote && parseFloat(s.quote.crewSize)) || 1;
+  const travelLines = ((typeof QUOTE_TRAVEL_CODES !== 'undefined' ? QUOTE_TRAVEL_CODES : [])).map(code => {
+    const t = (s.quote && s.quote.travel && s.quote.travel[code]) || {};
+    const qty = parseFloat(t.qty)||0;
+    const rate = parseFloat(t.rate)||0;
+    const mult = (typeof TRAVEL_CREW_MULT_CODES !== 'undefined' && TRAVEL_CREW_MULT_CODES.has(code)) ? crewSize : 1;
+    const ext = qty * rate * mult;
+    if (ext <= 0) return '';
+    const label = ftTravelLabel(code);
+    if (/^PM\b/i.test(label)) return ''; // Exclude PM airline/hotel/auto/mileage from field tab
+    return `<tr>
+      <td>${esc(label)}</td>
+      <td>${mult}</td>
+      <td>${qty}</td>
+      <td>$${rate.toFixed(2)}</td>
+      <td>$${ext.toFixed(2)}</td>
+    </tr>`;
+  }).join('');
+
+  const equipItems = [];
+  const eq = (s.quote && s.quote.equipment) || {};
+  (eq.rentalItems || []).forEach(it => { const q = parseFloat(it.qty)||0, r = parseFloat(it.rate)||0; const ext = q*r; if (ext > 0) equipItems.push({ name: it.name || 'Equipment Rental', label: 'Equipment Rental', qty: q, rate: r, ext }); });
+  (eq.inHouseItems || []).forEach(it => { const q = parseFloat(it.qty)||0, r = parseFloat(it.rate)||0; const ext = q*r; if (ext > 0) equipItems.push({ name: it.name || 'In-House Equipment', label: 'In-House Equipment', qty: q, rate: r, ext }); });
+  const equipRows = equipItems.map(it => `
+    <tr>
+      <td>${esc(it.label)}${it.name && it.name !== it.label ? ' — ' + esc(it.name) : ''}</td>
+      <td>1</td>
+      <td>${it.qty}</td>
+      <td>$${it.rate.toFixed(2)}</td>
+      <td>$${it.ext.toFixed(2)}</td>
+    </tr>`).join('');
+
+  const allTravelEquip = travelLines + equipRows;
+
+  const addl = (s.quote && s.quote.additional) || {};
+  const consum = parseFloat((addl['5-500']||{}).amount) || 0;
+  const poConsum = parseFloat((addl['5-550']||{}).amount) || 0;
+
+  const mark = v => v ? '☑' : '☐';
+
+  host.innerHTML = `
+    <div class="ft-page-label">Page 1 — Letter Portrait</div>
+    <div class="ft-page">
+    <div class="ft-page-section">
+    <h4>General Info</h4>
+    <div class="ft-kv">
+      <strong>Project Name:</strong><span>${esc(s.projectName||'')}</span>
+      <strong>Job #:</strong><span>${esc(s.jobNumber||'')}</span>
+      <strong>Project Manager:</strong><span>${esc(pi.projectManager||'')}</span>
+      <strong>Super / Foreman:</strong><span>${esc(pi.superForeman||'')}</span>
+    </div>
+    </div>
+
+    <div class="ft-page-section">
+    <h4>Scope / Schedule</h4>
+    <table class="ft-scope-table">
+      <colgroup>
+        <col class="c-phase"><col class="c-system">
+        <col class="c-num"><col class="c-num"><col class="c-num">
+        <col class="c-date"><col class="c-time"><col class="c-date"><col class="c-date">
+      </colgroup>
+      <thead><tr>
+        <th>Phase/Scope/COP</th><th>Installed System</th><th>SQ FT</th><th>LF Cove</th><th>LF Joints</th>
+        <th>Mat. Delivery</th><th>Start Time</th><th>Install Start</th><th>Install End</th>
+      </tr></thead>
+      <tbody>${scopeRows || '<tr><td colspan="9" style="text-align:center; color:#888;">No scopes</td></tr>'}</tbody>
+    </table>
+    </div>
+
+    <div class="ft-page-section">
+    <h4>Jobsite Information</h4>
+    <div class="ft-kv">
+      <strong>Install Address:</strong><span>${esc(fmtAddr(js.installAddress))}</span>
+      <strong>Ship To:</strong><span>${shipSame ? 'Same' : esc(fmtAddr(js.shipAddress))}</span>
+      <strong>Site Contact:</strong><span>${esc((js.siteContact||{}).name||'')}${(js.siteContact&&js.siteContact.phone)?' — '+esc(js.siteContact.phone):''}</span>
+      <strong>Labor Type:</strong><span>${esc(js.laborType||'')}${js.prevailingWage?' (prevailing wage)':''}</span>
+    </div>
+    </div>
+
+    <div class="ft-page-section">
+    <h4>Pre-Job Checklist</h4>
+    <div class="ft-kv" style="grid-template-columns:repeat(3,1fr);">
+      <span>${mark(pj.contractExecuted)} Contract Executed</span>
+      <span>${mark(pj.installationScheduled)} Installation Scheduled</span>
+      <span>${mark(pj.materialsOrdered)} Materials Ordered</span>
+      <span>${mark(pj.rentalBooked)} Rental Booked</span>
+      <span>${mark(pj.heat)} Heat</span>
+      <span>${mark(pj.light)} Lights</span>
+      <span>${mark(pj.power)} Power</span>
+      <span>${mark(pj.trash)} Trash</span>
+      <span>${mark(pj.complete)} Complete</span>
+      <span>${mark(pj.finalWalk)} Final Walk</span>
+      <span>${mark(pj.returnMat)} Return Mat</span>
+      <span>${mark(pj.newBuilding)} New Building</span>
+    </div>
+    </div>
+
+    <div class="ft-page-section">
+    <h4>General Project &amp; Flooring System Info</h4>
+    <div class="ft-general-box">${esc(ft.generalInfo||'')}</div>
+    </div>
+
+    <div class="ft-page-section">
+    <h4>Labor Budget</h4>
+    <table class="ft-labor-table">
+      <colgroup><col class="c-activity"><col class="c-narrow"><col class="c-narrow"><col class="c-narrow"><col class="c-narrow"></colgroup>
+      <thead><tr><th>Activity</th><th>Crew</th><th>Days</th><th>Rate/Day</th><th>Total Man-Days</th></tr></thead>
+      <tbody>${laborRows || '<tr><td colspan="5" style="text-align:center; color:#888;">No labor entries</td></tr>'}</tbody>
+    </table>
+    </div>
+
+    <div class="ft-page-section">
+    <h4>Travel / Equipment Budget</h4>
+    <table class="ft-travel-table">
+      <colgroup><col class="c-expense"><col class="c-narrow"><col class="c-narrow"><col class="c-narrow"><col class="c-narrow"></colgroup>
+      <thead><tr><th>Expense Type</th><th>Crew</th><th>Qty/Days</th><th>Rate</th><th>Total</th></tr></thead>
+      <tbody>${allTravelEquip || '<tr><td colspan="5" style="text-align:center; color:#888;">No travel / equipment entries</td></tr>'}</tbody>
+    </table>
+
+    <div class="ft-kv" style="margin-top:6px;">
+      <strong>Consumables-Supplies-Box Store:</strong><span>$${consum.toFixed(2)}</span>
+      <strong>PO Consumables:</strong><span>$${poConsum.toFixed(2)}</span>
+    </div>
+    </div>
+    </div>
+  `;
+}
+
+function ftEditTop(field, val) {
+  state[field] = val;
+  schedulePersist();
+  if (field === 'projectName') { const t = document.getElementById('topBarTitle'); if (t) t.textContent = val || 'HTI Proposal Builder'; }
+  updateFieldTabPreview();
+}
+function ftEditPi(field, val) { ensureProjectInfoState(); state.pi[field] = val; schedulePersist(); updateFieldTabPreview(); }
+function ftEditScope(i, key, val) {
+  ensureProjectInfoState();
+  if (state.pi.scopes[i]) { state.pi.scopes[i][key] = val; schedulePersist(); updateFieldTabPreview(); }
+}
+function ftEditJs(path, val) {
+  ensureProjectInfoState();
+  const parts = path.split('.');
+  let o = state.pi.jobsite;
+  for (let k = 0; k < parts.length - 1; k++) { if (!o[parts[k]]) o[parts[k]] = {}; o = o[parts[k]]; }
+  o[parts[parts.length-1]] = val;
+  schedulePersist();
+  updateFieldTabPreview();
+}
+function ftEditFieldTab(field, val) { ensureProjectInfoState(); state.pi.fieldTab[field] = val; schedulePersist(); updateFieldTabPreview(); }
+function ftAutoSize(el) { if (!el) return; el.style.height = 'auto'; el.style.height = (el.scrollHeight + 2) + 'px'; }
+function ftEditLabor(i, key, val) {
+  ensureQuoteState();
+  if (state.quote.labor[i]) {
+    state.quote.labor[i][key] = (key === 'activity') ? val : (parseFloat(val) || 0);
+    schedulePersist();
+    updateFieldTabPreview();
+  }
+}
+function ftEditTravel(code, key, val) {
+  ensureQuoteState();
+  if (!state.quote.travel[code]) state.quote.travel[code] = { qty: 0, rate: 0 };
+  if (key === 'crew') state.quote.travel[code].crew = Math.max(1, parseFloat(val) || 1);
+  else state.quote.travel[code][key] = parseFloat(val) || 0;
+  schedulePersist();
+  updateFieldTabPreview();
+}
+function ftEditEquip(listKey, i, key, val) {
+  ensureQuoteState();
+  const item = state.quote.equipment && state.quote.equipment[listKey] && state.quote.equipment[listKey][i];
+  if (!item) return;
+  item[key] = (key === 'name') ? val : (parseFloat(val) || 0);
+  schedulePersist();
+  updateFieldTabPreview();
+}
+function ftAddLaborRow() {
+  ensureQuoteState();
+  state.quote.labor.push({ activity: '', men: 0, days: 0, rate: 0 });
+  schedulePersist();
+  renderFieldTabForm();
+  updateFieldTabPreview();
+  if (typeof renderQuoteLabor === 'function') try { renderQuoteLabor(); } catch (e) {}
+}
+function ftRemoveLabor(i) {
+  ensureQuoteState();
+  if (!state.quote.labor[i]) return;
+  state.quote.labor.splice(i, 1);
+  schedulePersist();
+  renderFieldTabForm();
+  updateFieldTabPreview();
+  if (typeof renderQuoteLabor === 'function') try { renderQuoteLabor(); } catch (e) {}
+  if (typeof recalcQuoteSummary === 'function') try { recalcQuoteSummary(); } catch (e) {}
+}
+function ftAddEquipRow(listKey) {
+  ensureQuoteState();
+  if (!state.quote.equipment[listKey]) state.quote.equipment[listKey] = [];
+  state.quote.equipment[listKey].push({ name: '', qty: 0, rate: 0 });
+  schedulePersist();
+  renderFieldTabForm();
+  updateFieldTabPreview();
+  if (typeof renderQuoteEquipment === 'function') try { renderQuoteEquipment(); } catch (e) {}
+}
+function ftRemoveEquip(listKey, i) {
+  ensureQuoteState();
+  if (!state.quote.equipment[listKey] || !state.quote.equipment[listKey][i]) return;
+  state.quote.equipment[listKey].splice(i, 1);
+  schedulePersist();
+  renderFieldTabForm();
+  updateFieldTabPreview();
+  if (typeof renderQuoteEquipment === 'function') try { renderQuoteEquipment(); } catch (e) {}
+  if (typeof recalcQuoteSummary === 'function') try { recalcQuoteSummary(); } catch (e) {}
+}
+
+// ============================================================
+// Purchase Order
+// ============================================================
+function openPurchaseOrder() {
+  ensureProjectInfoState();
+  ensureQuoteState();
+  const grid = document.getElementById('teamDocsGrid');
+  const view = document.getElementById('purchaseOrderView');
+  if (grid) grid.style.display = 'none';
+  if (view) view.classList.add('active');
+  renderPOForm();
+  updatePOPreview();
+}
+function closePurchaseOrder() {
+  const grid = document.getElementById('teamDocsGrid');
+  const view = document.getElementById('purchaseOrderView');
+  if (grid) grid.style.display = '';
+  if (view) view.classList.remove('active');
+}
+function printPurchaseOrder() {
+  document.body.classList.add('print-po');
+  window.print();
+  setTimeout(() => document.body.classList.remove('print-po'), 500);
+}
+
+// Build a flat list of PO line items from state.quote.materials + customMaterials
+function _buildPOLines() {
+  ensureQuoteState();
+  const out = [];
+  (state.quote.materials || []).forEach((m, i) => {
+    out.push({
+      kind: 'catalog', idx: i,
+      description: m.productName || m.product_name || '',
+      color: m.color || '',
+      qty: parseFloat(m.qty) || 0,
+      unitSize: m.uom || m.unit || '',
+      cost: parseFloat(m.unitRate) || 0,
+      quotedCost: (m.quotedRate != null ? parseFloat(m.quotedRate) : null),
+      qtyAdjust: parseFloat(m.poQtyAdjust) || 0
+    });
+  });
+  (state.quote.customMaterials || []).forEach((m, i) => {
+    // Skip totally empty rows unless the user explicitly added them from the PO
+    const blank = !m.productName && !m.qty && !m.unitRate && !m.poQtyAdjust;
+    if (blank && !m.poAdded) return;
+    out.push({
+      kind: 'custom', idx: i,
+      description: m.productName || '',
+      color: m.color || '',
+      qty: parseFloat(m.qty) || 0,
+      unitSize: m.uom || '',
+      cost: parseFloat(m.unitRate) || 0,
+      quotedCost: (m.quotedRate != null ? parseFloat(m.quotedRate) : null),
+      qtyAdjust: parseFloat(m.poQtyAdjust) || 0
+    });
+  });
+  return out;
+}
+
+function renderPOForm() {
+  const host = document.getElementById('poForm');
+  if (!host) return;
+  const s = state;
+  const pi = s.pi;
+  const js = pi.jobsite;
+  const sc = js.siteContact || { name:'', phone:'' };
+  const lines = _buildPOLines();
+
+  const lineRows = lines.map((ln, i) => `
+    <div class="ft-row-inline" style="align-items:flex-end;">
+      <div class="ft-row" style="flex:3;"><label>Description</label><input value="${esc(ln.description||'')}" oninput="poEditLine(${i},'description',this.value)"></div>
+      <div class="ft-row" style="flex:1;"><label>Color</label><input value="${esc(ln.color||'')}" oninput="poEditLine(${i},'color',this.value)"></div>
+      <div class="ft-row" style="flex:0 0 60px;"><label>Qty</label><input type="number" value="${ln.qty||0}" oninput="poEditLine(${i},'qty',this.value)"></div>
+      <div class="ft-row" style="flex:0 0 70px;"><label>Unit</label><input value="${esc(ln.unitSize||'')}" oninput="poEditLine(${i},'unitSize',this.value)"></div>
+      <div class="ft-row" style="flex:0 0 80px;"><label>Cost</label><input type="number" value="${ln.cost||0}" oninput="poEditLine(${i},'cost',this.value)"></div>
+      <div class="ft-row" style="flex:0 0 80px;"><label>Qty Adj</label><input type="number" value="${ln.qtyAdjust||0}" oninput="poEditLine(${i},'qtyAdjust',this.value)"></div>
+      <button class="ft-row-del" title="Remove" onclick="poRemoveLine(${i})">&times;</button>
+    </div>`).join('');
+
+  host.innerHTML = `
+    <h4>Project Info</h4>
+    <div class="ft-row-inline">
+      <div class="ft-row"><label>Project Name</label><input value="${esc(s.projectName||'')}" oninput="ftEditTop('projectName',this.value); updatePOPreview();"></div>
+      <div class="ft-row" style="flex:0 0 120px;"><label>Job #</label><input value="${esc(s.jobNumber||'')}" oninput="ftEditTop('jobNumber',this.value); updatePOPreview();"></div>
+    </div>
+    <div class="ft-row-inline">
+      <div class="ft-row"><label>Project Manager</label><input value="${esc(pi.projectManager||'')}" oninput="ftEditPi('projectManager',this.value); updatePOPreview();"></div>
+      <div class="ft-row"><label>Super / Foreman</label><input value="${esc(pi.superForeman||'')}" oninput="ftEditPi('superForeman',this.value); updatePOPreview();"></div>
+    </div>
+
+    <h4>Install Address</h4>
+    <div class="ft-row"><label>Street</label><input value="${esc(js.installAddress.line1||'')}" oninput="ftEditJs('installAddress.line1',this.value); updatePOPreview();"></div>
+    <div class="ft-row-inline">
+      <div class="ft-row"><label>City</label><input value="${esc(js.installAddress.city||'')}" oninput="ftEditJs('installAddress.city',this.value); updatePOPreview();"></div>
+      <div class="ft-row" style="flex:0 0 70px;"><label>State</label><input value="${esc(js.installAddress.state||'')}" oninput="ftEditJs('installAddress.state',this.value); updatePOPreview();"></div>
+      <div class="ft-row" style="flex:0 0 100px;"><label>Zip</label><input value="${esc(js.installAddress.zip||'')}" oninput="ftEditJs('installAddress.zip',this.value); updatePOPreview();"></div>
+    </div>
+
+    <h4>Ship To Address</h4>
+    <div class="ft-row"><label>Street</label><input value="${esc((js.shipAddress&&js.shipAddress.line1)||'')}" oninput="ftEditJs('shipAddress.line1',this.value); updatePOPreview();"></div>
+    <div class="ft-row-inline">
+      <div class="ft-row"><label>City</label><input value="${esc((js.shipAddress&&js.shipAddress.city)||'')}" oninput="ftEditJs('shipAddress.city',this.value); updatePOPreview();"></div>
+      <div class="ft-row" style="flex:0 0 70px;"><label>State</label><input value="${esc((js.shipAddress&&js.shipAddress.state)||'')}" oninput="ftEditJs('shipAddress.state',this.value); updatePOPreview();"></div>
+      <div class="ft-row" style="flex:0 0 100px;"><label>Zip</label><input value="${esc((js.shipAddress&&js.shipAddress.zip)||'')}" oninput="ftEditJs('shipAddress.zip',this.value); updatePOPreview();"></div>
+    </div>
+
+    <h4>Site Contact</h4>
+    <div class="ft-row-inline">
+      <div class="ft-row"><label>Name</label><input value="${esc(sc.name||'')}" oninput="ftEditJs('siteContact.name',this.value); updatePOPreview();"></div>
+      <div class="ft-row"><label>Phone</label><input value="${esc(sc.phone||'')}" oninput="ftEditJs('siteContact.phone',this.value); updatePOPreview();"></div>
+    </div>
+
+    <h4>Freight Budget</h4>
+    <div class="ft-row-inline">
+      <div class="ft-row" style="flex:0 0 140px;"><label>Amount ($)</label><input type="number" value="${((s.quote.additional && s.quote.additional['5-100'] && s.quote.additional['5-100'].amount) || 0)}" oninput="poEditFreight('amount', this.value)"></div>
+      <div class="ft-row" style="flex:1;"><label>Notes</label><input value="${esc((s.quote.additional && s.quote.additional['5-100'] && s.quote.additional['5-100'].notes) || '')}" oninput="poEditFreight('notes', this.value)" placeholder="Carrier, lead time, etc."></div>
+    </div>
+
+    <h4>Line Items</h4>
+    <div style="font-size:11px; color:#888; margin:-2px 0 6px;">Pulled from Materials tab. Edits here write back to the source material. "Qty Adj" is PO-only (e.g. overage for waste / extras).</div>
+    ${lineRows || '<div style="color:#888; font-size:11px;">No materials yet — add some on the Material tab.</div>'}
+    <button class="ft-add-btn" onclick="poAddLine()">+ Add PO Line (custom)</button>
+  `;
+}
+
+function poEditFreight(key, val) {
+  ensureQuoteState();
+  if (!state.quote.additional) state.quote.additional = {};
+  if (!state.quote.additional['5-100']) state.quote.additional['5-100'] = { amount: 0, notes: '' };
+  if (key === 'amount') state.quote.additional['5-100'].amount = parseFloat(val) || 0;
+  else state.quote.additional['5-100'].notes = val;
+  schedulePersist();
+  updatePOPreview();
+  if (typeof renderQuoteAdditional === 'function') try { renderQuoteAdditional(); } catch (e) {}
+  if (typeof recalcQuoteSummary === 'function') try { recalcQuoteSummary(); } catch (e) {}
+}
+
+function updatePOPreview() {
+  const host = document.getElementById('poPreview');
+  if (!host) return;
+  const s = state;
+  const pi = s.pi || {};
+  const js = pi.jobsite || {};
+  const fmtAddr = (a) => !a ? '' : [a.line1, [a.city, a.state, a.zip].filter(Boolean).join(' ')].filter(Boolean).join(', ');
+  const shipSame = !js.shipDifferent;
+  const lines = _buildPOLines();
+
+  const freightAmount = (s.quote.additional && s.quote.additional['5-100'] && parseFloat(s.quote.additional['5-100'].amount)) || 0;
+  let totalAmount = 0;
+  let adjustedTotal = 0;
+  const bodyRows = lines.map(ln => {
+    const effectiveRate = (ln.quotedCost != null) ? ln.quotedCost : ln.cost;
+    const total = ln.qty * effectiveRate;
+    const adjQty = ln.qty + ln.qtyAdjust;
+    const adjTotal = adjQty * effectiveRate;
+    totalAmount += total;
+    adjustedTotal += adjTotal;
+    return `<tr>
+      <td>${esc(ln.description)}</td>
+      <td>${esc(ln.color)}</td>
+      <td style="text-align:right;">${ln.qty}</td>
+      <td>${esc(ln.unitSize)}</td>
+      <td style="text-align:right;">$${ln.cost.toFixed(2)}</td>
+      <td style="text-align:right;">${ln.quotedCost != null ? '$'+ln.quotedCost.toFixed(2) : ''}</td>
+      <td style="text-align:right;">$${total.toFixed(2)}</td>
+      <td style="text-align:right;">${ln.qtyAdjust ? (ln.qtyAdjust>0?'+':'')+ln.qtyAdjust : ''}</td>
+      <td style="text-align:right;">$${adjTotal.toFixed(2)}</td>
+    </tr>`;
+  }).join('');
+
+  host.innerHTML = `
+    <div class="ft-page-label">Page 1 — Letter Portrait</div>
+    <div class="ft-page po-page">
+      <div class="ft-page-section">
+        <h4>General Info</h4>
+        <div class="ft-kv">
+          <strong>Project Name:</strong><span>${esc(s.projectName||'')}</span>
+          <strong>Job #:</strong><span>${esc(s.jobNumber||'')}</span>
+          <strong>Project Manager:</strong><span>${esc(pi.projectManager||'')}</span>
+          <strong>Super / Foreman:</strong><span>${esc(pi.superForeman||'')}</span>
+        </div>
+      </div>
+
+      <div class="ft-page-section">
+        <h4>Jobsite Information</h4>
+        <div class="ft-kv">
+          <strong>Install Address:</strong><span>${esc(fmtAddr(js.installAddress))}</span>
+          <strong>Ship To:</strong><span>${shipSame ? 'Same' : esc(fmtAddr(js.shipAddress))}</span>
+          <strong>Site Contact:</strong><span>${esc((js.siteContact||{}).name||'')}${(js.siteContact&&js.siteContact.phone)?' — '+esc(js.siteContact.phone):''}</span>
+          <strong>Labor Type:</strong><span>${esc(js.laborType||'')}${js.prevailingWage?' (prevailing wage)':''}</span>
+        </div>
+      </div>
+
+      <div class="ft-page-section">
+        <h4>Freight Budget</h4>
+        <div class="ft-kv">
+          <strong>Freight Amount:</strong><span>$${((s.quote.additional && s.quote.additional['5-100'] && parseFloat(s.quote.additional['5-100'].amount)) || 0).toFixed(2)}</span>
+          <strong>Notes:</strong><span>${esc((s.quote.additional && s.quote.additional['5-100'] && s.quote.additional['5-100'].notes) || '')}</span>
+        </div>
+      </div>
+
+      <h4>Purchase Order Items</h4>
+      <table class="po-table">
+        <colgroup>
+          <col style="width:26%"><col style="width:10%"><col style="width:6%"><col style="width:9%">
+          <col style="width:9%"><col style="width:10%"><col style="width:10%"><col style="width:8%"><col style="width:12%">
+        </colgroup>
+        <thead><tr>
+          <th>Description</th><th>Color</th><th>Qty</th><th>Unit Size</th>
+          <th>Cost</th><th>Quoted Cost</th><th>Total Amount</th><th>Qty Adjust</th><th>Adjusted Total</th>
+        </tr></thead>
+        <tbody>${bodyRows || '<tr><td colspan="9" style="text-align:center; color:#888;">No line items</td></tr>'}</tbody>
+        <tfoot>
+          <tr class="po-total-row">
+            <td colspan="6" style="text-align:right; font-weight:700;">Materials Subtotal</td>
+            <td style="text-align:right; font-weight:700;">$${totalAmount.toFixed(2)}</td>
+            <td></td>
+            <td style="text-align:right; font-weight:700;">$${adjustedTotal.toFixed(2)}</td>
+          </tr>
+          <tr class="po-total-row">
+            <td colspan="6" style="text-align:right;">Freight Budget</td>
+            <td style="text-align:right;">$${freightAmount.toFixed(2)}</td>
+            <td></td>
+            <td style="text-align:right;">$${freightAmount.toFixed(2)}</td>
+          </tr>
+          <tr class="po-total-row" style="background:#e8e8e8;">
+            <td colspan="6" style="text-align:right; font-weight:700; font-size:11px;">Grand Total</td>
+            <td style="text-align:right; font-weight:700; font-size:11px;">$${(totalAmount + freightAmount).toFixed(2)}</td>
+            <td></td>
+            <td style="text-align:right; font-weight:700; font-size:11px;">$${(adjustedTotal + freightAmount).toFixed(2)}</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  `;
+}
+
+// Edit a line — writes back to the underlying material record
+function poEditLine(lineIdx, key, val) {
+  ensureQuoteState();
+  const lines = _buildPOLines();
+  const ln = lines[lineIdx];
+  if (!ln) return;
+  const src = (ln.kind === 'catalog') ? state.quote.materials[ln.idx] : state.quote.customMaterials[ln.idx];
+  if (!src) return;
+  switch (key) {
+    case 'description': src.productName = val; break;
+    case 'color': src.color = val; break;
+    case 'qty': src.qty = parseFloat(val) || 0; break;
+    case 'unitSize': src.uom = val; break;
+    case 'cost': src.unitRate = parseFloat(val) || 0; break;
+    case 'qtyAdjust': src.poQtyAdjust = parseFloat(val) || 0; break;
+  }
+  schedulePersist();
+  updatePOPreview();
+}
+
+function poAddLine() {
+  ensureQuoteState();
+  if (!state.quote.customMaterials) state.quote.customMaterials = [];
+  state.quote.customMaterials.push({ productName: '', color: '', uom: '', unitRate: 0, qty: 0, quotedRate: null, poQtyAdjust: 0, poAdded: true });
+  schedulePersist();
+  renderPOForm();
+  updatePOPreview();
+  if (typeof renderCustomProducts === 'function') try { renderCustomProducts(); } catch (e) {}
+}
+
+function poRemoveLine(lineIdx) {
+  ensureQuoteState();
+  const lines = _buildPOLines();
+  const ln = lines[lineIdx];
+  if (!ln) return;
+  if (ln.kind === 'catalog') {
+    state.quote.materials.splice(ln.idx, 1);
+  } else {
+    state.quote.customMaterials.splice(ln.idx, 1);
+  }
+  schedulePersist();
+  renderPOForm();
+  updatePOPreview();
+  if (typeof renderActiveMaterials === 'function') try { renderActiveMaterials(); } catch (e) {}
+  if (typeof renderCatalogueView === 'function') try { renderCatalogueView(); } catch (e) {}
+  if (typeof recalcQuoteSummary === 'function') try { recalcQuoteSummary(); } catch (e) {}
 }
 
 function piSyncTop(field, val) { state[field] = val; schedulePersist(); if (field === 'projectName') { const t = document.getElementById('topBarTitle'); if (t) t.textContent = val || 'HTI Proposal Builder'; } }
 function piSync(field, val) { ensureProjectInfoState(); state.pi[field] = val; schedulePersist(); }
-function piSyncScope(i, key, val) { ensureProjectInfoState(); if (state.pi.scopes[i]) { state.pi.scopes[i][key] = val; schedulePersist(); } }
+const _wxGeoCache = new Map();
+const _wxCache = new Map();
+const WX_CODES = {
+  0:'☀️ Clear',1:'🌤 Mainly Clear',2:'⛅ Partly Cloudy',3:'☁️ Overcast',
+  45:'🌫 Fog',48:'🌫 Icy Fog',
+  51:'🌦 Lt Drizzle',53:'🌦 Drizzle',55:'🌧 Hv Drizzle',
+  61:'🌧 Lt Rain',63:'🌧 Rain',65:'🌧 Hv Rain',
+  71:'🌨 Lt Snow',73:'🌨 Snow',75:'❄️ Hv Snow',77:'🌨 Snow Grains',
+  80:'🌦 Lt Showers',81:'🌦 Showers',82:'⛈ Hv Showers',
+  85:'🌨 Snow Showers',86:'🌨 Hv Snow Showers',
+  95:'⛈ Thunderstorm',96:'⛈ Thunder+Hail',99:'⛈ Thunder+Hv Hail'
+};
+async function _wxGeocode(addr) {
+  if (!addr || addr.length < 4) return null;
+  if (_wxGeoCache.has(addr)) return _wxGeoCache.get(addr);
+  try {
+    const r = await fetch('https://geocoding-api.open-meteo.com/v1/search?count=1&name=' + encodeURIComponent(addr));
+    const d = await r.json();
+    const hit = d && d.results && d.results[0];
+    const out = hit ? { lat: hit.latitude, lon: hit.longitude } : null;
+    _wxGeoCache.set(addr, out);
+    return out;
+  } catch (e) { return null; }
+}
+async function _wxFetch(lat, lon, date) {
+  const key = lat + ',' + lon + ',' + date;
+  if (_wxCache.has(key)) return _wxCache.get(key);
+  try {
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum&temperature_unit=fahrenheit&precipitation_unit=inch&timezone=auto&start_date=${date}&end_date=${date}`;
+    const r = await fetch(url);
+    const d = await r.json();
+    const out = d && d.daily && d.daily.time && d.daily.time.length ? {
+      max: d.daily.temperature_2m_max[0],
+      min: d.daily.temperature_2m_min[0],
+      code: d.daily.weather_code[0],
+      precip: d.daily.precipitation_sum[0]
+    } : null;
+    _wxCache.set(key, out);
+    return out;
+  } catch (e) { return null; }
+}
+function _wxFormat(w) {
+  if (!w || w.max == null) return 'No data';
+  const icon = WX_CODES[w.code] || '';
+  return `${icon} ${Math.round(w.max)}°/${Math.round(w.min)}°F · ${(w.precip||0).toFixed(2)}" precip`;
+}
+let _wxDebounce = null;
+function refreshAllScopeWeather() {
+  clearTimeout(_wxDebounce);
+  _wxDebounce = setTimeout(_doRefreshAllScopeWeather, 400);
+}
+async function _doRefreshAllScopeWeather() {
+  if (!state || !state.pi || !state.pi.scopes) return;
+  const js = state.pi.jobsite || {};
+  const ia = js.installAddress || {};
+  // Open-Meteo's geocoder is city/zip-level; street numbers confuse it.
+  // Prefer zip (most precise), then "city, state", as the geocode query.
+  const addr = ia.zip ? String(ia.zip).trim() : [ia.city, ia.state].filter(Boolean).join(', ');
+  const setCell = (i, which, text) => {
+    const el = document.querySelector(`[data-wx-scope="${i}"][data-wx-which="${which}"]`);
+    if (el) el.textContent = text;
+  };
+  if (!addr) {
+    state.pi.scopes.forEach((sc, i) => { setCell(i,'start','Enter address'); setCell(i,'end','Enter address'); });
+    return;
+  }
+  const today = new Date(); today.setHours(0,0,0,0);
+  const maxDate = new Date(today.getTime() + 16 * 86400000);
+  let geo = null;
+  const needGeo = state.pi.scopes.some(sc => sc.installStart || sc.installEnd);
+  if (needGeo) {
+    state.pi.scopes.forEach((sc, i) => {
+      if (sc.installStart) setCell(i,'start','Loading…');
+      if (sc.installEnd) setCell(i,'end','Loading…');
+    });
+    geo = await _wxGeocode(addr);
+    if (!geo) {
+      state.pi.scopes.forEach((sc, i) => { if (sc.installStart) setCell(i,'start','Address not found'); if (sc.installEnd) setCell(i,'end','Address not found'); });
+      return;
+    }
+  }
+  const renderOne = async (i, which, date) => {
+    if (!date) { setCell(i, which, '—'); return; }
+    const d = new Date(date); d.setHours(0,0,0,0);
+    if (d < today) { setCell(i, which, 'Past date'); return; }
+    if (d > maxDate) { setCell(i, which, 'Beyond 16-day forecast'); return; }
+    const w = await _wxFetch(geo.lat, geo.lon, date);
+    setCell(i, which, _wxFormat(w));
+  };
+  state.pi.scopes.forEach((sc, i) => {
+    renderOne(i, 'start', sc.installStart);
+    renderOne(i, 'end', sc.installEnd);
+  });
+}
+
+function piSyncScope(i, key, val) {
+  ensureProjectInfoState();
+  if (state.pi.scopes[i]) { state.pi.scopes[i][key] = val; schedulePersist(); }
+  if (key === 'installStart' || key === 'installEnd') refreshAllScopeWeather();
+}
 function piAddScope() { ensureProjectInfoState(); state.pi.scopes.push({ phaseName: '', installedSystem: '', sqFt: '', lnFt: '', lnFtJoints: '', materialDelivery: '', startTime: '', installStart: '', installEnd: '' }); renderProjectTab(); }
 function piRemoveScope(i) { ensureProjectInfoState(); if (state.pi.scopes.length <= 1) return; state.pi.scopes.splice(i, 1); renderProjectTab(); }
 function piSyncJobsite(path, val) {
@@ -8397,6 +9582,7 @@ function piSyncJobsite(path, val) {
   for (let k = 0; k < parts.length - 1; k++) o = o[parts[k]];
   o[parts[parts.length - 1]] = val;
   schedulePersist();
+  if (path.startsWith('installAddress.')) refreshAllScopeWeather();
 }
 function piToggleShipTo(checked) {
   ensureProjectInfoState();
@@ -8431,6 +9617,10 @@ function renderProjectTab() {
         <div class="form-row"><label>Start Time</label><input type="time" value="${esc(sc.startTime)}" oninput="piSyncScope(${i},'startTime',this.value)"></div>
         <div class="form-row"><label>Install Start Date</label><input type="date" value="${esc(sc.installStart)}" oninput="piSyncScope(${i},'installStart',this.value)"></div>
         <div class="form-row"><label>Install End Date</label><input type="date" value="${esc(sc.installEnd)}" oninput="piSyncScope(${i},'installEnd',this.value)"></div>
+      </div>
+      <div class="scope-weather">
+        <div class="scope-weather-cell"><span class="wx-label">Start Wx</span><span data-wx-scope="${i}" data-wx-which="start" class="wx-value">—</span></div>
+        <div class="scope-weather-cell"><span class="wx-label">End Wx</span><span data-wx-scope="${i}" data-wx-which="end" class="wx-value">—</span></div>
       </div>
     </div>
   `).join('');
@@ -8513,12 +9703,38 @@ function renderProjectTab() {
       <div class="form-row"><label>Notes</label><textarea rows="3" oninput="piSyncPreJob('notes',this.value)">${escH(pj.notes||'')}</textarea></div>
 
       <div class="pi-sub">Financials</div>
-      <div class="pi-placeholder">Financial details will populate here automatically.</div>
+      <div class="quote-section" style="margin-top:8px;">
+        <table class="quote-summary-table">
+          <tbody>
+            <tr><td>Materials Subtotal</td><td data-sum="sumMaterials">$0.00</td></tr>
+            <tr><td>Labor Subtotal</td><td data-sum="sumLabor">$0.00</td></tr>
+            <tr><td>Travel &amp; Expenses Subtotal</td><td data-sum="sumTravel">$0.00</td></tr>
+            <tr><td>Equipment Subtotal</td><td data-sum="sumEquipment">$0.00</td></tr>
+            <tr><td>Additional Costs Subtotal</td><td data-sum="sumAdditional">$0.00</td></tr>
+            <tr><td>Material Tax</td><td data-sum="sumTaxMaterial">$0.00</td></tr>
+            <tr><td>Equipment Rental Tax</td><td data-sum="sumTaxRental">$0.00</td></tr>
+            <tr><td>Freight Tax</td><td data-sum="sumTaxFreight">$0.00</td></tr>
+            <tr><td>Total Tax</td><td data-sum="sumTax">$0.00</td></tr>
+            <tr class="grand-total"><td>Grand Total (Cost)</td><td data-sum="sumGrandTotal">$0.00</td></tr>
+          </tbody>
+        </table>
+        <div style="display:flex; align-items:center; gap:16px; margin-top:12px; padding-top:10px; border-top:1px solid #333;">
+          <div style="flex:1;">
+            <div style="font-size:12px; color:#aaa; margin-bottom:4px;">Bid Amount</div>
+            <div style="font-size:22px; font-weight:700; color:#e2a308;" data-sum="quoteBidAmount">$0.00</div>
+          </div>
+          <div>
+            <div style="font-size:12px; color:#aaa; margin-bottom:4px;">Gross Profit %</div>
+            <div style="font-size:18px; font-weight:700; color:#27ae60;" data-sum="quoteGrossProfit">0.0%</div>
+          </div>
+        </div>
+      </div>
 
     </div>
   </div>`;
 
   dest.innerHTML = h;
+  refreshAllScopeWeather();
 }
 
 function updateLivePreview() {
@@ -9848,8 +11064,71 @@ function switchAdminTab(tab) {
   document.getElementById('adminUsersPanel').style.display = tab === 'users' ? '' : 'none';
   document.getElementById('adminCatalogPanel').style.display = tab === 'catalog' ? '' : 'none';
   document.getElementById('adminRatesPanel').style.display = tab === 'rates' ? '' : 'none';
+  document.getElementById('adminEngineeringPanel').style.display = tab === 'engineering' ? '' : 'none';
   if (tab === 'catalog') renderAdminCatalog();
   if (tab === 'rates') renderAdminRates();
+  if (tab === 'engineering') renderAdminEngineering();
+}
+
+// ---- Admin: Engineering Requests (placeholder — shows current project's requests) ----
+function renderAdminEngineering() {
+  const panel = document.getElementById('adminEngineeringPanel');
+  if (!panel) return;
+  ensureProjectInfoState();
+  const reqs = (state.pi && state.pi.engineeringRequests) || [];
+  if (!reqs.length) {
+    panel.innerHTML = '<div class="admin-empty" style="padding:16px; color:#888;">No engineering requests on the currently-loaded project. (When a cross-project table is added later, all open requests will appear here.)</div>';
+    return;
+  }
+  const sorted = reqs.slice().sort((a,b) => (a.response?1:0) - (b.response?1:0) || (b.createdAt||0) - (a.createdAt||0));
+  const rows = sorted.map(r => {
+    const statusClass = r.response ? 'responded' : 'open';
+    const statusText = r.response ? 'Responded' : 'Open';
+    const dateLabel = r.neededBy ? ('Needed by ' + r.neededBy) : 'No date';
+    return `<div class="er-item" style="background:#1e1e3a;">
+      <div class="er-top">
+        <div style="display:flex; gap:10px; align-items:center;">
+          <span class="er-status ${statusClass}">${statusText}</span>
+          <span class="er-date">${esc(dateLabel)}</span>
+        </div>
+        <div style="font-size:11px; color:#888;">${esc(r.projectName || '—')}</div>
+      </div>
+      <div class="er-text" style="margin:6px 0;">${esc(r.text||'')}</div>
+      <div class="er-label" style="margin-top:8px;">Engineering Response</div>
+      <textarea class="scratch-notes" style="min-height:60px;" oninput="adminEditEngineeringResponse('${esc(r.id)}', this.value)">${esc(r.response||'')}</textarea>
+      <div style="display:flex; gap:6px; justify-content:flex-end; margin-top:6px;">
+        <button class="btn btn-secondary btn-sm" onclick="adminMarkEngineering('${esc(r.id)}', true)">Mark Responded</button>
+        <button class="btn btn-secondary btn-sm" onclick="adminMarkEngineering('${esc(r.id)}', false)">Reopen</button>
+      </div>
+    </div>`;
+  }).join('');
+  panel.innerHTML = `
+    <div style="padding:14px 16px;">
+      <div style="font-size:11px; color:#888; margin-bottom:12px;">Engineering requests for the currently-loaded project. Responses save back to the request and appear in the requester's sidebar panel.</div>
+      <div style="display:flex; flex-direction:column; gap:10px;">${rows}</div>
+    </div>
+  `;
+}
+
+function adminEditEngineeringResponse(id, val) {
+  ensureProjectInfoState();
+  const reqs = state.pi.engineeringRequests || [];
+  const r = reqs.find(x => x.id === id);
+  if (!r) return;
+  r.response = val;
+  r.respondedAt = Date.now();
+  schedulePersist();
+}
+
+function adminMarkEngineering(id, responded) {
+  ensureProjectInfoState();
+  const reqs = state.pi.engineeringRequests || [];
+  const r = reqs.find(x => x.id === id);
+  if (!r) return;
+  if (!responded) { r.response = ''; r.respondedAt = null; }
+  else if (!r.response) { r.response = '(Acknowledged — no detailed response provided.)'; r.respondedAt = Date.now(); }
+  schedulePersist();
+  renderAdminEngineering();
 }
 
 // ============================================================
@@ -10612,7 +11891,9 @@ function ensureQuoteState() {
       labor: JSON.parse(JSON.stringify(QUOTE_DEFAULT_LABOR)),
       travel: {},
       additional: {},
-      taxRate: 10,
+      taxMaterial: 10,
+      taxRental: 0,
+      taxFreight: 0,
       markupPct: 0
     };
   }
@@ -10624,12 +11905,36 @@ function ensureQuoteState() {
   while (state.quote.customMaterials.length < MIN_BLANK_CUSTOM) {
     state.quote.customMaterials.push({ productName: '', color: '', uom: '', unitRate: 0, qty: 0, quotedRate: null });
   }
-  if (!state.quote.equipment) state.quote.equipment = { rental: 0, inHouse: 0, rentalNotes: '', inHouseNotes: '' };
+  if (!state.quote.equipment) state.quote.equipment = { rentalItems: [], inHouseItems: [] };
+  // Migrate legacy {rental, inHouse} shape to item arrays
+  const _eq = state.quote.equipment;
+  if (!Array.isArray(_eq.rentalItems)) {
+    const amt = parseFloat(_eq.rental) || 0;
+    _eq.rentalItems = amt > 0 ? [{ name: _eq.rentalNotes || 'Equipment Rental', qty: 1, rate: amt }] : [];
+  }
+  if (!Array.isArray(_eq.inHouseItems)) {
+    const amt = parseFloat(_eq.inHouse) || 0;
+    _eq.inHouseItems = amt > 0 ? [{ name: _eq.inHouseNotes || 'In-House Equipment', qty: 1, rate: amt }] : [];
+  }
+  delete _eq.rental; delete _eq.inHouse; delete _eq.rentalNotes; delete _eq.inHouseNotes;
+  const MIN_BLANK_EQUIP = 3;
+  while (_eq.rentalItems.length < MIN_BLANK_EQUIP) _eq.rentalItems.push({ name: '', qty: 0, rate: 0 });
+  while (_eq.inHouseItems.length < MIN_BLANK_EQUIP) _eq.inHouseItems.push({ name: '', qty: 0, rate: 0 });
   if (!state.quote.labor) state.quote.labor = JSON.parse(JSON.stringify(QUOTE_DEFAULT_LABOR));
   if (!state.quote.travel) state.quote.travel = {};
+  // Per diem defaults (only when unset or zero)
+  if (!state.quote.travel['7-810']) state.quote.travel['7-810'] = { qty: 0, rate: 51.00 };
+  else if (!state.quote.travel['7-810'].rate) state.quote.travel['7-810'].rate = 51.00;
+  if (!state.quote.travel['7-820']) state.quote.travel['7-820'] = { qty: 0, rate: 38.50 };
+  else if (!state.quote.travel['7-820'].rate) state.quote.travel['7-820'].rate = 38.50;
   if (state.quote.crewSize == null) state.quote.crewSize = 1;
   if (!state.quote.additional) state.quote.additional = {};
-  if (state.quote.taxRate == null) state.quote.taxRate = 10;
+  if (state.quote.taxMaterial == null) {
+    state.quote.taxMaterial = state.quote.taxRate != null ? state.quote.taxRate : 10;
+  }
+  if (state.quote.taxRental == null) state.quote.taxRental = 0;
+  if (state.quote.taxFreight == null) state.quote.taxFreight = 0;
+  delete state.quote.taxRate;
   if (state.quote.markupPct == null) state.quote.markupPct = 0;
 }
 
@@ -10701,9 +12006,14 @@ function fmtMoney(n) {
 
 // ---- Materials ----
 let _catalogueSearchQuery = '';
+let _catalogueVendorFilter = 'SW';
 function filterQuoteMaterials() {
   const input = document.getElementById('quoteMaterialSearch');
   _catalogueSearchQuery = (input && input.value || '').toLowerCase().trim();
+  renderCatalogueView();
+}
+function setCatalogueVendor(vendor) {
+  _catalogueVendorFilter = vendor;
   renderCatalogueView();
 }
 
@@ -10801,14 +12111,23 @@ function renderCatalogueView() {
 
   ensureQuoteState();
 
-  const vendorFilter = document.getElementById('catalogueVendorFilter');
-  const selectedVendor = vendorFilter ? vendorFilter.value : 'SW';
+  const selectedVendor = _catalogueVendorFilter || 'SW';
   const allVendors = selectedVendor === '__ALL__';
+
+  // Reflect active vendor tab
+  document.querySelectorAll('#catalogueVendorTabs .cat-vendor-tab').forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('data-vendor') === selectedVendor);
+  });
 
   // Build logical products. Vendor='ALL' rows are manufacturer-agnostic and
   // show in every vendor view (including the "All Vendors" filter).
   const allGroups = Object.values(buildQuoteProductGroups());
-  const groups = allGroups.filter(g => allVendors || g.vendor === selectedVendor || g.vendor === 'ALL');
+  let groups = allGroups.filter(g => allVendors || g.vendor === selectedVendor || g.vendor === 'ALL');
+
+  // Real-time search: filter catalogue to only matching groups
+  if (_catalogueSearchQuery) {
+    groups = groups.filter(g => g.rows.some(r => productMatchesQuery(r, _catalogueSearchQuery)));
+  }
 
   // Organize by category (prefix vendor when "All")
   const categories = {};
@@ -11172,7 +12491,7 @@ function renderActiveMaterials() {
     </div>`;
   }).join('');
   listEl.innerHTML = rowsHtml;
-  const taxRate = parseFloat(state.quote.taxRate) || 0;
+  const taxRate = parseFloat(state.quote.taxMaterial) || 0;
   const tax = subtotal * (taxRate / 100);
   const total = subtotal + tax;
   breakdownEl.innerHTML = `
@@ -11257,27 +12576,37 @@ function onQuoteLaborChange(idx, field, val) {
   else if (field === 'days') row.days = parseFloat(val) || 0;
   else if (field === 'rate') row.rate = parseFloat(val) || 0;
   schedulePersist();
-  renderQuoteLabor();
+  updateQuoteLaborTotals();
   recalcQuoteSummary();
+}
+
+function updateQuoteLaborTotals() {
+  let total = 0;
+  state.quote.labor.forEach((row, i) => {
+    const ext = (row.men || 0) * (row.days || 0) * (row.rate || 0);
+    total += ext;
+    const cell = document.querySelector('#quoteLaborBody [data-labor-ext="' + i + '"]');
+    if (cell) cell.textContent = fmtMoney(ext);
+  });
+  const totEl = document.getElementById('quoteLaborTotal');
+  if (totEl) totEl.textContent = 'Labor Total: ' + fmtMoney(total);
 }
 
 function renderQuoteLabor() {
   ensureQuoteState();
   const tbody = document.getElementById('quoteLaborBody');
-  let total = 0;
   tbody.innerHTML = state.quote.labor.map((row, i) => {
     const ext = (row.men || 0) * (row.days || 0) * (row.rate || 0);
-    total += ext;
     return `<tr>
-      <td><input type="text" value="${escH(row.activity)}" onchange="onQuoteLaborChange(${i},'activity',this.value)"></td>
-      <td><input type="number" class="narrow" value="${row.men || ''}" min="0" step="1" onchange="onQuoteLaborChange(${i},'men',this.value)"></td>
-      <td><input type="number" class="narrow" value="${row.days || ''}" min="0" step="0.5" onchange="onQuoteLaborChange(${i},'days',this.value)"></td>
-      <td><input type="number" class="narrow" value="${row.rate || ''}" min="0" step="0.01" onchange="onQuoteLaborChange(${i},'rate',this.value)"></td>
-      <td style="text-align:right; font-weight:600;">${fmtMoney(ext)}</td>
+      <td><input type="text" value="${escH(row.activity)}" oninput="onQuoteLaborChange(${i},'activity',this.value)"></td>
+      <td><input type="number" class="narrow no-spin" value="${row.men || ''}" min="0" step="1" oninput="onQuoteLaborChange(${i},'men',this.value)"></td>
+      <td><input type="number" class="narrow no-spin" value="${row.days || ''}" min="0" step="0.5" oninput="onQuoteLaborChange(${i},'days',this.value)"></td>
+      <td><input type="number" class="narrow no-spin" value="${row.rate || ''}" min="0" step="0.01" oninput="onQuoteLaborChange(${i},'rate',this.value)"></td>
+      <td style="text-align:right; font-weight:600;" data-labor-ext="${i}">${fmtMoney(ext)}</td>
       <td><button class="btn-remove" onclick="removeQuoteLaborRow(${i})">×</button></td>
     </tr>`;
   }).join('');
-  document.getElementById('quoteLaborTotal').textContent = 'Labor Total: ' + fmtMoney(total);
+  updateQuoteLaborTotals();
 }
 
 // ---- Travel ----
@@ -11288,8 +12617,22 @@ function onQuoteTravelChange(code, field, val) {
   if (field === 'rate') state.quote.travel[code].rate = parseFloat(val) || 0;
   if (field === 'crew') state.quote.travel[code].crew = Math.max(1, parseFloat(val) || 1);
   schedulePersist();
-  renderQuoteTravel();
+  updateQuoteTravelTotals();
   recalcQuoteSummary();
+}
+
+function updateQuoteTravelTotals() {
+  let total = 0;
+  QUOTE_TRAVEL_CODES.forEach(code => {
+    const t = state.quote.travel[code] || { qty: 0, rate: 0 };
+    const mult = TRAVEL_CREW_MULT_CODES.has(code) ? crewForTravelCode(code) : 1;
+    const ext = (t.qty || 0) * (t.rate || 0) * mult;
+    total += ext;
+    const cell = document.querySelector('#quoteTravelBody [data-travel-ext="' + code + '"]');
+    if (cell) cell.textContent = fmtMoney(ext);
+  });
+  const totEl = document.getElementById('quoteTravelTotal');
+  if (totEl) totEl.textContent = 'Travel Total: ' + fmtMoney(total);
 }
 
 // Legacy: migrate global state.quote.crewSize to per-row crew on first access, then
@@ -11303,40 +12646,91 @@ function crewForTravelCode(code) {
 }
 
 // ---- Equipment (own tab) ----
-function onQuoteEquipmentChange(field, val) {
+function addEquipmentRow(listKey) {
   ensureQuoteState();
-  if (!state.quote.equipment) state.quote.equipment = { rental: 0, inHouse: 0, rentalNotes: '', inHouseNotes: '' };
-  if (field === 'rental' || field === 'inHouse') state.quote.equipment[field] = parseFloat(val) || 0;
-  else state.quote.equipment[field] = val;
+  state.quote.equipment[listKey].push({ name: '', qty: 0, rate: 0 });
   schedulePersist();
   renderQuoteEquipment();
   recalcQuoteSummary();
 }
 
+function removeEquipmentRow(listKey, idx) {
+  ensureQuoteState();
+  state.quote.equipment[listKey].splice(idx, 1);
+  schedulePersist();
+  renderQuoteEquipment();
+  recalcQuoteSummary();
+}
+
+function onEquipmentItemChange(listKey, idx, field, val) {
+  ensureQuoteState();
+  const item = state.quote.equipment[listKey][idx];
+  if (!item) return;
+  if (field === 'name') item.name = val;
+  else item[field] = parseFloat(val) || 0;
+  schedulePersist();
+  updateQuoteEquipmentTotals();
+  recalcQuoteSummary();
+}
+
+function updateQuoteEquipmentTotals() {
+  const sumList = (listKey, bodyId) => {
+    const items = state.quote.equipment[listKey] || [];
+    let total = 0;
+    items.forEach((it, i) => {
+      const ext = (parseFloat(it.qty) || 0) * (parseFloat(it.rate) || 0);
+      total += ext;
+      const cell = document.querySelector('#' + bodyId + ' [data-eq-ext="' + listKey + '-' + i + '"]');
+      if (cell) cell.textContent = fmtMoney(ext);
+    });
+    return total;
+  };
+  const rt = sumList('rentalItems', 'quoteEquipmentRentalBody');
+  const ih = sumList('inHouseItems', 'quoteEquipmentInHouseBody');
+  const r1 = document.getElementById('quoteEquipmentRentalTotal');
+  if (r1) r1.textContent = 'Rental Total: ' + fmtMoney(rt);
+  const r2 = document.getElementById('quoteEquipmentInHouseTotal');
+  if (r2) r2.textContent = 'In-House Total: ' + fmtMoney(ih);
+  const tot = document.getElementById('quoteEquipmentTotal');
+  if (tot) tot.textContent = 'Equipment Total: ' + fmtMoney(rt + ih);
+}
+
+function _renderEquipmentSection(listKey, bodyId, totalId, totalLabel) {
+  const tbody = document.getElementById(bodyId);
+  if (!tbody) return 0;
+  const items = state.quote.equipment[listKey] || [];
+  let total = 0;
+  if (!items.length) {
+    tbody.innerHTML = `<tr><td colspan="5" style="color:#666; text-align:center; padding:10px;">No items. Click "Add" below.</td></tr>`;
+  } else {
+    tbody.innerHTML = items.map((it, i) => {
+      const ext = (parseFloat(it.qty) || 0) * (parseFloat(it.rate) || 0);
+      total += ext;
+      return `<tr>
+        <td><input type="text" value="${escH(it.name || '')}" placeholder="Item name..." oninput="onEquipmentItemChange('${listKey}',${i},'name',this.value)"></td>
+        <td><input type="number" class="narrow no-spin" value="${it.qty || ''}" min="0" step="1" oninput="onEquipmentItemChange('${listKey}',${i},'qty',this.value)"></td>
+        <td><input type="number" class="narrow no-spin" value="${it.rate || ''}" min="0" step="0.01" oninput="onEquipmentItemChange('${listKey}',${i},'rate',this.value)"></td>
+        <td style="text-align:right; font-weight:600;" data-eq-ext="${listKey}-${i}">${fmtMoney(ext)}</td>
+        <td><button class="btn btn-secondary btn-sm" onclick="removeEquipmentRow('${listKey}',${i})" title="Remove">&times;</button></td>
+      </tr>`;
+    }).join('');
+  }
+  const totEl = document.getElementById(totalId);
+  if (totEl) totEl.textContent = totalLabel + ': ' + fmtMoney(total);
+  return total;
+}
+
 function renderQuoteEquipment() {
   ensureQuoteState();
-  const tbody = document.getElementById('quoteEquipmentBody');
-  if (!tbody) return;
-  const eq = state.quote.equipment;
-  let total = 0;
-  tbody.innerHTML = QUOTE_EQUIPMENT_CODES.map(item => {
-    const amount = parseFloat(eq[item.field]) || 0;
-    total += amount;
-    return `<tr>
-      <td>${escH(item.code)}</td>
-      <td>${escH(item.label)}</td>
-      <td><input type="number" value="${eq[item.field] || ''}" min="0" step="0.01" onchange="onQuoteEquipmentChange('${item.field}',this.value)"></td>
-      <td><input type="text" value="${escH(eq[item.notesField] || '')}" onchange="onQuoteEquipmentChange('${item.notesField}',this.value)" placeholder="Notes..."></td>
-    </tr>`;
-  }).join('');
+  const rentalTotal = _renderEquipmentSection('rentalItems', 'quoteEquipmentRentalBody', 'quoteEquipmentRentalTotal', 'Rental Total');
+  const inHouseTotal = _renderEquipmentSection('inHouseItems', 'quoteEquipmentInHouseBody', 'quoteEquipmentInHouseTotal', 'In-House Total');
   const totEl = document.getElementById('quoteEquipmentTotal');
-  if (totEl) totEl.textContent = 'Equipment Total: ' + fmtMoney(total);
+  if (totEl) totEl.textContent = 'Equipment Total: ' + fmtMoney(rentalTotal + inHouseTotal);
 }
 
 function renderQuoteTravel() {
   ensureQuoteState();
   const tbody = document.getElementById('quoteTravelBody');
-  let total = 0;
   tbody.innerHTML = QUOTE_TRAVEL_CODES.map(code => {
     const t = state.quote.travel[code] || { qty: 0, rate: 0 };
     const info = getRateByCode(code);
@@ -11345,20 +12739,19 @@ function renderQuoteTravel() {
     const crew = crewForTravelCode(code);
     const mult = multByCrew ? crew : 1;
     const ext = (t.qty || 0) * (t.rate || 0) * mult;
-    total += ext;
     const crewCell = multByCrew
-      ? `<td><input type="number" class="narrow" value="${crew}" min="1" step="1" onchange="onQuoteTravelChange('${code}','crew',this.value)" title="Crew size for this line"></td>`
+      ? `<td><input type="number" class="narrow no-spin" value="${crew}" min="1" step="1" oninput="onQuoteTravelChange('${code}','crew',this.value)" title="Crew size for this line"></td>`
       : `<td style="text-align:center; color:#555; font-weight:600;">—</td>`;
     return `<tr>
       <td>${escH(code)}</td>
       <td>${escH(label)}</td>
       ${crewCell}
-      <td><input type="number" class="narrow" value="${t.qty || ''}" min="0" step="1" onchange="onQuoteTravelChange('${code}','qty',this.value)"></td>
-      <td><input type="number" class="narrow" value="${t.rate || ''}" min="0" step="0.01" onchange="onQuoteTravelChange('${code}','rate',this.value)"></td>
-      <td style="text-align:right; font-weight:600;">${fmtMoney(ext)}</td>
+      <td><input type="number" class="narrow no-spin" value="${t.qty || ''}" min="0" step="1" oninput="onQuoteTravelChange('${code}','qty',this.value)"></td>
+      <td><input type="number" class="narrow no-spin" value="${t.rate || ''}" min="0" step="0.01" oninput="onQuoteTravelChange('${code}','rate',this.value)"></td>
+      <td style="text-align:right; font-weight:600;" data-travel-ext="${code}">${fmtMoney(ext)}</td>
     </tr>`;
   }).join('');
-  document.getElementById('quoteTravelTotal').textContent = 'Travel Total: ' + fmtMoney(total);
+  updateQuoteTravelTotals();
 }
 
 // ---- Additional ----
@@ -11390,11 +12783,14 @@ function renderQuoteAdditional() {
 }
 
 // ---- Tax ----
-function onQuoteTaxChange(val) {
+function onQuoteTaxChange(kind, val) {
   ensureQuoteState();
-  state.quote.taxRate = parseFloat(val) || 0;
+  const num = parseFloat(val) || 0;
+  if (kind === 'material') state.quote.taxMaterial = num;
+  else if (kind === 'rental') state.quote.taxRental = num;
+  else if (kind === 'freight') state.quote.taxFreight = num;
   schedulePersist();
-  renderActiveMaterials();
+  if (kind === 'material') renderActiveMaterials();
   recalcQuoteSummary();
 }
 
@@ -11435,40 +12831,62 @@ function calcQuoteTotals() {
     additionalTotal += (parseFloat(a.amount) || 0);
   });
 
-  const equipTotal = (parseFloat(state.quote.equipment && state.quote.equipment.rental) || 0)
-    + (parseFloat(state.quote.equipment && state.quote.equipment.inHouse) || 0);
+  const _sumItems = (arr) => (arr || []).reduce((s, it) => s + (parseFloat(it.qty) || 0) * (parseFloat(it.rate) || 0), 0);
+  const rentalTotal = _sumItems(state.quote.equipment && state.quote.equipment.rentalItems);
+  const inHouseTotal = _sumItems(state.quote.equipment && state.quote.equipment.inHouseItems);
+  const equipTotal = rentalTotal + inHouseTotal;
 
-  const taxRate = state.quote.taxRate || 0;
-  const tax = matTotal * (taxRate / 100);
+  const freightAmount = parseFloat((state.quote.additional['5-100'] || {}).amount) || 0;
+
+  const taxMatRate = parseFloat(state.quote.taxMaterial) || 0;
+  const taxRentRate = parseFloat(state.quote.taxRental) || 0;
+  const taxFreightRate = parseFloat(state.quote.taxFreight) || 0;
+  const taxMaterial = matTotal * (taxMatRate / 100);
+  const taxRental = rentalTotal * (taxRentRate / 100);
+  const taxFreight = freightAmount * (taxFreightRate / 100);
+  const tax = taxMaterial + taxRental + taxFreight;
   const grandTotal = matTotal + laborTotal + travelTotal + additionalTotal + equipTotal + tax;
   const markupPct = state.quote.markupPct || 0;
   const bidAmount = grandTotal * (1 + markupPct / 100);
   const grossProfit = bidAmount > 0 ? ((bidAmount - grandTotal) / bidAmount) * 100 : 0;
 
-  return { matTotal, laborTotal, travelTotal, additionalTotal, equipTotal, tax, grandTotal, bidAmount, grossProfit };
+  return { matTotal, laborTotal, travelTotal, additionalTotal, equipTotal, rentalTotal, inHouseTotal, taxMaterial, taxRental, taxFreight, tax, grandTotal, bidAmount, grossProfit };
 }
 
 function recalcQuoteSummary() {
   const t = calcQuoteTotals();
-  const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
-  set('sumMaterials', fmtMoney(t.matTotal));
-  set('sumLabor', fmtMoney(t.laborTotal));
-  set('sumTravel', fmtMoney(t.travelTotal));
-  set('sumEquipment', fmtMoney(t.equipTotal));
-  set('sumAdditional', fmtMoney(t.additionalTotal));
-  set('sumTax', fmtMoney(t.tax));
-  set('sumGrandTotal', fmtMoney(t.grandTotal));
-  set('quoteBidAmount', fmtMoney(t.bidAmount));
+  const setAll = (id, val) => {
+    document.querySelectorAll('[data-sum="' + id + '"]').forEach(el => { el.textContent = val; });
+    const el = document.getElementById(id);
+    if (el) el.textContent = val;
+  };
+  setAll('sumMaterials', fmtMoney(t.matTotal));
+  setAll('sumLabor', fmtMoney(t.laborTotal));
+  setAll('sumTravel', fmtMoney(t.travelTotal));
+  setAll('sumEquipment', fmtMoney(t.equipTotal));
+  setAll('sumAdditional', fmtMoney(t.additionalTotal));
+  setAll('sumTaxMaterial', fmtMoney(t.taxMaterial));
+  setAll('sumTaxRental', fmtMoney(t.taxRental));
+  setAll('sumTaxFreight', fmtMoney(t.taxFreight));
+  setAll('sumTax', fmtMoney(t.tax));
+  setAll('sumGrandTotal', fmtMoney(t.grandTotal));
+  setAll('quoteBidAmount', fmtMoney(t.bidAmount));
+  document.querySelectorAll('[data-sum="quoteGrossProfit"]').forEach(el => { el.textContent = t.grossProfit.toFixed(1) + '%'; });
   const gpEl = document.getElementById('quoteGrossProfit');
   if (gpEl) gpEl.textContent = t.grossProfit.toFixed(1) + '%';
-  document.getElementById('quoteTaxAmount').textContent = 'Tax on Materials: ' + fmtMoney(t.tax);
+  const taxLabel = document.getElementById('quoteTaxAmount');
+  if (taxLabel) taxLabel.textContent = 'Total Tax: ' + fmtMoney(t.tax);
 }
 
 function renderQuoteTool() {
   ensureQuoteState();
   // Populate inputs from state
-  const taxEl = document.getElementById('quoteTaxRate');
-  if (taxEl) taxEl.value = state.quote.taxRate;
+  const taxMatEl = document.getElementById('quoteTaxMaterial');
+  if (taxMatEl) taxMatEl.value = state.quote.taxMaterial;
+  const taxRentEl = document.getElementById('quoteTaxRental');
+  if (taxRentEl) taxRentEl.value = state.quote.taxRental;
+  const taxFrtEl = document.getElementById('quoteTaxFreight');
+  if (taxFrtEl) taxFrtEl.value = state.quote.taxFreight;
   const markupEl = document.getElementById('quoteMarkupPct');
   if (markupEl) markupEl.value = state.quote.markupPct;
   renderCatalogueView();
