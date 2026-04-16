@@ -312,6 +312,11 @@
   .top-bar select, .top-bar input { padding: 6px 8px; background: #0f3460; border: 1px solid #333; border-radius: 4px; color: #fff; font-size: 12px; font-family: inherit; }
   .top-bar select:focus, .top-bar input:focus { border-color: #e2a308; outline: none; }
   .top-bar .btn { padding: 8px 16px; font-size: 12px; }
+  .topbar-stats { display: flex; align-items: center; flex-wrap: wrap; }
+  .topbar-stat { display: flex; flex-direction: column; align-items: center; padding: 2px 10px; border-right: 1px solid #2a2a4a; line-height: 1.2; }
+  .topbar-stat:last-child { border-right: none; }
+  .topbar-stat .stat-val { font-size: 13px; font-weight: 700; color: #e2a308; }
+  .topbar-stat .stat-label { font-size: 9px; color: #888; text-transform: uppercase; letter-spacing: 0.4px; }
 
   .builder-subbar {
     display: flex; align-items: center; gap: 16px; background: #16213e; padding: 10px 20px;
@@ -420,13 +425,27 @@
 
   /* ============ DOCUMENTS PANEL ============ */
   /* Global app sidebar — fixed to the right edge across all tabs */
-  .docs-panel { position: fixed; top: 98px; right: 0; bottom: 0; width: 440px; overflow-y: auto; background: #2d2d2d; padding: 16px; border-left: 3px solid #e2a308; box-shadow: -4px 0 14px rgba(0,0,0,0.35); transition: width 0.2s ease, padding 0.2s ease; z-index: 900; }
-  .docs-panel.collapsed { width: 52px; padding: 12px 6px; box-shadow: -2px 0 6px rgba(0,0,0,0.25); }
+  .docs-panel { position: fixed; top: 98px; right: 0; bottom: 0; width: 50vw; min-width: 440px; max-width: 66vw; overflow-y: auto; background: #2d2d2d; padding: 16px; padding-left: 22px; border-left: 3px solid #e2a308; box-shadow: -4px 0 14px rgba(0,0,0,0.35); z-index: 900; }
+  .docs-panel.collapsed { width: 52px !important; min-width: 52px !important; padding: 12px 6px; box-shadow: -2px 0 6px rgba(0,0,0,0.25); }
   .docs-panel.collapsed .docs-scroll > *:not(.docs-toggle-wrap) { display: none; }
   .docs-panel.collapsed .docs-toggle-wrap { justify-content: center; }
   .docs-panel.collapsed .docs-toggle-label { display: none; }
+  .docs-panel.collapsed .docs-resize-handle { display: none; }
+  /* Drag handle on the left edge */
+  .docs-resize-handle { position: absolute; left: 0; top: 0; bottom: 0; width: 6px; cursor: col-resize; background: transparent; z-index: 10; }
+  .docs-resize-handle:hover, .docs-resize-handle.active { background: rgba(226,163,8,0.35); }
   /* Reserve ≥ 52px on right so the collapsed rail never overlaps content; expanded rail overlays content intentionally */
   .tab-panel { margin-right: 52px; }
+  /* Preview area at top of sidebar */
+  .docs-preview-area { display: none; grid-column: 1 / -1; margin-bottom: 12px; border: 1px solid #2a2a4a; border-radius: 6px; overflow: hidden; background: #1a1a2e; }
+  .docs-preview-area.active { display: block; }
+  .docs-preview-area .preview-header { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: #0f1d3a; border-bottom: 1px solid #2a2a4a; }
+  .docs-preview-area .preview-header span { font-size: 12px; color: #e2a308; font-weight: 600; }
+  .docs-preview-area .preview-header button { background: transparent; border: 1px solid #444; color: #ccc; border-radius: 3px; padding: 3px 8px; font-size: 10px; cursor: pointer; }
+  .docs-preview-area .preview-body { padding: 0; }
+  .docs-preview-area .preview-body iframe { width: 100%; height: 500px; border: none; background: #fff; }
+  .docs-preview-area .preview-body img { width: 100%; display: block; }
+  .docs-preview-area .preview-body .no-preview { padding: 20px; text-align: center; color: #666; font-size: 12px; }
   .docs-toggle-wrap { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; margin-bottom: 12px; }
   .docs-toggle-btn { background:#0f3460; border:1px solid #e2a308; color:#e2a308; padding:6px 10px; border-radius:4px; cursor:pointer; font-size:13px; display:inline-flex; align-items:center; gap:6px; }
   .docs-toggle-btn:hover { background:#163b6b; }
@@ -468,9 +487,7 @@
   .docs-scroll { max-width: 1100px; margin: 0 auto; }
   .docs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: start; }
   /* When a file preview is open inside a doc-category, let the card span both columns and double its body height */
-  .doc-category.preview-expanded { grid-column: 1 / -1; }
-  .doc-category.preview-expanded .doc-preview-wrap { max-height: 1000px; }
-  .doc-category.preview-expanded .doc-preview-wrap iframe { height: 1000px; }
+  /* Preview is now handled by the top-level .docs-preview-area, not inline within categories */
 
   .team-docs-wrap { flex: 1; overflow: auto; padding: 40px; }
   .team-docs-title { color: #e2a308; font-size: 26px; margin: 0 0 6px; }
@@ -533,6 +550,8 @@
   .ft-header .btn-back:hover { background: rgba(226,163,8,0.15); }
   .ft-header .btn-export { background: #e2a308; color: #1a1a2e; }
   .ft-header .btn-export:hover { background: #f0b520; }
+  .ft-header .od-save-btn { background: #0f3460; color: #e2a308; border-color: #e2a308; }
+  .ft-header .od-save-btn:hover { background: #163b6b; }
   @media print {
     @page { size: letter portrait; margin: 0; }
     html, body { background: #fff !important; }
@@ -586,8 +605,9 @@
   .doc-file-info { flex: 1; min-width: 0; }
   .doc-file-name { font-size: 13px; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .doc-file-meta { font-size: 10px; color: #888; margin-top: 2px; }
-  .doc-file-actions { display: flex; gap: 4px; flex-shrink: 0; }
-  .doc-file-actions .btn { padding: 4px 8px; font-size: 10px; }
+  .doc-file-actions { display: flex; gap: 3px; flex-shrink: 0; }
+  .doc-file-actions .btn { padding: 3px 6px; font-size: 12px; line-height: 1; min-width: 24px; text-align: center; }
+  .doc-file-actions .btn-danger { font-size: 10px; padding: 2px 5px; }
   .doc-preview-wrap {
     margin-top: 8px; background: #0a0a1a; border: 1px solid #2a2a4a; border-radius: 6px;
     overflow: hidden; max-height: 500px; overflow-y: auto;
@@ -815,6 +835,7 @@
   .page-footer .confidential { font-weight: 700; font-size: 8pt; color: #000; margin-top: 2px; }
   .existing-conditions { margin-bottom: 4px; font-size: 10pt; }
   .existing-conditions strong { font-weight: 700; }
+  .procedure-existing { margin: 4px 0 6px; font-size: 10pt; line-height: 1.35; white-space: pre-wrap; }
   .scope-row { display: flex; align-items: center; padding: 0; margin: 0; line-height: 1.1; }
   .scope-desc { flex: 1; }
   .scope-dash { padding: 0 8px; color: #999; }
@@ -985,7 +1006,7 @@
 <!-- ==================== AUTH OVERLAY ==================== -->
 <div class="auth-overlay" id="authOverlay">
   <div class="auth-card" id="authCard">
-    <h1>HTI Proposal Builder</h1>
+    <h1>HTI Workbench</h1>
     <p class="auth-sub" id="authSub">Sign in to continue</p>
 
     <div id="authForm">
@@ -1049,9 +1070,10 @@
 
 <div class="top-bar">
   <button class="btn btn-secondary" onclick="showProjectList()" style="margin-right:8px;" title="Back to project list">My Projects</button>
-  <h1 id="topBarTitle">HTI Proposal Builder</h1>
+  <h1 id="topBarTitle">HTI Workbench</h1>
 
-  <div class="bar-section" style="margin-left: auto;">
+  <div class="bar-section topbar-stats" id="topBarStats" style="margin-left:auto; gap:14px; font-size:11px; color:#ccc;"></div>
+  <div class="bar-section" style="gap:6px;">
     <button class="btn btn-secondary" onclick="openProfilePanel()">Profile</button>
     <button class="btn btn-secondary" id="adminBtn" style="display:none; position:relative;" onclick="openAdminPanel()">Admin<span id="adminBadge" class="admin-badge" style="display:none;"></span></button>
     <button class="btn btn-secondary" onclick="handleSignOut()" title="Sign out">⎋</button>
@@ -1078,6 +1100,16 @@
     <div class="form-row">
       <label>Sign-off Closing</label>
       <textarea id="profileSignoffClosing" rows="2" placeholder="e.g. Best regards,"></textarea>
+    </div>
+    <div class="form-row">
+      <label>Signature (draw or upload — used on proposals)</label>
+      <div style="position:relative; display:inline-block;">
+        <canvas id="signatureCanvas" width="600" height="200" style="border:1px solid #333; border-radius:4px; background:#fff; cursor:crosshair; display:block; max-width:100%;"></canvas>
+        <div style="display:flex; gap:6px; margin-top:6px;">
+          <button class="btn btn-secondary" style="padding:4px 10px; font-size:11px;" onclick="clearSignatureCanvas()">Clear</button>
+          <label class="btn btn-secondary" style="padding:4px 10px; font-size:11px; cursor:pointer;">Upload Image<input type="file" accept="image/*" style="display:none;" onchange="uploadSignatureImage(this)"></label>
+        </div>
+      </div>
     </div>
     <div class="profile-msg" id="profileMsg"></div>
     <div class="profile-actions">
@@ -1191,6 +1223,7 @@
 
 <!-- ==================== GLOBAL APP SIDEBAR (docs / calc / engineering) ==================== -->
 <div class="docs-panel collapsed" id="appSidebar">
+  <div class="docs-resize-handle" id="docsResizeHandle"></div>
   <div class="docs-scroll">
     <div class="docs-toggle-wrap">
       <button class="docs-toggle-btn" onclick="toggleDocsPanel()" title="Toggle Documents">
@@ -1205,6 +1238,13 @@
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
         <span class="docs-toggle-label">Engineering Request</span>
       </button>
+    </div>
+    <div class="docs-preview-area" id="docsPreviewArea">
+      <div class="preview-header">
+        <span id="docsPreviewTitle">Preview</span>
+        <button onclick="closeDocsPreview()">Close Preview</button>
+      </div>
+      <div class="preview-body" id="docsPreviewBody"></div>
     </div>
     <div class="docs-grid" id="docsGrid"></div>
   </div>
@@ -1282,15 +1322,12 @@
         <div class="team-doc-icon">&#128205;</div>
         <div class="team-doc-label">Field (Site Survey)</div>
       </button>
-      <button class="team-doc-box" onclick="this.classList.toggle('active')">
+      <button class="team-doc-box" onclick="openCostCodes()">
         <div class="team-doc-icon">&#128200;</div>
         <div class="team-doc-label">Cost Codes</div>
       </button>
-      <button class="team-doc-box" onclick="this.classList.toggle('active')">
-        <div class="team-doc-icon">&#128230;</div>
-        <div class="team-doc-label">Packlist</div>
-      </button>
-      <button class="team-doc-box" onclick="this.classList.toggle('active')">
+      <!-- Packlist removed from Team Docs grid; now an optional attachment on the Field Tab -->
+      <button class="team-doc-box" onclick="openWorkOrder()">
         <div class="team-doc-icon">&#128221;</div>
         <div class="team-doc-label">Work Order</div>
       </button>
@@ -1301,7 +1338,10 @@
     <div class="ft-header">
       <button class="btn btn-back" onclick="closeFieldTabSurvey()">&larr; Back to Team Docs</button>
       <h2>Field Tab / Site Survey</h2>
-      <button class="btn btn-export" onclick="printFieldTab()">Export / Print</button>
+      <div style="display:flex; gap:6px;">
+        <button class="btn btn-export" onclick="printFieldTab()">Export / Print</button>
+        <button class="btn btn-export od-save-btn" onclick="exportPreviewToOneDrive('ftPreview','sitesurveys',(state.projectName||'Project')+' - Field Tab')" title="Save to OneDrive Site Surveys folder">Save to OneDrive</button>
+      </div>
     </div>
     <div class="ft-split">
       <div class="ft-form-col" id="ftForm"></div>
@@ -1313,11 +1353,46 @@
     <div class="ft-header">
       <button class="btn btn-back" onclick="closePurchaseOrder()">&larr; Back to Team Docs</button>
       <h2>Purchase Order</h2>
-      <button class="btn btn-export" onclick="printPurchaseOrder()">Export / Print</button>
+      <div style="display:flex; gap:6px;">
+        <button class="btn btn-export" onclick="printPurchaseOrder()">Export / Print</button>
+        <button class="btn btn-export od-save-btn" onclick="exportPreviewToOneDrive('poPreview','additional',(state.projectName||'Project')+' - Purchase Order')" title="Save to OneDrive Additional Documents folder">Save to OneDrive</button>
+      </div>
     </div>
     <div class="ft-split">
       <div class="ft-form-col" id="poForm"></div>
       <div class="ft-preview-col" id="poPreview"></div>
+    </div>
+  </div>
+
+  <div class="field-tab-view" id="costCodesView">
+    <div class="ft-header">
+      <button class="btn btn-back" onclick="closeCostCodes()">&larr; Back to Team Docs</button>
+      <h2>Cost Codes</h2>
+      <div style="display:flex; gap:6px;">
+        <button class="btn btn-export" onclick="window.print()">Export / Print</button>
+        <button class="btn btn-export od-save-btn" onclick="exportPreviewToOneDrive('ccPreview','additional',(state.projectName||'Project')+' - Cost Codes')" title="Save to OneDrive Additional Documents folder">Save to OneDrive</button>
+      </div>
+    </div>
+    <div class="ft-split">
+      <div class="ft-form-col" id="ccForm"></div>
+      <div class="ft-preview-col" id="ccPreview"></div>
+    </div>
+  </div>
+
+  <!-- Packlist view removed; content is now generated inline at the end of the Field Tab when the "Include Packing List" checkbox is checked -->
+
+  <div class="field-tab-view" id="workOrderView">
+    <div class="ft-header">
+      <button class="btn btn-back" onclick="closeWorkOrder()">&larr; Back to Team Docs</button>
+      <h2>Work Order</h2>
+      <div style="display:flex; gap:6px;">
+        <button class="btn btn-export" onclick="window.print()">Export / Print</button>
+        <button class="btn btn-export od-save-btn" onclick="exportPreviewToOneDrive('woPreview','workorders',(state.projectName||'Project')+' - Work Order')" title="Save to OneDrive Work Orders folder">Save to OneDrive</button>
+      </div>
+    </div>
+    <div class="ft-split">
+      <div class="ft-form-col" id="woForm"></div>
+      <div class="ft-preview-col" id="woPreview"></div>
     </div>
   </div>
 </div>
@@ -1345,6 +1420,11 @@
 
       <div class="quote-section" id="quoteActiveMaterialsSection" style="margin-top:18px;">
         <h3>Selected Materials</h3>
+        <div class="freight-inline" style="display:flex; gap:8px; align-items:flex-end; margin-bottom:8px; padding:6px 8px; background:#15152a; border:1px solid #2a2a4a; border-radius:4px;">
+          <div style="flex:0 0 auto; font-size:11px; color:#e2a308; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; padding-bottom:4px;">Freight (5-100)</div>
+          <div style="flex:0 0 120px;"><label style="font-size:10px; color:#aaa; text-transform:uppercase;">Amount ($)</label><input type="number" class="freight-amount-input" value="" style="width:100%; padding:4px 6px; background:#0f3460; border:1px solid #333; border-radius:3px; color:#fff; font-size:12px;" oninput="onFreightChange('amount',this.value)"></div>
+          <div style="flex:1;"><label style="font-size:10px; color:#aaa; text-transform:uppercase;">Notes</label><input type="text" class="freight-notes-input" value="" placeholder="Carrier, lead time…" style="width:100%; padding:4px 6px; background:#0f3460; border:1px solid #333; border-radius:3px; color:#fff; font-size:12px;" oninput="onFreightChange('notes',this.value)"></div>
+        </div>
         <div id="quoteActiveMaterialsList"></div>
         <div id="quoteMaterialsBreakdown" class="materials-breakdown"></div>
       </div>
@@ -1355,6 +1435,18 @@
 <!-- Labor tab -->
 <div class="tab-panel" id="tabLabor" style="flex-direction:column;">
     <div class="quote-panel">
+      <div style="max-width:100%; margin:0 auto 12px;">
+        <div class="quote-section" id="laborSelectedMaterialsSection">
+          <h3>Selected Materials</h3>
+          <div class="freight-inline" style="display:flex; gap:8px; align-items:flex-end; margin-bottom:8px; padding:6px 8px; background:#15152a; border:1px solid #2a2a4a; border-radius:4px;">
+            <div style="flex:0 0 auto; font-size:11px; color:#e2a308; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; padding-bottom:4px;">Freight (5-100)</div>
+            <div style="flex:0 0 120px;"><label style="font-size:10px; color:#aaa; text-transform:uppercase;">Amount ($)</label><input type="number" class="freight-amount-input" value="" style="width:100%; padding:4px 6px; background:#0f3460; border:1px solid #333; border-radius:3px; color:#fff; font-size:12px;" oninput="onFreightChange('amount',this.value)"></div>
+            <div style="flex:1;"><label style="font-size:10px; color:#aaa; text-transform:uppercase;">Notes</label><input type="text" class="freight-notes-input" value="" placeholder="Carrier, lead time…" style="width:100%; padding:4px 6px; background:#0f3460; border:1px solid #333; border-radius:3px; color:#fff; font-size:12px;" oninput="onFreightChange('notes',this.value)"></div>
+          </div>
+          <div id="laborActiveMaterialsList"></div>
+          <div id="laborMaterialsBreakdown" class="materials-breakdown"></div>
+        </div>
+      </div>
       <div class="quote-scroll" style="display:flex; gap:18px; align-items:flex-start;">
         <div style="flex:1; min-width:0; display:flex; flex-direction:column; gap:18px;">
           <div class="quote-section" id="quoteLaborSection">
@@ -1427,7 +1519,7 @@
 <!-- Cost Summary tab -->
 <div class="tab-panel" id="tabSummary" style="flex-direction:column;">
     <div class="quote-panel">
-      <div class="quote-scroll">
+      <div class="quote-scroll" style="max-width:700px; margin:0 auto;">
         <div class="quote-section" id="quoteTaxSection">
           <h3>Tax Rates</h3>
           <div style="display:flex; align-items:flex-end; gap:18px; flex-wrap:wrap;">
@@ -1437,11 +1529,11 @@
             </div>
             <div>
               <div style="font-size:11px; color:#aaa; text-transform:uppercase; letter-spacing:0.5px;">Equipment Rental Tax %</div>
-              <input type="number" id="quoteTaxRental" value="0" step="0.01" min="0" max="100" style="width:110px; padding:7px 9px; background:#0f3460; border:1px solid #333; border-radius:4px; color:#fff; font-size:13px; margin-top:3px;" oninput="onQuoteTaxChange('rental', this.value)">
+              <input type="number" id="quoteTaxRental" value="10" step="0.01" min="0" max="100" style="width:110px; padding:7px 9px; background:#0f3460; border:1px solid #333; border-radius:4px; color:#fff; font-size:13px; margin-top:3px;" oninput="onQuoteTaxChange('rental', this.value)">
             </div>
             <div>
               <div style="font-size:11px; color:#aaa; text-transform:uppercase; letter-spacing:0.5px;">Freight Tax %</div>
-              <input type="number" id="quoteTaxFreight" value="0" step="0.01" min="0" max="100" style="width:110px; padding:7px 9px; background:#0f3460; border:1px solid #333; border-radius:4px; color:#fff; font-size:13px; margin-top:3px;" oninput="onQuoteTaxChange('freight', this.value)">
+              <input type="number" id="quoteTaxFreight" value="10" step="0.01" min="0" max="100" style="width:110px; padding:7px 9px; background:#0f3460; border:1px solid #333; border-radius:4px; color:#fff; font-size:13px; margin-top:3px;" oninput="onQuoteTaxChange('freight', this.value)">
             </div>
             <span style="font-size:13px; color:#ccc;" id="quoteTaxAmount">Total Tax: $0.00</span>
           </div>
@@ -1470,7 +1562,7 @@
             </div>
             <div style="flex:1;">
               <div style="font-size:12px; color:#aaa; margin-bottom:4px;">Bid Amount</div>
-              <div style="font-size:22px; font-weight:700; color:#e2a308;" id="quoteBidAmount">$0.00</div>
+              <input type="number" id="quoteBidAmount" value="0" step="0.01" min="0" style="width:100%; padding:6px 8px; background:#0f3460; border:1px solid #333; border-radius:4px; color:#e2a308; font-size:22px; font-weight:700; font-family:inherit; box-sizing:border-box;" oninput="onQuoteBidAmountChange(this.value)">
             </div>
             <div>
               <div style="font-size:12px; color:#aaa; margin-bottom:4px;">Gross Profit %</div>
@@ -3312,7 +3404,7 @@ async function _openProjectAsync(projectId) {
 
   // Update the top bar title
   const titleEl = document.getElementById('topBarTitle');
-  if (titleEl) titleEl.textContent = state.projectName || 'HTI Proposal Builder';
+  if (titleEl) titleEl.textContent = state.projectName ? 'HTI Workbench - ' + state.projectName : 'HTI Workbench';
 
   // Auto-backfill: if OneDrive is linked and this project has no folder yet, provision one
   if (ONEDRIVE.isLinked() && !state.oneDrive && !_oneDriveProvisioning.has(projectId)) {
@@ -3514,6 +3606,19 @@ function openSectionImport(sectionId) {
     const meta = [p.companyName, p.projectCity, p.projectState, p.systemDisplayName].filter(Boolean).join(' • ');
     _sectionImportCandidates.push({ label: PREV_PROJECT_LABELS[pid], meta, source: 'prev', id: pid });
   });
+  // For products & procedures, also offer flooring systems as a source
+  if (sectionId === 'products' || sectionId === 'procedures') {
+    Object.keys(SYSTEM_SEARCH || {}).forEach(sysId => {
+      const meta = SYSTEM_SEARCH[sysId];
+      if (!meta) return;
+      _sectionImportCandidates.push({
+        label: meta.label + ' (Flooring System)',
+        meta: (meta.tags || []).join(', '),
+        source: 'system',
+        id: sysId
+      });
+    });
+  }
   let modal = document.getElementById('sectionImportModal');
   if (!modal) {
     modal = document.createElement('div');
@@ -3593,6 +3698,14 @@ function applySectionImport(source, id) {
   } else if (source === 'prev') {
     const p = PREV_PROJECTS[id];
     if (p) srcData = normalizePrevProject(p);
+  } else if (source === 'system') {
+    const sys = SYSTEMS[id];
+    if (sys) {
+      srcData = {
+        products: (sys.products || []).map(p => ({ text: p })),
+        procedureSections: [{ header: sys.proceduresHeader || '', steps: (sys.procedures || []).map(p => ({ text: p })) }]
+      };
+    }
   }
   if (!srcData) { closeSectionImport(); return; }
   keys.forEach(k => {
@@ -7368,6 +7481,39 @@ function toggleDocsPanel() {
   document.body.classList.toggle('app-sidebar-open', !collapsed);
 }
 
+// Drag-to-resize the docs sidebar
+(function initDocsSidebarResize() {
+  let isDragging = false;
+  const handle = document.getElementById('docsResizeHandle');
+  const panel = document.getElementById('appSidebar');
+  if (!handle || !panel) return;
+
+  handle.addEventListener('mousedown', e => {
+    if (panel.classList.contains('collapsed')) return;
+    e.preventDefault();
+    isDragging = true;
+    handle.classList.add('active');
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+  });
+
+  document.addEventListener('mousemove', e => {
+    if (!isDragging) return;
+    const minW = 440;
+    const maxW = window.innerWidth * 0.66;
+    const newW = Math.max(minW, Math.min(maxW, window.innerWidth - e.clientX));
+    panel.style.width = newW + 'px';
+  });
+
+  document.addEventListener('mouseup', () => {
+    if (!isDragging) return;
+    isDragging = false;
+    handle.classList.remove('active');
+    document.body.style.cursor = '';
+    document.body.style.userSelect = '';
+  });
+})();
+
 // ---- Engineering Request ----
 function toggleEngineeringRequest() {
   ensureProjectInfoState();
@@ -7447,21 +7593,18 @@ function deleteEngineeringRequest(id) {
 }
 
 function closeAllDocPreviews() {
-  document.querySelectorAll('.doc-category.preview-expanded').forEach(card => {
-    card.classList.remove('preview-expanded');
-    card.querySelectorAll('.doc-preview-wrap').forEach(wrap => {
-      wrap.style.display = 'none';
-      wrap.innerHTML = '';
-    });
-    card.querySelectorAll('.doc-file-actions .btn').forEach(btn => {
-      if (btn.textContent === 'Hide') btn.textContent = 'Preview';
-    });
-  });
+  if (typeof closeDocsPreview === 'function') closeDocsPreview();
 }
 
 function switchTab(tabName) {
   // Close any open doc previews when leaving a tab so cards return to normal size
   closeAllDocPreviews();
+  // Reset Team Docs tab to the card grid when navigating away from it
+  if (typeof _closeAllTeamDocViews === 'function') {
+    _closeAllTeamDocViews();
+    const grid = document.getElementById('teamDocsGrid');
+    if (grid) grid.style.display = '';
+  }
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
   const btn = document.querySelector(`.tab-btn[onclick*="'${tabName}'"]`);
@@ -7487,6 +7630,7 @@ function switchTab(tabName) {
       const csEl = document.getElementById('quoteCrewSize');
       if (csEl) csEl.value = state.quote && state.quote.crewSize != null ? state.quote.crewSize : 1;
       renderQuoteEquipment();
+      renderActiveMaterials();
     }
     if (tabName === 'summary') recalcQuoteSummary();
   }
@@ -7635,13 +7779,72 @@ function newDraftFromProjectInfo() {
   if (js.siteContact) {
     data.contactName = js.siteContact.name || '';
   }
-  if (pi.scopes && pi.scopes[0]) {
-    const sc = pi.scopes[0];
-    if (sc.installedSystem) data.systemDisplayName = sc.installedSystem;
-    const scopeDesc = sc.phaseName || sc.installedSystem || 'FLOORING SCOPE';
-    const qty = sc.sqFt || '';
-    data.scopeSections = [{ name: 'Installation of ' + (sc.installedSystem || 'SYSTEM'), scopes: [{ desc: scopeDesc, qty: qty, unit: 'Square Feet' }] }];
+  // Pull ALL scope sections from Project Info. Each pi.scope becomes its own
+  // scope section so multi-phase projects hydrate fully in the draft.
+  const piScopes = (pi.scopes || []).filter(sc => sc && (sc.phaseName || sc.installedSystem || sc.sqFt || sc.lnFt || sc.lnFtJoints));
+  if (piScopes.length) {
+    // systemDisplayName picks the first non-empty installedSystem as a fallback label
+    const firstSystem = piScopes.find(sc => sc.installedSystem);
+    if (firstSystem) data.systemDisplayName = firstSystem.installedSystem;
+
+    data.scopeSections = piScopes.map(sc => {
+      const system = sc.installedSystem || 'SYSTEM';
+      const sectionName = sc.phaseName
+        ? sc.phaseName + (sc.installedSystem ? ' — ' + sc.installedSystem : '')
+        : 'Installation of ' + system;
+      const scopes = [];
+      if (sc.sqFt) scopes.push({ desc: 'Flooring Installation', qty: String(sc.sqFt), unit: 'Square Feet' });
+      if (sc.lnFt) scopes.push({ desc: 'Cove Base', qty: String(sc.lnFt), unit: 'Linear Feet' });
+      if (sc.lnFtJoints) scopes.push({ desc: 'Joint Treatment', qty: String(sc.lnFtJoints), unit: 'Linear Feet' });
+      if (scopes.length === 0) scopes.push({ desc: sc.phaseName || system || 'FLOORING SCOPE', qty: '', unit: 'Square Feet' });
+      return { name: sectionName, scopes };
+    });
   }
+
+  // Pull all materials with a quantity from the Material tab into the Products section.
+  // Format: "Product Name (Color)" — qty and UOM are dropped on purpose; proposal
+  // products are about what's being used, not how much.
+  const productStrings = [];
+  const q = state.quote || {};
+  (q.materials || []).forEach(m => {
+    const qty = parseFloat(m.qty) || 0;
+    if (qty <= 0) return;
+    const name = m.productName || m.product_name || '';
+    if (!name) return;
+    const color = m.color && m.color !== 'N/A' ? ` (${m.color})` : '';
+    productStrings.push(`${name}${color}`);
+  });
+  (q.customMaterials || []).forEach(m => {
+    const qty = parseFloat(m.qty) || 0;
+    if (qty <= 0) return;
+    const name = m.productName || '';
+    if (!name) return;
+    const color = m.color && m.color !== 'N/A' ? ` (${m.color})` : '';
+    productStrings.push(`${name}${color}`);
+  });
+  if (productStrings.length) {
+    data.products = productStrings.map(s => ({ text: s }));
+  }
+
+  // Populate the cost section's Value field from Cost Summary's Bid Amount.
+  // Format matches the existing style in PREV_PROJECTS (comma-separated, no decimals or $).
+  try {
+    if (typeof calcQuoteTotals === 'function') {
+      const totals = calcQuoteTotals();
+      const bid = totals && totals.bidAmount;
+      if (bid && bid > 0) {
+        const formatted = Math.round(bid).toLocaleString('en-US');
+        const firstScope = piScopes[0];
+        const desc = (firstScope && (firstScope.phaseName || firstScope.installedSystem)) || '';
+        data.costSections = [{ description: desc, value: formatted }];
+      }
+    }
+  } catch (e) { console.warn('Failed to pull bid amount into draft:', e); }
+
+  // NOTE: user-created drafts and saved proposals intentionally do NOT feed into
+  // the "Previous Project" search bar — that search reads only from the static
+  // PREV_PROJECTS / PREV_PROJECT_LABELS library. If a future feature wants to
+  // merge user proposals into that dropdown, it needs to be an explicit opt-in.
   createDraftFromData('Draft ' + (state.drafts.length + 1), data);
 }
 
@@ -7990,12 +8193,11 @@ async function renderFileList(category, opts) {
         <div class="doc-file-meta">${size}${modified ? ' • ' + modified : ''}</div>
       </div>
       <div class="doc-file-actions">
-        ${previewable ? `<button class="btn btn-secondary" data-filename="${escName}" onclick="toggleFilePreview('${f.id}', this)">Preview</button>` : ''}
-        <button class="btn btn-secondary" onclick="downloadFile('${f.id}','${escName.replace(/'/g,"\\'")}')">Download</button>
-        <button class="btn btn-danger" onclick="removeFile('${f.id}','${category}')">Delete</button>
+        ${previewable ? `<button class="btn btn-secondary" data-filename="${escName}" onclick="toggleFilePreview('${f.id}', this, '${escName.replace(/'/g,"\\'")}')" title="Preview">&#128269;</button>` : ''}
+        <button class="btn btn-secondary" onclick="downloadFile('${f.id}','${escName.replace(/'/g,"\\'")}') " title="Download">&#11015;</button>
+        <button class="btn btn-danger" onclick="removeFile('${f.id}','${category}')" title="Delete">&times;</button>
       </div>
-    </li>
-    <div class="doc-preview-wrap" id="preview-${f.id}" style="display:none;"></div>`;
+    </li>`;
   }).join('');
 }
 
@@ -8057,40 +8259,52 @@ function _guessMimeFromName(name) {
   return map[ext] || '';
 }
 
-async function toggleFilePreview(fileId, btn) {
-  const wrap = document.getElementById('preview-' + fileId);
-  if (!wrap) return;
-  // Find the parent doc-category card so we can expand/collapse it for preview mode
-  const card = wrap.closest('.doc-category');
-  if (wrap.style.display !== 'none') {
-    wrap.style.display = 'none';
-    wrap.innerHTML = '';
-    btn.textContent = 'Preview';
-    if (card) card.classList.remove('preview-expanded');
+let _activePreviewFileId = null;
+
+async function toggleFilePreview(fileId, btn, filename) {
+  const area = document.getElementById('docsPreviewArea');
+  const body = document.getElementById('docsPreviewBody');
+  const title = document.getElementById('docsPreviewTitle');
+  if (!area || !body) return;
+
+  // If previewing the same file, close it
+  if (_activePreviewFileId === fileId && area.classList.contains('active')) {
+    closeDocsPreview();
     return;
   }
-  // Load from OneDrive
-  btn.textContent = 'Loading…';
+
+  btn.innerHTML = '&#8987;'; // hourglass
   try {
     const blob = await ONEDRIVE.downloadItemAsBlob(fileId);
-    const name = btn.dataset.filename || '';
+    const name = filename || btn.dataset.filename || '';
     const type = blob.type || _guessMimeFromName(name);
     const url = URL.createObjectURL(blob);
     if (type.startsWith('image/')) {
-      wrap.innerHTML = `<img src="${url}" alt="${escH(name)}">`;
+      body.innerHTML = `<img src="${url}" alt="${escH(name)}">`;
     } else if (type === 'application/pdf') {
-      wrap.innerHTML = `<iframe src="${url}#toolbar=1"></iframe>`;
+      body.innerHTML = `<iframe src="${url}#toolbar=1"></iframe>`;
     } else {
-      wrap.innerHTML = '<div class="no-preview">Preview not available for this file type</div>';
+      body.innerHTML = '<div class="no-preview">Preview not available for this file type</div>';
     }
-    wrap.style.display = '';
-    btn.textContent = 'Hide';
-    if (card) card.classList.add('preview-expanded');
+    if (title) title.textContent = name || 'Preview';
+    area.classList.add('active');
+    _activePreviewFileId = fileId;
+    // Scroll sidebar to top so preview is visible
+    const sidebar = document.getElementById('appSidebar');
+    if (sidebar) sidebar.scrollTop = 0;
   } catch (e) {
     console.error('[OneDrive] Preview failed:', e);
     alert('Preview failed: ' + (e.message || e));
-    btn.textContent = 'Preview';
   }
+  btn.innerHTML = '&#128269;'; // restore magnifying glass
+}
+
+function closeDocsPreview() {
+  const area = document.getElementById('docsPreviewArea');
+  const body = document.getElementById('docsPreviewBody');
+  if (area) area.classList.remove('active');
+  if (body) body.innerHTML = '';
+  _activePreviewFileId = null;
 }
 
 async function downloadFile(fileId, filename) {
@@ -8480,7 +8694,7 @@ function syncField(field, val) {
   // Keep the top bar title in sync with the project name
   if (field === 'projectName') {
     const t = document.getElementById('topBarTitle');
-    if (t) t.textContent = val || 'HTI Proposal Builder';
+    if (t) t.textContent = val ? 'HTI Workbench - ' + val : 'HTI Workbench';
   }
 }
 function syncScope(sec, i, key, val) { if (state.scopeSections[sec] && state.scopeSections[sec].scopes[i]) state.scopeSections[sec].scopes[i][key] = val; schedulePreviewUpdate(); }
@@ -8605,7 +8819,7 @@ function render() {
 
   // PROCEDURES
   h += `<div class="form-card">${cardHeader("procedures","Procedures")}
-    <div class="form-row"><label>Existing Site Conditions</label><textarea style="min-height:60px;" oninput="syncField('existingConditions',this.value)" placeholder="Describe existing site conditions (optional)">${escH(s.existingConditions)}</textarea></div>`;
+    <div class="form-row"><label>Existing Conditions, Notes, Clarifications, ETC.</label><textarea style="min-height:60px;" oninput="syncField('existingConditions',this.value)" placeholder="Describe existing site conditions, notes, clarifications, etc. (optional)">${escH(s.existingConditions)}</textarea></div>`;
   s.procedureSections.forEach((sec, pi) => {
     h += `<div class="procedure-section-block">
       <div class="form-row-inline" style="margin-bottom:6px;">
@@ -8769,9 +8983,65 @@ function ensureProjectInfoState() {
 }
 
 // ---- Field Tab / Site Survey ----
+// ---- Export preview to OneDrive as a standalone HTML document ----
+async function exportPreviewToOneDrive(previewElId, odCategory, filenameBase) {
+  if (!ONEDRIVE.isLinked()) {
+    alert('Link OneDrive in the My Projects screen first.');
+    return;
+  }
+  if (!_currentProjectId) {
+    alert('Open a project first.');
+    return;
+  }
+  const el = document.getElementById(previewElId);
+  if (!el) { alert('Preview not rendered.'); return; }
+
+  // Grab the preview HTML (the rendered .ft-page elements) and wrap in a standalone doc
+  const pages = el.querySelectorAll('.ft-page');
+  let pagesHtml = '';
+  pages.forEach(p => { pagesHtml += p.outerHTML; });
+
+  const styles = `
+    body { font-family: Arial, Helvetica, sans-serif; background: #fff; color: #222; margin: 0; padding: 0; }
+    .ft-page { width: 8.5in; min-height: 11in; padding: 0.4in 0.5in; box-sizing: border-box; margin: 0 auto; page-break-after: always; }
+    .ft-page:last-child { page-break-after: auto; }
+    .ft-page-section { page-break-inside: avoid; break-inside: avoid; }
+    h4 { background: #d5d5d5; color: #333; padding: 3px 8px; margin: 10px 0 4px; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; border: 1px solid #aaa; }
+    h4:first-child { margin-top: 0; }
+    .ft-kv { display: grid; grid-template-columns: 160px 1fr; font-size: 11px; gap: 3px 10px; margin-bottom: 4px; }
+    .ft-kv strong { color: #555; font-weight: 600; }
+    table { width: 100%; border-collapse: collapse; font-size: 10px; margin: 3px 0 6px; table-layout: fixed; }
+    th, td { border: 1px solid #bbb; padding: 3px 5px; text-align: left; vertical-align: top; word-wrap: break-word; }
+    th { background: #e6e6e6; color: #333; font-size: 9px; text-transform: uppercase; font-weight: 600; }
+    .ft-general-box { font-size: 11px; white-space: pre-wrap; word-wrap: break-word; border: 1px solid #bbb; padding: 6px 8px; background: #f8f8f8; }
+    .po-total-row td { background: #f0f0f0; border-top: 2px solid #888; }
+    .procedure-existing { margin: 4px 0 6px; font-size: 10pt; line-height: 1.35; white-space: pre-wrap; }
+    @media print { @page { size: letter portrait; margin: 0; } .ft-page { box-shadow: none; } }
+  `;
+
+  const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${esc(filenameBase)}</title><style>${styles}</style></head><body>${pagesHtml}</body></html>`;
+  const blob = new Blob([html], { type: 'text/html' });
+  const filename = (filenameBase || 'Document') + '.html';
+  const file = new File([blob], filename, { type: 'text/html' });
+
+  try {
+    const folderId = await _odGetCategoryFolderId(odCategory);
+    if (!folderId) {
+      alert('OneDrive folder not found for this project. Reopen the project to auto-provision folders.');
+      return;
+    }
+    await ONEDRIVE.uploadFileToFolder(folderId, file);
+    alert('Saved to OneDrive: ' + filename);
+  } catch (e) {
+    console.error('[OneDrive] Export save failed:', e);
+    alert('Failed to save to OneDrive: ' + (e.message || e));
+  }
+}
+
 function openFieldTabSurvey() {
   ensureProjectInfoState();
   ensureQuoteState();
+  if (typeof _closeAllTeamDocViews === 'function') _closeAllTeamDocViews();
   const grid = document.getElementById('teamDocsGrid');
   const view = document.getElementById('fieldTabView');
   if (grid) grid.style.display = 'none';
@@ -8907,6 +9177,12 @@ function renderFieldTabForm() {
     <h4>In-House Equipment</h4>
     ${inHouseBlock}
     <button class="ft-add-btn" onclick="ftAddEquipRow('inHouseItems')">+ Add In-House Item</button>
+
+    <h4>Attachments</h4>
+    <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:#ddd; cursor:pointer;">
+      <input type="checkbox" ${(ft.includePacklist ? 'checked' : '')} onchange="ftTogglePacklist(this.checked)">
+      Include Packing List at end of export
+    </label>
   `;
 }
 
@@ -8934,6 +9210,146 @@ function ftTravelLabel(code) {
     }
   } catch (e) {}
   return TRAVEL_CODE_NAMES[code] || code;
+}
+
+// Split a text block into pagination-friendly atoms. Each atom is either a run of
+// whitespace (preserved to keep formatting) or a run of up to MAX_ATOM non-whitespace
+// characters. This guarantees very fine split granularity even for unbroken text
+// (pasted base64 blobs, UUIDs, etc.) so the paginator can always find a break point.
+function _ftSplitAtoms(text, maxAtom) {
+  maxAtom = maxAtom || 10;
+  const atoms = [];
+  let i = 0;
+  const n = text.length;
+  while (i < n) {
+    if (/\s/.test(text[i])) {
+      let j = i;
+      while (j < n && /\s/.test(text[j])) j++;
+      atoms.push(text.slice(i, j));
+      i = j;
+    } else {
+      let j = i;
+      while (j < n && !/\s/.test(text[j])) j++;
+      const word = text.slice(i, j);
+      for (let k = 0; k < word.length; k += maxAtom) {
+        atoms.push(word.slice(k, k + maxAtom));
+      }
+      i = j;
+    }
+  }
+  return atoms;
+}
+
+// Paginate an array of sections into visual ft-pages matching print behavior.
+// Each section can be either:
+//   - a string of HTML (atomic — never split across pages)
+//   - an object { splittable: true, text, renderChunk(chunk, isFirst) } — the text
+//     is split at word boundaries so the header stays on the originating page and
+//     overflow continues on subsequent pages.
+//
+// Pagination strategy: we render the current page's cumulative content (plus the
+// proposed new section) into a hidden probe and use its actual offsetHeight. This
+// accounts for margin-collapse between stacked sections, which per-section
+// measurements do not.
+function ftPaginate(sections, opts) {
+  opts = opts || {};
+  const pageClass = opts.pageClass || 'ft-page';
+  const labelPrefix = opts.label || 'Letter Portrait';
+  // Letter 11in at 96dpi = 1056px; subtract 0.4in top + 0.4in bottom padding = 1056 - 76.8 = 979.2
+  // Leave a small safety buffer (6px) for sub-pixel rounding and margin collapse jitter.
+  const USABLE = (11 * 96) - (0.8 * 96) - 6;
+
+  // Hidden probe — same width & padding as a real .ft-page so measurements match
+  const probe = document.createElement('div');
+  probe.className = pageClass;
+  probe.style.cssText = 'position:absolute; visibility:hidden; left:-9999px; top:-9999px; width:8.5in; min-height:0; padding:0.4in 0.5in; box-sizing:border-box;';
+  document.body.appendChild(probe);
+  const measure = (html) => { probe.innerHTML = html; return probe.offsetHeight; };
+
+  // Pages as arrays of committed HTML strings
+  const pages = [[]];
+  const cur = () => pages[pages.length - 1];
+  const curHtml = () => cur().join('');
+  const newPage = () => {
+    if (cur().length > 0) pages.push([]);
+  };
+
+  sections.forEach(section => {
+    // Force-page-break marker — starts a fresh page unconditionally
+    if (section && section.forcePageBreak) {
+      newPage();
+      return;
+    }
+    if (typeof section === 'string') {
+      const cumulative = measure(curHtml() + section);
+      if (cumulative > USABLE && cur().length > 0) {
+        newPage();
+      }
+      cur().push(section);
+      return;
+    }
+    if (section && section.splittable) {
+      let text = section.text || '';
+      let isFirst = true;
+      // Empty section — still render once so the header shows
+      if (!text) {
+        const html = section.renderChunk('', true);
+        const cumulative = measure(curHtml() + html);
+        if (cumulative > USABLE && cur().length > 0) newPage();
+        cur().push(html);
+        return;
+      }
+      while (text.length > 0) {
+        // Try fitting the whole remainder on the current page
+        const fullHtml = section.renderChunk(text, isFirst);
+        const fullCum = measure(curHtml() + fullHtml);
+        if (fullCum <= USABLE) {
+          cur().push(fullHtml);
+          text = '';
+          break;
+        }
+        // Doesn't all fit. Binary-search by atom count for the largest chunk
+        // that fits on the current page, given what's already committed.
+        // _ftSplitAtoms produces very fine-grained atoms so even a single huge
+        // pasted word can be broken mid-string if necessary.
+        const tokens = _ftSplitAtoms(text, 10);
+        let lo = 0, hi = tokens.length;
+        while (lo < hi) {
+          const mid = Math.ceil((lo + hi) / 2);
+          const candidate = tokens.slice(0, mid).join('');
+          const h = measure(curHtml() + section.renderChunk(candidate, isFirst));
+          if (h <= USABLE) lo = mid;
+          else hi = mid - 1;
+        }
+        if (lo === 0) {
+          // Not even one token fits — if the current page has other content, try
+          // a fresh page. Otherwise (single huge token on an empty page), commit
+          // it anyway to avoid infinite loop.
+          if (cur().length > 0) {
+            newPage();
+            continue;
+          }
+          cur().push(fullHtml);
+          text = '';
+          break;
+        }
+        const fitting = tokens.slice(0, lo).join('');
+        const remainder = tokens.slice(lo).join('').replace(/^\s+/, '');
+        cur().push(section.renderChunk(fitting, isFirst));
+        isFirst = false;
+        text = remainder;
+        if (text.length > 0) newPage();
+      }
+    }
+  });
+
+  document.body.removeChild(probe);
+
+  return pages.map((secs, i) => {
+    const labelText = `Page ${i + 1} of ${pages.length} — ${labelPrefix}`;
+    return `<div class="ft-page-label">${labelText}</div>
+            <div class="${pageClass}">${secs.join('')}</div>`;
+  }).join('');
 }
 
 function updateFieldTabPreview() {
@@ -9014,98 +9430,142 @@ function updateFieldTabPreview() {
 
   const mark = v => v ? '☑' : '☐';
 
-  host.innerHTML = `
-    <div class="ft-page-label">Page 1 — Letter Portrait</div>
-    <div class="ft-page">
-    <div class="ft-page-section">
-    <h4>General Info</h4>
-    <div class="ft-kv">
-      <strong>Project Name:</strong><span>${esc(s.projectName||'')}</span>
-      <strong>Job #:</strong><span>${esc(s.jobNumber||'')}</span>
-      <strong>Project Manager:</strong><span>${esc(pi.projectManager||'')}</span>
-      <strong>Super / Foreman:</strong><span>${esc(pi.superForeman||'')}</span>
-    </div>
-    </div>
+  const sections = [
+    `<div class="ft-page-section">
+      <h4>General Info</h4>
+      <div class="ft-kv">
+        <strong>Project Name:</strong><span>${esc(s.projectName||'')}</span>
+        <strong>Job #:</strong><span>${esc(s.jobNumber||'')}</span>
+        <strong>Project Manager:</strong><span>${esc(pi.projectManager||'')}</span>
+        <strong>Super / Foreman:</strong><span>${esc(pi.superForeman||'')}</span>
+      </div>
+    </div>`,
+    `<div class="ft-page-section">
+      <h4>Scope / Schedule</h4>
+      <table class="ft-scope-table">
+        <colgroup>
+          <col class="c-phase"><col class="c-system">
+          <col class="c-num"><col class="c-num"><col class="c-num">
+          <col class="c-date"><col class="c-time"><col class="c-date"><col class="c-date">
+        </colgroup>
+        <thead><tr>
+          <th>Phase/Scope/COP</th><th>Installed System</th><th>SQ FT</th><th>LF Cove</th><th>LF Joints</th>
+          <th>Mat. Delivery</th><th>Start Time</th><th>Install Start</th><th>Install End</th>
+        </tr></thead>
+        <tbody>${scopeRows || '<tr><td colspan="9" style="text-align:center; color:#888;">No scopes</td></tr>'}</tbody>
+      </table>
+    </div>`,
+    `<div class="ft-page-section">
+      <h4>Jobsite Information</h4>
+      <div class="ft-kv">
+        <strong>Install Address:</strong><span>${esc(fmtAddr(js.installAddress))}</span>
+        <strong>Ship To:</strong><span>${shipSame ? 'Same' : esc(fmtAddr(js.shipAddress))}</span>
+        <strong>Site Contact:</strong><span>${esc((js.siteContact||{}).name||'')}${(js.siteContact&&js.siteContact.phone)?' — '+esc(js.siteContact.phone):''}</span>
+        <strong>Labor Type:</strong><span>${esc((js.laborType||'').charAt(0).toUpperCase()+(js.laborType||'').slice(1))}${js.prevailingWage?' (Prevailing Wage)':''}</span>
+      </div>
+    </div>`,
+    `<div class="ft-page-section">
+      <h4>Pre-Job Checklist</h4>
+      <div class="ft-kv" style="grid-template-columns:repeat(3,1fr);">
+        <span>${mark(pj.contractExecuted)} Contract Executed</span>
+        <span>${mark(pj.installationScheduled)} Installation Scheduled</span>
+        <span>${mark(pj.materialsOrdered)} Materials Ordered</span>
+        <span>${mark(pj.rentalBooked)} Rental Booked</span>
+        <span>${mark(pj.heat)} Heat</span>
+        <span>${mark(pj.light)} Lights</span>
+        <span>${mark(pj.power)} Power</span>
+        <span>${mark(pj.trash)} Trash</span>
+        <span>${mark(pj.complete)} Complete</span>
+        <span>${mark(pj.finalWalk)} Final Walk</span>
+        <span>${mark(pj.returnMat)} Return Mat</span>
+        <span>${mark(pj.newBuilding)} New Building</span>
+      </div>
+    </div>`,
+    {
+      splittable: true,
+      text: ft.generalInfo || '',
+      renderChunk: (chunk, isFirst) => `<div class="ft-page-section">
+        <h4>${isFirst ? 'General Project &amp; Flooring System Info' : 'General Project &amp; Flooring System Info (cont.)'}</h4>
+        <div class="ft-general-box">${esc(chunk)}</div>
+      </div>`
+    },
+    `<div class="ft-page-section">
+      <h4>Labor Budget</h4>
+      <table class="ft-labor-table">
+        <colgroup><col class="c-activity"><col class="c-narrow"><col class="c-narrow"><col class="c-narrow"><col class="c-narrow"></colgroup>
+        <thead><tr><th>Activity</th><th>Crew</th><th>Days</th><th>Rate/Day</th><th>Total Man-Days</th></tr></thead>
+        <tbody>${laborRows || '<tr><td colspan="5" style="text-align:center; color:#888;">No labor entries</td></tr>'}</tbody>
+      </table>
+    </div>`,
+    `<div class="ft-page-section">
+      <h4>Travel / Equipment Budget</h4>
+      <table class="ft-travel-table">
+        <colgroup><col class="c-expense"><col class="c-narrow"><col class="c-narrow"><col class="c-narrow"><col class="c-narrow"></colgroup>
+        <thead><tr><th>Expense Type</th><th>Crew</th><th>Qty/Days</th><th>Rate</th><th>Total</th></tr></thead>
+        <tbody>${allTravelEquip || '<tr><td colspan="5" style="text-align:center; color:#888;">No travel / equipment entries</td></tr>'}</tbody>
+      </table>
+      <div class="ft-kv" style="margin-top:6px;">
+        <strong>Consumables-Supplies-Box Store:</strong><span>$${consum.toFixed(2)}</span>
+        <strong>PO Consumables:</strong><span>$${poConsum.toFixed(2)}</span>
+      </div>
+    </div>`
+  ];
 
-    <div class="ft-page-section">
-    <h4>Scope / Schedule</h4>
-    <table class="ft-scope-table">
-      <colgroup>
-        <col class="c-phase"><col class="c-system">
-        <col class="c-num"><col class="c-num"><col class="c-num">
-        <col class="c-date"><col class="c-time"><col class="c-date"><col class="c-date">
-      </colgroup>
-      <thead><tr>
-        <th>Phase/Scope/COP</th><th>Installed System</th><th>SQ FT</th><th>LF Cove</th><th>LF Joints</th>
-        <th>Mat. Delivery</th><th>Start Time</th><th>Install Start</th><th>Install End</th>
-      </tr></thead>
-      <tbody>${scopeRows || '<tr><td colspan="9" style="text-align:center; color:#888;">No scopes</td></tr>'}</tbody>
-    </table>
-    </div>
+  // Optional packlist attachment — always starts on a fresh page
+  if (ft.includePacklist) {
+    sections.push({ forcePageBreak: true });
+    const packLines = (typeof _buildPackLines === 'function') ? _buildPackLines() : [];
+    const packRows = packLines.map(ln => `<tr>
+      <td style="border:1px solid #bbb; padding:2px 4px; font-size:9px;">${esc(ln.description)}</td>
+      <td style="border:1px solid #bbb; padding:2px 4px; font-size:9px;">${esc(ln.color)}</td>
+      <td style="border:1px solid #bbb; padding:2px 4px; font-size:9px; text-align:right;">${ln.qty}</td>
+      <td style="border:1px solid #bbb; padding:2px 4px; font-size:9px;">${esc(ln.unitSize)}</td>
+      <td style="border:1px solid #bbb; padding:2px 4px;"></td>
+      <td style="border:1px solid #bbb; padding:2px 4px;"></td>
+      <td style="border:1px solid #bbb; padding:2px 4px;"></td>
+      <td style="border:1px solid #bbb; padding:2px 4px;"></td>
+      <td style="border:1px solid #bbb; padding:2px 4px;"></td>
+    </tr>`).join('');
+    sections.push(`<div class="ft-page-section" style="text-align:center;">
+      <h2 style="margin:0 0 12px; font-size:16px; color:#000; page-break-before:always;">Packing List</h2>
+    </div>`);
+    sections.push(`<div class="ft-page-section">
+      <div class="ft-kv" style="grid-template-columns:110px 1fr 110px 1fr;">
+        <strong>Start Date:</strong><span>${esc(((pi.packlist||{}).startDate)||'')}</span>
+        <strong>Inventoried by:</strong><span>${esc(((pi.packlist||{}).inventoriedBy)||'')}</span>
+        <strong>Project Manager:</strong><span>${esc(pi.projectManager||'')}</span>
+        <strong>Date Inventoried:</strong><span>${esc(((pi.packlist||{}).dateInventoried)||'')}</span>
+      </div>
+    </div>`);
+    sections.push(`<div class="ft-page-section">
+      <table style="width:100%; border-collapse:collapse; font-size:9px; table-layout:fixed;">
+        <colgroup>
+          <col style="width:25%"><col style="width:12%"><col style="width:7%"><col style="width:9%">
+          <col style="width:9%"><col style="width:9%"><col style="width:9%"><col style="width:10%"><col style="width:10%">
+        </colgroup>
+        <thead><tr>
+          <th style="border:1px solid #bbb; padding:3px 4px; background:#e6e6e6;">Description</th>
+          <th style="border:1px solid #bbb; padding:3px 4px; background:#e6e6e6;">Color</th>
+          <th style="border:1px solid #bbb; padding:3px 4px; background:#e6e6e6;">Total Qty</th>
+          <th style="border:1px solid #bbb; padding:3px 4px; background:#e6e6e6;">Unit Size</th>
+          <th style="border:1px solid #bbb; padding:3px 4px; background:#e6e6e6;">Weight</th>
+          <th style="border:1px solid #bbb; padding:3px 4px; background:#e6e6e6;">Rec'd Qty</th>
+          <th style="border:1px solid #bbb; padding:3px 4px; background:#e6e6e6;">Return Qty</th>
+          <th style="border:1px solid #bbb; padding:3px 4px; background:#e6e6e6;">Pallet #</th>
+          <th style="border:1px solid #bbb; padding:3px 4px; background:#e6e6e6;">Shop Qty</th>
+        </tr></thead>
+        <tbody>${packRows || '<tr><td colspan="9" style="text-align:center; color:#888; padding:10px;">No materials</td></tr>'}</tbody>
+      </table>
+    </div>`);
+  }
 
-    <div class="ft-page-section">
-    <h4>Jobsite Information</h4>
-    <div class="ft-kv">
-      <strong>Install Address:</strong><span>${esc(fmtAddr(js.installAddress))}</span>
-      <strong>Ship To:</strong><span>${shipSame ? 'Same' : esc(fmtAddr(js.shipAddress))}</span>
-      <strong>Site Contact:</strong><span>${esc((js.siteContact||{}).name||'')}${(js.siteContact&&js.siteContact.phone)?' — '+esc(js.siteContact.phone):''}</span>
-      <strong>Labor Type:</strong><span>${esc(js.laborType||'')}${js.prevailingWage?' (prevailing wage)':''}</span>
-    </div>
-    </div>
-
-    <div class="ft-page-section">
-    <h4>Pre-Job Checklist</h4>
-    <div class="ft-kv" style="grid-template-columns:repeat(3,1fr);">
-      <span>${mark(pj.contractExecuted)} Contract Executed</span>
-      <span>${mark(pj.installationScheduled)} Installation Scheduled</span>
-      <span>${mark(pj.materialsOrdered)} Materials Ordered</span>
-      <span>${mark(pj.rentalBooked)} Rental Booked</span>
-      <span>${mark(pj.heat)} Heat</span>
-      <span>${mark(pj.light)} Lights</span>
-      <span>${mark(pj.power)} Power</span>
-      <span>${mark(pj.trash)} Trash</span>
-      <span>${mark(pj.complete)} Complete</span>
-      <span>${mark(pj.finalWalk)} Final Walk</span>
-      <span>${mark(pj.returnMat)} Return Mat</span>
-      <span>${mark(pj.newBuilding)} New Building</span>
-    </div>
-    </div>
-
-    <div class="ft-page-section">
-    <h4>General Project &amp; Flooring System Info</h4>
-    <div class="ft-general-box">${esc(ft.generalInfo||'')}</div>
-    </div>
-
-    <div class="ft-page-section">
-    <h4>Labor Budget</h4>
-    <table class="ft-labor-table">
-      <colgroup><col class="c-activity"><col class="c-narrow"><col class="c-narrow"><col class="c-narrow"><col class="c-narrow"></colgroup>
-      <thead><tr><th>Activity</th><th>Crew</th><th>Days</th><th>Rate/Day</th><th>Total Man-Days</th></tr></thead>
-      <tbody>${laborRows || '<tr><td colspan="5" style="text-align:center; color:#888;">No labor entries</td></tr>'}</tbody>
-    </table>
-    </div>
-
-    <div class="ft-page-section">
-    <h4>Travel / Equipment Budget</h4>
-    <table class="ft-travel-table">
-      <colgroup><col class="c-expense"><col class="c-narrow"><col class="c-narrow"><col class="c-narrow"><col class="c-narrow"></colgroup>
-      <thead><tr><th>Expense Type</th><th>Crew</th><th>Qty/Days</th><th>Rate</th><th>Total</th></tr></thead>
-      <tbody>${allTravelEquip || '<tr><td colspan="5" style="text-align:center; color:#888;">No travel / equipment entries</td></tr>'}</tbody>
-    </table>
-
-    <div class="ft-kv" style="margin-top:6px;">
-      <strong>Consumables-Supplies-Box Store:</strong><span>$${consum.toFixed(2)}</span>
-      <strong>PO Consumables:</strong><span>$${poConsum.toFixed(2)}</span>
-    </div>
-    </div>
-    </div>
-  `;
+  host.innerHTML = ftPaginate(sections);
 }
 
 function ftEditTop(field, val) {
   state[field] = val;
   schedulePersist();
-  if (field === 'projectName') { const t = document.getElementById('topBarTitle'); if (t) t.textContent = val || 'HTI Proposal Builder'; }
+  if (field === 'projectName') { const t = document.getElementById('topBarTitle'); if (t) t.textContent = val ? 'HTI Workbench - ' + val : 'HTI Workbench'; }
   updateFieldTabPreview();
 }
 function ftEditPi(field, val) { ensureProjectInfoState(); state.pi[field] = val; schedulePersist(); updateFieldTabPreview(); }
@@ -9124,6 +9584,13 @@ function ftEditJs(path, val) {
 }
 function ftEditFieldTab(field, val) { ensureProjectInfoState(); state.pi.fieldTab[field] = val; schedulePersist(); updateFieldTabPreview(); }
 function ftAutoSize(el) { if (!el) return; el.style.height = 'auto'; el.style.height = (el.scrollHeight + 2) + 'px'; }
+function ftTogglePacklist(checked) {
+  ensureProjectInfoState();
+  if (!state.pi.fieldTab) state.pi.fieldTab = {};
+  state.pi.fieldTab.includePacklist = checked;
+  schedulePersist();
+  updateFieldTabPreview();
+}
 function ftEditLabor(i, key, val) {
   ensureQuoteState();
   if (state.quote.labor[i]) {
@@ -9192,6 +9659,7 @@ function ftRemoveEquip(listKey, i) {
 function openPurchaseOrder() {
   ensureProjectInfoState();
   ensureQuoteState();
+  if (typeof _closeAllTeamDocViews === 'function') _closeAllTeamDocViews();
   const grid = document.getElementById('teamDocsGrid');
   const view = document.getElementById('purchaseOrderView');
   if (grid) grid.style.display = 'none';
@@ -9356,37 +9824,33 @@ function updatePOPreview() {
     </tr>`;
   }).join('');
 
-  host.innerHTML = `
-    <div class="ft-page-label">Page 1 — Letter Portrait</div>
-    <div class="ft-page po-page">
-      <div class="ft-page-section">
-        <h4>General Info</h4>
-        <div class="ft-kv">
-          <strong>Project Name:</strong><span>${esc(s.projectName||'')}</span>
-          <strong>Job #:</strong><span>${esc(s.jobNumber||'')}</span>
-          <strong>Project Manager:</strong><span>${esc(pi.projectManager||'')}</span>
-          <strong>Super / Foreman:</strong><span>${esc(pi.superForeman||'')}</span>
-        </div>
+  const sections = [
+    `<div class="ft-page-section">
+      <h4>General Info</h4>
+      <div class="ft-kv">
+        <strong>Project Name:</strong><span>${esc(s.projectName||'')}</span>
+        <strong>Job #:</strong><span>${esc(s.jobNumber||'')}</span>
+        <strong>Project Manager:</strong><span>${esc(pi.projectManager||'')}</span>
+        <strong>Super / Foreman:</strong><span>${esc(pi.superForeman||'')}</span>
       </div>
-
-      <div class="ft-page-section">
-        <h4>Jobsite Information</h4>
-        <div class="ft-kv">
-          <strong>Install Address:</strong><span>${esc(fmtAddr(js.installAddress))}</span>
-          <strong>Ship To:</strong><span>${shipSame ? 'Same' : esc(fmtAddr(js.shipAddress))}</span>
-          <strong>Site Contact:</strong><span>${esc((js.siteContact||{}).name||'')}${(js.siteContact&&js.siteContact.phone)?' — '+esc(js.siteContact.phone):''}</span>
-          <strong>Labor Type:</strong><span>${esc(js.laborType||'')}${js.prevailingWage?' (prevailing wage)':''}</span>
-        </div>
+    </div>`,
+    `<div class="ft-page-section">
+      <h4>Jobsite Information</h4>
+      <div class="ft-kv">
+        <strong>Install Address:</strong><span>${esc(fmtAddr(js.installAddress))}</span>
+        <strong>Ship To:</strong><span>${shipSame ? 'Same' : esc(fmtAddr(js.shipAddress))}</span>
+        <strong>Site Contact:</strong><span>${esc((js.siteContact||{}).name||'')}${(js.siteContact&&js.siteContact.phone)?' — '+esc(js.siteContact.phone):''}</span>
+        <strong>Labor Type:</strong><span>${esc((js.laborType||'').charAt(0).toUpperCase()+(js.laborType||'').slice(1))}${js.prevailingWage?' (Prevailing Wage)':''}</span>
       </div>
-
-      <div class="ft-page-section">
-        <h4>Freight Budget</h4>
-        <div class="ft-kv">
-          <strong>Freight Amount:</strong><span>$${((s.quote.additional && s.quote.additional['5-100'] && parseFloat(s.quote.additional['5-100'].amount)) || 0).toFixed(2)}</span>
-          <strong>Notes:</strong><span>${esc((s.quote.additional && s.quote.additional['5-100'] && s.quote.additional['5-100'].notes) || '')}</span>
-        </div>
+    </div>`,
+    `<div class="ft-page-section">
+      <h4>Freight Budget</h4>
+      <div class="ft-kv">
+        <strong>Freight Amount:</strong><span>$${freightAmount.toFixed(2)}</span>
+        <strong>Notes:</strong><span>${esc((s.quote.additional && s.quote.additional['5-100'] && s.quote.additional['5-100'].notes) || '')}</span>
       </div>
-
+    </div>`,
+    `<div class="ft-page-section">
       <h4>Purchase Order Items</h4>
       <table class="po-table">
         <colgroup>
@@ -9419,8 +9883,9 @@ function updatePOPreview() {
           </tr>
         </tfoot>
       </table>
-    </div>
-  `;
+    </div>`
+  ];
+  host.innerHTML = ftPaginate(sections);
 }
 
 // Edit a line — writes back to the underlying material record
@@ -9471,7 +9936,610 @@ function poRemoveLine(lineIdx) {
   if (typeof recalcQuoteSummary === 'function') try { recalcQuoteSummary(); } catch (e) {}
 }
 
-function piSyncTop(field, val) { state[field] = val; schedulePersist(); if (field === 'projectName') { const t = document.getElementById('topBarTitle'); if (t) t.textContent = val || 'HTI Proposal Builder'; } }
+// ============================================================
+// Cost Codes
+// ============================================================
+// Canonical order / labels / notes matching the Blank Cost Codes template.
+// Some slots read directly from state; others are free-entry overrides kept in
+// state.pi.costCodesOverrides.
+const COST_CODES_TEMPLATE = [
+  { code: '1-100', label: 'Polymer Materials',                    note: '',                                                                valueFrom: 'materials' },
+  { code: '2-100', label: 'In-house Labor',                       note: '$450 (Max) includes wages and burden',                            valueFrom: 'labor' },
+  { code: '2-200', label: 'Payroll Taxes',                        note: '2-200 through 2-700 will be included in man day rate above',      valueFrom: 'rolled-into-labor' },
+  { code: '2-300', label: "Workers' Compensation",                note: '',                                                                valueFrom: 'rolled-into-labor' },
+  { code: '2-400', label: 'Union Costs',                          note: '',                                                                valueFrom: 'rolled-into-labor' },
+  { code: '2-500', label: 'Fringe Benefits',                      note: '',                                                                valueFrom: 'rolled-into-labor' },
+  { code: '2-600', label: 'Liability Insurance',                  note: '',                                                                valueFrom: 'rolled-into-labor' },
+  { code: '2-700', label: 'Shop Allocation',                      note: '',                                                                valueFrom: 'rolled-into-labor' },
+  { code: '4-100', label: 'Subcontractor Work Order',             note: 'Subcontractor work order value',                                  valueFrom: 'additional' },
+  { code: '5-000', label: 'Other Job Costs',                      note: 'Miscellaneous Items',                                             valueFrom: 'override' },
+  { code: '5-100', label: 'Freight',                              note: '',                                                                valueFrom: 'additional' },
+  { code: '5-150', label: 'Expedited Freight',                    note: 'Use if freight is expedited',                                     valueFrom: 'override' },
+  { code: '5-300', label: 'Equipment Rental',                     note: 'Use if there is large equipment rented from rental yard',          valueFrom: 'equipmentRental' },
+  { code: '5-400', label: 'Tools and Small Equipment',            note: 'Use if unique hand tools are needed for a particular job',         valueFrom: 'additional' },
+  { code: '5-500', label: 'Consumables Supplies-Box Store',       note: 'Home Depot, Lowes, hardware store purchases',                      valueFrom: 'additional' },
+  { code: '5-550', label: 'PO Consumables Supplies',              note: 'Charged against shop allocation',                                 valueFrom: 'additional' },
+  { code: '5-600', label: 'In-House Equipment Cost',              note: '$650 per day. Large equipment.',                                  valueFrom: 'equipmentInHouse' },
+  { code: '5-900', label: 'Misc. Expenses - External',            note: 'Also known as Warranty Markup',                                   valueFrom: 'additional' },
+  { code: '5-901', label: 'Misc. Expenses - Internal',            note: 'Also known as Contingency',                                       valueFrom: 'additional' },
+  { code: '7-100', label: 'Airline Expenses',                     note: '$420 per one way flight per man',                                 valueFrom: 'travel' },
+  { code: '7-200', label: 'Hotel Expenses',                       note: '$85 per day. Odd sizes still use $170 per room per night',         valueFrom: 'travel' },
+  { code: '7-300', label: 'Auto Rental',                          note: 'Use $65/day',                                                     valueFrom: 'travel' },
+  { code: '7-400', label: 'Mileage/Fuel Expense',                 note: 'Use $0.50/ mile',                                                 valueFrom: 'travel' },
+  { code: '7-600', label: 'Parking / Tolls',                      note: '',                                                                valueFrom: 'travel' },
+  { code: '7-750', label: 'Per Diem for Travel Days Only',        note: '$38.25 / day on travel days',                                     valueFrom: 'travel', codeAlias: '7-820' },
+  { code: '7-760', label: 'Per Diem for Work Days Only',          note: '$51.00/ day on work days',                                        valueFrom: 'travel', codeAlias: '7-810' },
+  { code: '7-770', label: 'Travel Pay',                           note: '$325/ day except DOT Driver which is $450/ day',                   valueFrom: 'travel' },
+  { code: '7-910', label: 'PM Airline Expenses',                  note: '',                                                                valueFrom: 'travel' },
+  { code: '7-920', label: 'PM Hotel Expenses',                    note: '',                                                                valueFrom: 'travel' },
+  { code: '7-930', label: 'PM Auto Rental',                       note: '',                                                                valueFrom: 'travel' },
+  { code: '7-940', label: 'PM Mileage/Fuel Expense',              note: '',                                                                valueFrom: 'travel' },
+  { code: '7-950', label: 'PM Meals',                             note: '',                                                                valueFrom: 'travel' },
+  { code: '7-960', label: 'PM Parking / Tolls',                   note: '',                                                                valueFrom: 'travel' },
+  { code: '8-100', label: 'Sales Tax',                            note: 'Use only on jobs within states that charge sales tax',             valueFrom: 'tax' },
+  { code: '',      label: 'California Litigation Fund',           note: 'Used for California jobs without subcontractors',                 valueFrom: 'override' }
+];
+
+function _costCodeValue(row) {
+  ensureQuoteState();
+  const q = state.quote;
+  const sumItems = (arr) => (arr || []).reduce((s, it) => s + (parseFloat(it.qty)||0) * (parseFloat(it.rate)||0), 0);
+  switch (row.valueFrom) {
+    case 'materials': {
+      let t = 0;
+      (q.materials || []).forEach(m => {
+        const rate = m.quotedRate != null ? m.quotedRate : (m.unitRate || 0);
+        t += (m.qty || 0) * rate;
+      });
+      (q.customMaterials || []).forEach(m => {
+        const rate = m.quotedRate != null ? m.quotedRate : (m.unitRate || 0);
+        t += (m.qty || 0) * rate;
+      });
+      return t;
+    }
+    case 'labor': return (q.labor || []).reduce((s, r) => s + (r.men||0)*(r.days||0)*(r.rate||0), 0);
+    case 'equipmentRental': return sumItems(q.equipment && q.equipment.rentalItems);
+    case 'equipmentInHouse': return sumItems(q.equipment && q.equipment.inHouseItems);
+    case 'travel': {
+      const code = row.codeAlias || row.code;
+      const t = (q.travel || {})[code] || { qty: 0, rate: 0 };
+      const qty = parseFloat(t.qty)||0, rate = parseFloat(t.rate)||0;
+      const mult = (typeof TRAVEL_CREW_MULT_CODES !== 'undefined' && TRAVEL_CREW_MULT_CODES.has(code)) ? (typeof crewForTravelCode === 'function' ? crewForTravelCode(code) : 1) : 1;
+      return qty * rate * mult;
+    }
+    case 'additional': {
+      const a = (q.additional || {})[row.code] || { amount: 0 };
+      return parseFloat(a.amount) || 0;
+    }
+    case 'tax': {
+      const totals = (typeof calcQuoteTotals === 'function') ? calcQuoteTotals() : { tax: 0 };
+      return totals.tax || 0;
+    }
+    case 'rolled-into-labor': return null; // not shown as a $ value
+    case 'override': {
+      const ov = (state.pi && state.pi.costCodesOverrides) || {};
+      return parseFloat(ov[row.code || row.label]) || 0;
+    }
+  }
+  return 0;
+}
+
+function _closeAllTeamDocViews() {
+  ['fieldTabView','purchaseOrderView','costCodesView','packlistView','workOrderView'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('active');
+  });
+}
+
+function openCostCodes() {
+  ensureProjectInfoState();
+  ensureQuoteState();
+  if (!state.pi.costCodesOverrides) state.pi.costCodesOverrides = {};
+  _closeAllTeamDocViews();
+  const grid = document.getElementById('teamDocsGrid');
+  const view = document.getElementById('costCodesView');
+  if (grid) grid.style.display = 'none';
+  if (view) view.classList.add('active');
+  renderCostCodesForm();
+  updateCostCodesPreview();
+}
+function closeCostCodes() {
+  const grid = document.getElementById('teamDocsGrid');
+  const view = document.getElementById('costCodesView');
+  if (grid) grid.style.display = '';
+  if (view) view.classList.remove('active');
+}
+
+function renderCostCodesForm() {
+  const host = document.getElementById('ccForm');
+  if (!host) return;
+  const s = state;
+  const grandTotal = (typeof calcQuoteTotals === 'function') ? calcQuoteTotals().grandTotal : 0;
+
+  const overrideRows = COST_CODES_TEMPLATE.filter(r => r.valueFrom === 'override').map(r => `
+    <div class="ft-row-inline">
+      <div class="ft-row" style="flex:2;"><label>${esc(r.code || '')} ${esc(r.label)}</label><input type="number" value="${((state.pi.costCodesOverrides||{})[r.code || r.label]) || 0}" oninput="ccEditOverride('${esc(r.code || r.label)}', this.value)"></div>
+      <div class="ft-row" style="flex:3;"><label>Note</label><input value="${esc(r.note || '')}" disabled style="opacity:0.5;"></div>
+    </div>`).join('');
+
+  host.innerHTML = `
+    <h4>Project Info</h4>
+    <div class="ft-row-inline">
+      <div class="ft-row"><label>Project Name</label><input value="${esc(s.projectName||'')}" oninput="ftEditTop('projectName',this.value); updateCostCodesPreview();"></div>
+      <div class="ft-row" style="flex:0 0 120px;"><label>Job #</label><input value="${esc(s.jobNumber||'')}" oninput="ftEditTop('jobNumber',this.value); updateCostCodesPreview();"></div>
+    </div>
+    <div class="ft-row">
+      <label>Contract Value (auto — calculated from Cost Summary)</label>
+      <input value="$${grandTotal.toFixed(2)}" disabled style="opacity:0.8;">
+    </div>
+
+    <h4>Manual-Entry Cost Code Rows</h4>
+    <div style="font-size:11px; color:#888; margin:-2px 0 6px;">Most codes pull automatically from Materials / Labor / Travel / Additional. These ones aren't computed anywhere else, so enter them manually here.</div>
+    ${overrideRows}
+
+    <h4>Notes</h4>
+    <div class="ft-row"><textarea placeholder="Notes for the cost code sheet..." style="min-height:60px;" oninput="ccEditNotes(this.value)">${esc((state.pi.costCodesNotes)||'')}</textarea></div>
+  `;
+}
+
+function ccEditOverride(key, val) {
+  ensureProjectInfoState();
+  if (!state.pi.costCodesOverrides) state.pi.costCodesOverrides = {};
+  state.pi.costCodesOverrides[key] = parseFloat(val) || 0;
+  schedulePersist();
+  updateCostCodesPreview();
+}
+function ccEditNotes(val) {
+  ensureProjectInfoState();
+  state.pi.costCodesNotes = val;
+  schedulePersist();
+  updateCostCodesPreview();
+}
+
+function updateCostCodesPreview() {
+  const host = document.getElementById('ccPreview');
+  if (!host) return;
+  const s = state;
+  const grandTotal = (typeof calcQuoteTotals === 'function') ? calcQuoteTotals().grandTotal : 0;
+
+  const rows = COST_CODES_TEMPLATE.map(r => {
+    const val = _costCodeValue(r);
+    const valCell = val == null
+      ? '<td style="border:1px solid #bbb; padding:3px 5px;"></td>'
+      : `<td style="border:1px solid #bbb; padding:3px 5px; text-align:right;">$${val.toFixed(2)}</td>`;
+    return `<tr>
+      <td style="border:1px solid #bbb; padding:3px 5px; font-weight:600;">${esc(r.code || '')}</td>
+      <td style="border:1px solid #bbb; padding:3px 5px;">${esc(r.label)}</td>
+      ${valCell}
+      <td style="border:1px solid #bbb; padding:3px 5px; font-size:9px; color:#555;">${esc(r.note || '')}</td>
+    </tr>`;
+  }).join('');
+
+  const sections = [
+    `<div class="ft-page-section" style="text-align:center; margin-bottom:10px;">
+      <h2 style="margin:0 0 12px; font-size:18px; color:#000;">Cost Codes</h2>
+      <table style="width:auto; margin:0 auto; border-collapse:collapse; font-size:11px;">
+        <tr><td style="border:1px solid #bbb; padding:4px 10px; background:#e8e8e8; font-weight:700; text-align:right;">Project Name</td><td style="border:1px solid #bbb; padding:4px 10px; background:#ffe9a8;">${esc(s.projectName||'')}</td></tr>
+        <tr><td style="border:1px solid #bbb; padding:4px 10px; background:#e8e8e8; font-weight:700; text-align:right;">Job Number</td><td style="border:1px solid #bbb; padding:4px 10px; background:#ffe9a8;">${esc(s.jobNumber||'')}</td></tr>
+        <tr><td style="border:1px solid #bbb; padding:4px 10px; background:#e8e8e8; font-weight:700; text-align:right;">Contract Value</td><td style="border:1px solid #bbb; padding:4px 10px; background:#ffe9a8;">$${grandTotal.toFixed(2)}</td></tr>
+      </table>
+    </div>`,
+    `<div class="ft-page-section">
+      <table style="width:100%; border-collapse:collapse; font-size:10px; table-layout:fixed;">
+        <colgroup><col style="width:11%"><col style="width:34%"><col style="width:14%"><col style="width:41%"></colgroup>
+        <thead><tr>
+          <th style="border:1px solid #bbb; padding:4px 6px; background:#e6e6e6; color:#333; font-size:9px; text-transform:uppercase;">Cost Code</th>
+          <th style="border:1px solid #bbb; padding:4px 6px; background:#e6e6e6; color:#333; font-size:9px; text-transform:uppercase;">Description</th>
+          <th style="border:1px solid #bbb; padding:4px 6px; background:#e6e6e6; color:#333; font-size:9px; text-transform:uppercase;">Value</th>
+          <th style="border:1px solid #bbb; padding:4px 6px; background:#e6e6e6; color:#333; font-size:9px; text-transform:uppercase;">Notes</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`
+  ];
+
+  if (state.pi && state.pi.costCodesNotes) {
+    sections.push(`<div class="ft-page-section"><h4>Notes</h4><div class="ft-general-box">${esc(state.pi.costCodesNotes)}</div></div>`);
+  }
+
+  host.innerHTML = ftPaginate(sections);
+}
+
+// ============================================================
+// Packing List
+// ============================================================
+function openPacklist() {
+  ensureProjectInfoState();
+  ensureQuoteState();
+  _closeAllTeamDocViews();
+  const grid = document.getElementById('teamDocsGrid');
+  const view = document.getElementById('packlistView');
+  if (grid) grid.style.display = 'none';
+  if (view) view.classList.add('active');
+  renderPacklistForm();
+  updatePacklistPreview();
+}
+function closePacklist() {
+  const grid = document.getElementById('teamDocsGrid');
+  const view = document.getElementById('packlistView');
+  if (grid) grid.style.display = '';
+  if (view) view.classList.remove('active');
+}
+
+function _buildPackLines() {
+  ensureQuoteState();
+  const out = [];
+  (state.quote.materials || []).forEach((m, i) => {
+    out.push({ kind:'catalog', idx:i, description: m.productName || m.product_name || '', color: m.color || 'N/A', qty: parseFloat(m.qty)||0, unitSize: m.uom || m.unit || '' });
+  });
+  (state.quote.customMaterials || []).forEach((m, i) => {
+    const blank = !m.productName && !m.qty && !m.unitRate && !m.poQtyAdjust;
+    if (blank && !m.poAdded) return;
+    out.push({ kind:'custom', idx:i, description: m.productName || '', color: m.color || 'N/A', qty: parseFloat(m.qty)||0, unitSize: m.uom || '' });
+  });
+  return out.filter(ln => ln.qty > 0 || ln.description);
+}
+
+function renderPacklistForm() {
+  const host = document.getElementById('plForm');
+  if (!host) return;
+  const s = state;
+  const pi = s.pi;
+  const pl = pi.packlist = pi.packlist || { startDate:'', inventoriedBy:'', dateInventoried:'' };
+  const lines = _buildPackLines();
+
+  const lineRows = lines.map((ln, i) => `
+    <div class="ft-row-inline" style="align-items:flex-end;">
+      <div class="ft-row" style="flex:3;"><label>Description</label><input value="${esc(ln.description||'')}" oninput="plEditLine(${i},'description',this.value)"></div>
+      <div class="ft-row" style="flex:1;"><label>Color</label><input value="${esc(ln.color||'')}" oninput="plEditLine(${i},'color',this.value)"></div>
+      <div class="ft-row" style="flex:0 0 60px;"><label>Qty</label><input type="number" value="${ln.qty||0}" oninput="plEditLine(${i},'qty',this.value)"></div>
+      <div class="ft-row" style="flex:0 0 80px;"><label>Unit Size</label><input value="${esc(ln.unitSize||'')}" oninput="plEditLine(${i},'unitSize',this.value)"></div>
+    </div>`).join('');
+
+  host.innerHTML = `
+    <h4>Project Info</h4>
+    <div class="ft-row-inline">
+      <div class="ft-row"><label>Project Manager</label><input value="${esc(pi.projectManager||'')}" oninput="ftEditPi('projectManager',this.value); updatePacklistPreview();"></div>
+      <div class="ft-row"><label>Start Date</label><input type="date" value="${esc(pl.startDate||'')}" oninput="plEditMeta('startDate',this.value)"></div>
+    </div>
+    <div class="ft-row-inline">
+      <div class="ft-row"><label>Inventoried By</label><input value="${esc(pl.inventoriedBy||'')}" oninput="plEditMeta('inventoriedBy',this.value)"></div>
+      <div class="ft-row"><label>Date Inventoried</label><input type="date" value="${esc(pl.dateInventoried||'')}" oninput="plEditMeta('dateInventoried',this.value)"></div>
+    </div>
+
+    <h4>Materials (from Material tab)</h4>
+    <div style="font-size:11px; color:#888; margin:-2px 0 6px;">Edits here write back to the source material. Weight / Pallet # / etc. are filled out by the crew on the printed sheet.</div>
+    ${lineRows || '<div style="color:#888; font-size:11px;">No materials yet — add some on the Material tab.</div>'}
+  `;
+}
+
+function plEditMeta(key, val) {
+  ensureProjectInfoState();
+  if (!state.pi.packlist) state.pi.packlist = {};
+  state.pi.packlist[key] = val;
+  schedulePersist();
+  updatePacklistPreview();
+}
+function plEditLine(lineIdx, key, val) {
+  ensureQuoteState();
+  const lines = _buildPackLines();
+  const ln = lines[lineIdx];
+  if (!ln) return;
+  const src = (ln.kind === 'catalog') ? state.quote.materials[ln.idx] : state.quote.customMaterials[ln.idx];
+  if (!src) return;
+  switch (key) {
+    case 'description': src.productName = val; break;
+    case 'color': src.color = val; break;
+    case 'qty': src.qty = parseFloat(val) || 0; break;
+    case 'unitSize': src.uom = val; break;
+  }
+  schedulePersist();
+  updatePacklistPreview();
+}
+
+function updatePacklistPreview() {
+  const host = document.getElementById('plPreview');
+  if (!host) return;
+  const s = state;
+  const pi = s.pi || {};
+  const pl = pi.packlist || {};
+  const lines = _buildPackLines();
+
+  const rows = lines.map(ln => `<tr>
+    <td style="border:1px solid #bbb; padding:2px 4px; font-size:9px;">${esc(ln.description)}</td>
+    <td style="border:1px solid #bbb; padding:2px 4px; font-size:9px;">${esc(ln.color)}</td>
+    <td style="border:1px solid #bbb; padding:2px 4px; font-size:9px; text-align:right;">${ln.qty}</td>
+    <td style="border:1px solid #bbb; padding:2px 4px; font-size:9px;">${esc(ln.unitSize)}</td>
+    <td style="border:1px solid #bbb; padding:2px 4px;"></td>
+    <td style="border:1px solid #bbb; padding:2px 4px;"></td>
+    <td style="border:1px solid #bbb; padding:2px 4px;"></td>
+    <td style="border:1px solid #bbb; padding:2px 4px;"></td>
+    <td style="border:1px solid #bbb; padding:2px 4px;"></td>
+  </tr>`).join('');
+
+  const sections = [
+    `<div class="ft-page-section" style="text-align:center;">
+      <h2 style="margin:0 0 12px; font-size:18px; color:#000;">Packing List</h2>
+    </div>`,
+    `<div class="ft-page-section">
+      <div class="ft-kv" style="grid-template-columns:110px 1fr 110px 1fr;">
+        <strong>Start Date:</strong><span>${esc(pl.startDate||'')}</span>
+        <strong>Inventoried by:</strong><span>${esc(pl.inventoriedBy||'')}</span>
+        <strong>Project Manager:</strong><span>${esc(pi.projectManager||'')}</span>
+        <strong>Date Inventoried:</strong><span>${esc(pl.dateInventoried||'')}</span>
+      </div>
+    </div>`,
+    `<div class="ft-page-section">
+      <table style="width:100%; border-collapse:collapse; font-size:9px; table-layout:fixed;">
+        <colgroup>
+          <col style="width:25%"><col style="width:12%"><col style="width:7%"><col style="width:9%">
+          <col style="width:9%"><col style="width:9%"><col style="width:9%"><col style="width:10%"><col style="width:10%">
+        </colgroup>
+        <thead><tr>
+          <th style="border:1px solid #bbb; padding:3px 4px; background:#e6e6e6; font-size:9px;">Description</th>
+          <th style="border:1px solid #bbb; padding:3px 4px; background:#e6e6e6; font-size:9px;">Color</th>
+          <th style="border:1px solid #bbb; padding:3px 4px; background:#e6e6e6; font-size:9px;">Total Qty</th>
+          <th style="border:1px solid #bbb; padding:3px 4px; background:#e6e6e6; font-size:9px;">Unit Size</th>
+          <th style="border:1px solid #bbb; padding:3px 4px; background:#e6e6e6; font-size:9px;">Weight</th>
+          <th style="border:1px solid #bbb; padding:3px 4px; background:#e6e6e6; font-size:9px;">Rec'd Qty</th>
+          <th style="border:1px solid #bbb; padding:3px 4px; background:#e6e6e6; font-size:9px;">Return Qty</th>
+          <th style="border:1px solid #bbb; padding:3px 4px; background:#e6e6e6; font-size:9px;">Pallet #</th>
+          <th style="border:1px solid #bbb; padding:3px 4px; background:#e6e6e6; font-size:9px;">Shop Qty</th>
+        </tr></thead>
+        <tbody>${rows || '<tr><td colspan="9" style="text-align:center; color:#888; padding:10px;">No materials</td></tr>'}</tbody>
+      </table>
+    </div>`
+  ];
+
+  host.innerHTML = ftPaginate(sections);
+}
+
+// ============================================================
+// Work Order
+// ============================================================
+function openWorkOrder() {
+  ensureProjectInfoState();
+  ensureQuoteState();
+  _closeAllTeamDocViews();
+  const grid = document.getElementById('teamDocsGrid');
+  const view = document.getElementById('workOrderView');
+  if (grid) grid.style.display = 'none';
+  if (view) view.classList.add('active');
+  renderWorkOrderForm();
+  updateWorkOrderPreview();
+}
+function closeWorkOrder() {
+  const grid = document.getElementById('teamDocsGrid');
+  const view = document.getElementById('workOrderView');
+  if (grid) grid.style.display = '';
+  if (view) view.classList.remove('active');
+}
+
+function _defaultWorkOrder() {
+  return {
+    number: '',
+    date: new Date().toISOString().slice(0,10),
+    customer: '',
+    installVendor: '',
+    jobContactName: '',
+    jobContactPhone: '',
+    pmPhone: '',
+    startDate: '',
+    completionDate: '',
+    lines: [
+      { qty: '', desc: '', total: 0 }
+    ],
+    retention: false,
+    authorizedBy: ''
+  };
+}
+
+function renderWorkOrderForm() {
+  const host = document.getElementById('woForm');
+  if (!host) return;
+  ensureProjectInfoState();
+  if (!state.pi.workOrder) state.pi.workOrder = _defaultWorkOrder();
+  const s = state;
+  const pi = s.pi;
+  const wo = pi.workOrder;
+
+  const lineRows = (wo.lines || []).map((ln, i) => `
+    <div class="ft-row-inline" style="align-items:flex-end;">
+      <div class="ft-row" style="flex:0 0 80px;"><label>Qty</label><input value="${esc(ln.qty||'')}" oninput="woEditLine(${i},'qty',this.value)"></div>
+      <div class="ft-row" style="flex:4;"><label>Description</label><input value="${esc(ln.desc||'')}" oninput="woEditLine(${i},'desc',this.value)"></div>
+      <div class="ft-row" style="flex:0 0 110px;"><label>Total ($)</label><input type="number" value="${ln.total||0}" oninput="woEditLine(${i},'total',this.value)"></div>
+      <button class="ft-row-del" onclick="woRemoveLine(${i})" title="Remove">&times;</button>
+    </div>`).join('');
+
+  host.innerHTML = `
+    <h4>Work Order Header</h4>
+    <div class="ft-row-inline">
+      <div class="ft-row" style="flex:0 0 110px;"><label>WO Number</label><input value="${esc(wo.number||'')}" oninput="woEditMeta('number',this.value)" placeholder="W..."></div>
+      <div class="ft-row" style="flex:0 0 140px;"><label>Date</label><input type="date" value="${esc(wo.date||'')}" oninput="woEditMeta('date',this.value)"></div>
+      <div class="ft-row" style="flex:0 0 120px;"><label>Job #</label><input value="${esc(s.jobNumber||'')}" oninput="ftEditTop('jobNumber',this.value); updateWorkOrderPreview();"></div>
+    </div>
+    <div class="ft-row-inline">
+      <div class="ft-row" style="flex:0 0 140px;"><label>Start Date</label><input type="date" value="${esc(wo.startDate||'')}" oninput="woEditMeta('startDate',this.value)"></div>
+      <div class="ft-row" style="flex:0 0 140px;"><label>Completion Date</label><input type="date" value="${esc(wo.completionDate||'')}" oninput="woEditMeta('completionDate',this.value)"></div>
+    </div>
+
+    <h4>Customer &amp; Vendor</h4>
+    <div class="ft-row"><label>Customer</label><input value="${esc(wo.customer||s.projectName||'')}" oninput="woEditMeta('customer',this.value)"></div>
+    <div class="ft-row"><label>Install Vendor (subcontractor)</label><input value="${esc(wo.installVendor||'')}" oninput="woEditMeta('installVendor',this.value)"></div>
+    <div class="ft-row"><label>Jobsite Address</label><input value="${esc((pi.jobsite&&pi.jobsite.installAddress&&pi.jobsite.installAddress.line1)||'')}" oninput="ftEditJs('installAddress.line1',this.value); updateWorkOrderPreview();"></div>
+
+    <h4>Contacts</h4>
+    <div class="ft-row-inline">
+      <div class="ft-row"><label>PM</label><input value="${esc(pi.projectManager||'')}" oninput="ftEditPi('projectManager',this.value); updateWorkOrderPreview();"></div>
+      <div class="ft-row"><label>PM Phone</label><input value="${esc(wo.pmPhone||'')}" oninput="woEditMeta('pmPhone',this.value)"></div>
+    </div>
+    <div class="ft-row-inline">
+      <div class="ft-row"><label>Job Contact</label><input value="${esc(wo.jobContactName||'')}" oninput="woEditMeta('jobContactName',this.value)"></div>
+      <div class="ft-row"><label>Job Contact Phone</label><input value="${esc(wo.jobContactPhone||'')}" oninput="woEditMeta('jobContactPhone',this.value)"></div>
+    </div>
+
+    <h4>Line Items</h4>
+    ${lineRows}
+    <button class="ft-add-btn" onclick="woAddLine()">+ Add Line</button>
+
+    <h4>Finalization</h4>
+    <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:#ddd; margin-bottom:6px;">
+      <input type="checkbox" ${wo.retention ? 'checked' : ''} onchange="woEditMeta('retention', this.checked)">
+      5% Retention Required
+    </label>
+    <div class="ft-row"><label>Authorized By</label><input value="${esc(wo.authorizedBy||'')}" oninput="woEditMeta('authorizedBy',this.value)"></div>
+  `;
+}
+
+function woEditMeta(key, val) {
+  ensureProjectInfoState();
+  if (!state.pi.workOrder) state.pi.workOrder = _defaultWorkOrder();
+  state.pi.workOrder[key] = val;
+  schedulePersist();
+  updateWorkOrderPreview();
+}
+function woEditLine(i, key, val) {
+  ensureProjectInfoState();
+  const wo = state.pi.workOrder;
+  if (!wo || !wo.lines || !wo.lines[i]) return;
+  wo.lines[i][key] = (key === 'total') ? (parseFloat(val)||0) : val;
+  schedulePersist();
+  updateWorkOrderPreview();
+}
+function woAddLine() {
+  ensureProjectInfoState();
+  if (!state.pi.workOrder) state.pi.workOrder = _defaultWorkOrder();
+  state.pi.workOrder.lines.push({ qty: '', desc: '', total: 0 });
+  schedulePersist();
+  renderWorkOrderForm();
+  updateWorkOrderPreview();
+}
+function woRemoveLine(i) {
+  ensureProjectInfoState();
+  const wo = state.pi.workOrder;
+  if (!wo || !wo.lines || !wo.lines[i]) return;
+  wo.lines.splice(i, 1);
+  schedulePersist();
+  renderWorkOrderForm();
+  updateWorkOrderPreview();
+}
+
+function updateWorkOrderPreview() {
+  const host = document.getElementById('woPreview');
+  if (!host) return;
+  ensureProjectInfoState();
+  if (!state.pi.workOrder) state.pi.workOrder = _defaultWorkOrder();
+  const s = state;
+  const pi = s.pi;
+  const wo = pi.workOrder;
+  const js = pi.jobsite || {};
+  const fmtAddr = (a) => !a ? '' : [a.line1, [a.city, a.state, a.zip].filter(Boolean).join(' ')].filter(Boolean).join(', ');
+  const total = (wo.lines || []).reduce((s, l) => s + (parseFloat(l.total)||0), 0);
+
+  const lineRows = (wo.lines || []).map(ln => `<tr>
+    <td style="border:1px solid #bbb; padding:4px 6px; text-align:center; font-size:10px;">${esc(ln.qty||'')}</td>
+    <td style="border:1px solid #bbb; padding:4px 6px; font-size:10px;">${esc(ln.desc||'')}</td>
+    <td style="border:1px solid #bbb; padding:4px 6px; text-align:right; font-size:10px;">${ln.total ? '$'+parseFloat(ln.total).toFixed(2) : ''}</td>
+  </tr>`).join('');
+  // pad to 12 rows so the table looks like the template
+  const padRows = Math.max(0, 12 - (wo.lines||[]).length);
+  const padHtml = Array(padRows).fill('<tr><td style="border:1px solid #bbb; padding:10px;"></td><td style="border:1px solid #bbb;"></td><td style="border:1px solid #bbb;"></td></tr>').join('');
+
+  const sections = [
+    `<div class="ft-page-section" style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;">
+      <div style="font-size:10px; color:#333; line-height:1.4;">
+        <div style="font-size:22px; font-weight:800; color:#000;">HTI</div>
+        <div style="font-size:11px; font-weight:600;">Polymer, Inc.</div>
+        <div>18702 - 142nd Ave NE Woodinville, WA 98072</div>
+        <div>Ph: 425-487-8911 Fx: 425-487-8915</div>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-size:24px; font-weight:800; color:#000;">WORK ORDER</div>
+        <div style="font-size:12px; font-weight:600; margin-top:6px;">NO. ${esc(wo.number||'W')}</div>
+      </div>
+    </div>`,
+    `<div class="ft-page-section">
+      <table style="width:100%; border-collapse:collapse; font-size:10px;">
+        <tr>
+          <td style="border:1px solid #444; padding:4px 8px; background:#e8e8e8; font-weight:700; width:110px;">START DATE:</td>
+          <td style="border:1px solid #444; padding:4px 8px; background:#fff8c6; width:200px;">${esc(wo.startDate||'')}</td>
+          <td style="border:1px solid #444; padding:4px 8px; background:#e8e8e8; font-weight:700; width:140px;">COMPLETION DATE:</td>
+          <td style="border:1px solid #444; padding:4px 8px; background:#fff8c6;">${esc(wo.completionDate||'')}</td>
+        </tr>
+        <tr>
+          <td style="border:1px solid #444; padding:4px 8px; background:#e8e8e8; font-weight:700;">DATE:</td>
+          <td style="border:1px solid #444; padding:4px 8px; background:#fff8c6;">${esc(wo.date||'')}</td>
+          <td style="border:1px solid #444; padding:4px 8px; background:#e8e8e8; font-weight:700;">JOB #:</td>
+          <td style="border:1px solid #444; padding:4px 8px; background:#fff8c6;">${esc(s.jobNumber||'')}</td>
+        </tr>
+        <tr>
+          <td colspan="2" style="border:1px solid #444; padding:4px 8px; background:#e8e8e8; font-weight:700;">CUSTOMER:</td>
+          <td colspan="2" style="border:1px solid #444; padding:4px 8px; background:#fff8c6;">${esc(wo.customer||s.projectName||'')}</td>
+        </tr>
+        <tr>
+          <td style="border:1px solid #444; padding:4px 8px; background:#e8e8e8; font-weight:700;">INSTALL VENDOR:</td>
+          <td style="border:1px solid #444; padding:4px 8px; background:#fff8c6;">${esc(wo.installVendor||'')}</td>
+          <td style="border:1px solid #444; padding:4px 8px; background:#e8e8e8; font-weight:700;">JOBSITE:</td>
+          <td style="border:1px solid #444; padding:4px 8px; background:#fff8c6;">${esc(fmtAddr(js.installAddress))}</td>
+        </tr>
+        <tr>
+          <td style="border:1px solid #444; padding:4px 8px; background:#e8e8e8; font-weight:700;">PM:</td>
+          <td style="border:1px solid #444; padding:4px 8px; background:#fff8c6;">${esc(pi.projectManager||'')}</td>
+          <td style="border:1px solid #444; padding:4px 8px; background:#e8e8e8; font-weight:700;">JOB CONTACT:</td>
+          <td style="border:1px solid #444; padding:4px 8px; background:#fff8c6;">${esc(wo.jobContactName||'')}</td>
+        </tr>
+        <tr>
+          <td style="border:1px solid #444; padding:4px 8px; background:#e8e8e8; font-weight:700;">PHONE:</td>
+          <td style="border:1px solid #444; padding:4px 8px; background:#fff8c6;">${esc(wo.pmPhone||'')}</td>
+          <td style="border:1px solid #444; padding:4px 8px; background:#e8e8e8; font-weight:700;">PHONE:</td>
+          <td style="border:1px solid #444; padding:4px 8px; background:#fff8c6;">${esc(wo.jobContactPhone||'')}</td>
+        </tr>
+      </table>
+    </div>`,
+    `<div class="ft-page-section">
+      <table style="width:100%; border-collapse:collapse; font-size:10px; table-layout:fixed;">
+        <colgroup><col style="width:12%"><col style="width:68%"><col style="width:20%"></colgroup>
+        <thead><tr>
+          <th style="border:1px solid #444; padding:6px; background:#e6e6e6; font-size:11px; font-weight:800;">QTY</th>
+          <th style="border:1px solid #444; padding:6px; background:#e6e6e6; font-size:12px; font-weight:800;">DESCRIPTION</th>
+          <th style="border:1px solid #444; padding:6px; background:#e6e6e6; font-size:11px; font-weight:800;">TOTAL</th>
+        </tr></thead>
+        <tbody>
+          <tr>
+            <td style="border:1px solid #444; padding:6px;"></td>
+            <td style="border:1px solid #444; padding:6px; font-size:9px;">PROVIDE MATERIALS, LABOR, EQUIPMENT, AND SUPERVISION TO INSTALL POLYMER FLOORING PER PLANS AND SPECIFICATIONS SECTION 09700.  TWO YEAR LABOR WARRANTY PER SPECIFICATION.  SEE APPENDIX A ATTACHED.</td>
+            <td style="border:1px solid #444; padding:6px;"></td>
+          </tr>
+          <tr>
+            <td style="border:1px solid #444; padding:3px;"></td>
+            <td style="border:1px solid #444; padding:3px; text-align:center; font-style:italic; font-size:11px; font-weight:600;">Polymer Flooring in the following areas:</td>
+            <td style="border:1px solid #444; padding:3px;"></td>
+          </tr>
+          ${lineRows}
+          ${padHtml}
+          <tr>
+            <td style="border:1px solid #444; padding:3px;"></td>
+            <td style="border:1px solid #444; padding:3px; text-align:center; font-size:10px;">${wo.retention ? '5% Retention Required:' : ''}</td>
+            <td style="border:1px solid #444; padding:3px;"></td>
+          </tr>
+          <tr>
+            <td colspan="2" style="border:1px solid #444; padding:6px; background:#fff8c6;">${esc(wo.authorizedBy||'')}<br><span style="font-size:8px; color:#555;">AUTHORIZED BY</span></td>
+            <td style="border:1px solid #444; padding:6px; background:#e0e0e0; font-weight:800; text-align:center;"><div style="font-size:11px;">TOTAL</div><div style="font-size:12px;">$${total.toFixed(2)}</div></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>`,
+    `<div class="ft-page-section">
+      <div style="font-size:8px; color:#333; line-height:1.4; border:1px solid #444; padding:8px;">
+        <strong>PAYMENT TERMS:</strong> WORK ORDER NUMBER AND JOB NUMBER MUST APPEAR ON ALL INVOICES. Items on multiple work orders must be invoiced separately. Please have all invoicing through the end of the month received in our office by the 18th of each month to ensure monthly draws are included in our billings to the Owners; as stated in the "HTI Polymer, Inc. Agreement for Services". Invoices are to be sent to HTIAP@htipolymer.com or mail. Payment terms for all invoices are net 60 days upon receipt of invoice for approval and accepted work and after payment by customer. All work shall be performed in accordance with prices, delivery, and specifications shown above. The work shall be in compliance with current HTI SOP's - no deviation will be considered without prior agreement. Notify HTI immediately if you are unable to complete work by date specified.
+      </div>
+    </div>`
+  ];
+
+  host.innerHTML = ftPaginate(sections);
+}
+
+function piSyncTop(field, val) { state[field] = val; schedulePersist(); if (field === 'projectName') { const t = document.getElementById('topBarTitle'); if (t) t.textContent = val ? 'HTI Workbench - ' + val : 'HTI Workbench'; } }
 function piSync(field, val) { ensureProjectInfoState(); state.pi[field] = val; schedulePersist(); }
 const _wxGeoCache = new Map();
 const _wxCache = new Map();
@@ -9514,10 +10582,35 @@ async function _wxFetch(lat, lon, date) {
     return out;
   } catch (e) { return null; }
 }
+// Historical weather — fetch the same date from last year via Open-Meteo's archive API
+// as a proxy for "average conditions for that date." Cached the same way as forecasts.
+async function _wxFetchHistorical(lat, lon, date) {
+  const key = 'hist_' + lat + ',' + lon + ',' + date;
+  if (_wxCache.has(key)) return _wxCache.get(key);
+  try {
+    // Get the same calendar day from the previous year
+    const d = new Date(date);
+    const lastYr = new Date(d.getFullYear() - 1, d.getMonth(), d.getDate());
+    const isoLast = lastYr.toISOString().slice(0,10);
+    const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum&temperature_unit=fahrenheit&precipitation_unit=inch&timezone=auto&start_date=${isoLast}&end_date=${isoLast}`;
+    const r = await fetch(url);
+    const data = await r.json();
+    const out = data && data.daily && data.daily.time && data.daily.time.length ? {
+      max: data.daily.temperature_2m_max[0],
+      min: data.daily.temperature_2m_min[0],
+      code: data.daily.weather_code[0],
+      precip: data.daily.precipitation_sum[0],
+      historical: true
+    } : null;
+    _wxCache.set(key, out);
+    return out;
+  } catch (e) { return null; }
+}
 function _wxFormat(w) {
   if (!w || w.max == null) return 'No data';
   const icon = WX_CODES[w.code] || '';
-  return `${icon} ${Math.round(w.max)}°/${Math.round(w.min)}°F · ${(w.precip||0).toFixed(2)}" precip`;
+  const avg = w.historical ? ' (avg)' : '';
+  return `${icon} ${Math.round(w.max)}°/${Math.round(w.min)}°F · ${(w.precip||0).toFixed(2)}" precip${avg}`;
 }
 let _wxDebounce = null;
 function refreshAllScopeWeather() {
@@ -9558,7 +10651,13 @@ async function _doRefreshAllScopeWeather() {
     if (!date) { setCell(i, which, '—'); return; }
     const d = new Date(date); d.setHours(0,0,0,0);
     if (d < today) { setCell(i, which, 'Past date'); return; }
-    if (d > maxDate) { setCell(i, which, 'Beyond 16-day forecast'); return; }
+    if (d > maxDate) {
+      // Beyond 16-day forecast range — fall back to last year's actual weather
+      // for the same calendar date as a "historical average" approximation
+      const w = await _wxFetchHistorical(geo.lat, geo.lon, date);
+      setCell(i, which, w ? _wxFormat(w) : 'No historical data');
+      return;
+    }
     const w = await _wxFetch(geo.lat, geo.lon, date);
     setCell(i, which, _wxFormat(w));
   };
@@ -9639,6 +10738,12 @@ function renderProjectTab() {
       <div class="form-row-inline">
         <div class="form-row"><label>Project Manager</label><input value="${esc(pi.projectManager || (typeof currentProfile!=='undefined' && currentProfile && currentProfile.pm_name) || '')}" oninput="piSync('projectManager',this.value)"></div>
         <div class="form-row"><label>Super / Foreman</label><input value="${esc(pi.superForeman)}" oninput="piSync('superForeman',this.value)"></div>
+      </div>
+
+      <div class="pi-sub">Project Page / Procore Link</div>
+      <div class="form-row-inline" style="align-items:flex-end;">
+        <div class="form-row" style="flex:1;"><label>URL</label><input value="${esc(pi.procoreLink||'')}" oninput="piSync('procoreLink',this.value)" placeholder="https://app.procore.com/..."></div>
+        <button class="btn btn-secondary" style="padding:5px 10px; font-size:11px; white-space:nowrap; margin-bottom:5px;" onclick="if(state.pi&&state.pi.procoreLink){window.open(state.pi.procoreLink,'_blank')}else{alert('Enter a link first.')}">Go to &#8599;</button>
       </div>
 
       <div class="pi-sub">Jobsite Information</div>
@@ -9735,6 +10840,7 @@ function renderProjectTab() {
 
   dest.innerHTML = h;
   refreshAllScopeWeather();
+  if (typeof refreshTopBarStats === 'function') refreshTopBarStats();
 }
 
 function updateLivePreview() {
@@ -9777,8 +10883,10 @@ async function generateWordBlob() {
 
   function escXml(t) { return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
-  // Detect continuation breaks from the HTML preview pagination
-  // Each break point: { firstItemText: '...', contLabel: 'X (Continued):' }
+  // Capture every page break from the HTML preview pagination so Word can mirror
+  // it exactly — including the case where the preview pushed a whole new section
+  // (e.g. Warranty) onto the next page because it wouldn't fit on the previous one.
+  // Each break point: { firstItemText: '...', contLabel: '… (Continued):' | null }
   const breakPoints = [];
   const livePreview = document.getElementById('livePreview');
   if (livePreview) {
@@ -9789,8 +10897,10 @@ async function generateWordBlob() {
       const firstChild = ec.firstElementChild;
       if (!firstChild) continue;
       const firstChildText = firstChild.textContent.trim();
-      // Continuation header detected
+
       if (/\(Continued\)/.test(firstChildText)) {
+        // Continuation case: "X (Continued):" header + list whose first item is
+        // the item we should break before in the Word doc.
         const list = firstChild.nextElementSibling;
         if (list) {
           const firstItem = list.querySelector('li');
@@ -9801,22 +10911,54 @@ async function generateWordBlob() {
             });
           }
         }
+      } else {
+        // Non-continuation case: a full section starts this page. Grab the first
+        // recognizable text element so we can match it against the Word paragraph.
+        // Walk the first child and collect its first text run (trimmed, single-line).
+        const firstText = (firstChild.textContent || '').trim().replace(/\s+/g, ' ').split('\n')[0];
+        if (firstText) {
+          // Use just enough leading text to uniquely identify the paragraph — up
+          // to ~120 chars is plenty for any header or list item.
+          breakPoints.push({
+            contLabel: null,
+            firstItemText: firstText.slice(0, 120)
+          });
+        }
       }
     }
   }
-  // Helper: check if this item text matches a break point. Returns continuation label or null.
+
+  // Helper: does this paragraph text match the next unclaimed break point?
+  // Returns the break info object (and consumes it) or null.
   function checkBreak(itemText) {
     const normalized = itemText.replace(/\s+/g, ' ').trim();
     for (let i = 0; i < breakPoints.length; i++) {
-      // Use prefix match to handle minor whitespace/formatting differences
       const target = breakPoints[i].firstItemText;
-      if (normalized === target || normalized.indexOf(target.substring(0, Math.min(50, target.length))) === 0 || target.indexOf(normalized.substring(0, Math.min(50, normalized.length))) === 0) {
-        const label = breakPoints[i].contLabel;
+      if (!target) continue;
+      const headA = normalized.substring(0, Math.min(50, normalized.length));
+      const headB = target.substring(0, Math.min(50, target.length));
+      if (normalized === target || normalized.indexOf(headB) === 0 || target.indexOf(headA) === 0) {
+        const info = breakPoints[i];
         breakPoints.splice(i, 1);
-        return label;
+        return info;
       }
     }
     return null;
+  }
+
+  // Emit a page break + optional (continued) label before a paragraph if the
+  // preview paginated there. Returns true if a break was inserted.
+  function applyBreakBefore(paras, itemText) {
+    const info = checkBreak(itemText);
+    if (!info) return false;
+    paras.push(pageBreakP());
+    if (info.contLabel) {
+      // Reuse the same formatting rules the old call sites used. The callers
+      // that need underline/bold specifically pass them via applyBreakBefore's
+      // optional third argument below.
+      paras.push(wp(info.contLabel, { bold: true }));
+    }
+    return true;
   }
 
   function wp(text, opts) {
@@ -9841,6 +10983,13 @@ async function generateWordBlob() {
   }
   function emptyP() {
     return '<w:p><w:pPr><w:autoSpaceDE w:val="0"/><w:autoSpaceDN w:val="0"/><w:adjustRightInd w:val="0"/><w:spacing w:before="0" w:after="0" w:line="240" w:lineRule="auto"/><w:rPr><w:sz w:val="20"/><w:szCs w:val="20"/></w:rPr></w:pPr></w:p>';
+  }
+  // Soft page break — a normal paragraph containing a page-break character run.
+  // Unlike <w:pageBreakBefore/>, this is editable: users can place their cursor
+  // right before it and press Backspace/Delete to remove the break, or drag
+  // surrounding content around it freely.
+  function pageBreakP() {
+    return '<w:p><w:pPr><w:autoSpaceDE w:val="0"/><w:autoSpaceDN w:val="0"/><w:adjustRightInd w:val="0"/><w:spacing w:before="0" w:after="0" w:line="240" w:lineRule="auto"/><w:rPr><w:sz w:val="20"/><w:szCs w:val="20"/></w:rPr></w:pPr><w:r><w:br w:type="page"/></w:r></w:p>';
   }
   // Paragraph with left text and right-aligned text via tab stop
   function wpTab(leftText, rightText, opts) {
@@ -9869,64 +11018,80 @@ async function generateWordBlob() {
   paras.push(wp(resolveTemplateText(s.introTemplate || '', s)));
   s.scopeSections.forEach(function(sec, si) {
     var label = s.scopeSections.length > 1 ? ('Scope ' + (si + 1)) : 'Scope of Work';
-    paras.push(wp(label + ': ' + sec.name, { bold: true, underline: true, before: 240 }));
+    var headerText = label + ': ' + sec.name;
+    applyBreakBefore(paras, headerText);
+    paras.push(wp(headerText, { bold: true, underline: true, before: 240 }));
     sec.scopes.forEach(function(sc) {
       var rightText = '- ' + (sc.qty || '') + ' ' + (sc.unit || '');
       if (sc.qty2 || sc.unit2) rightText += '; ' + (sc.qty2 || '') + ' ' + (sc.unit2 || '');
+      applyBreakBefore(paras, sc.desc);
       paras.push(wpTab(sc.desc, rightText));
     });
   });
+  applyBreakBefore(paras, 'Products:');
   paras.push(wp('Products: ', { bold: true, before: 240 }));
   s.products.forEach(function(p) {
-    const cont = checkBreak(p.text);
-    if (cont) paras.push(wp(cont, { bold: true, pageBreakBefore: true }));
+    applyBreakBefore(paras, p.text);
     paras.push(wp(p.text, { numId: 33 }));
   });
-  if (s.existingConditions) {
-    paras.push(wp('Existing Site Conditions:', { bold: true, before: 240 }));
-    paras.push(wp(s.existingConditions, { bold: true }));
-  }
   s.procedureSections.forEach(function(sec, pi) {
-    paras.push(wp('Procedures: ' + sec.header, { bold: true, before: 240 }));
+    var procHeader = 'Procedures: ' + sec.header;
+    applyBreakBefore(paras, procHeader);
+    paras.push(wp(procHeader, { bold: true, before: 240 }));
+    if (pi === 0 && s.existingConditions) {
+      paras.push(wp(s.existingConditions));
+    }
     sec.steps.forEach(function(step) {
       const stepText = step.text.replace(/\{([^}]+)\}/g, '$1');
-      const cont = checkBreak(stepText);
-      if (cont) paras.push(wp(cont, { bold: true, pageBreakBefore: true }));
+      applyBreakBefore(paras, stepText);
       paras.push(wp(stepText, { numId: 34 }));
     });
   });
+  applyBreakBefore(paras, 'Cost:');
   paras.push(wp('Cost: ', { bold: true, before: 240 }));
   s.costSections.forEach(function(cs) {
-    if (cs.description) paras.push(wp(cs.description, { bold: true }));
+    if (cs.description) {
+      applyBreakBefore(paras, cs.description);
+      paras.push(wp(cs.description, { bold: true }));
+    }
     paras.push(wp(resolveTemplateText(s.costTemplate || '', s, { value: cs.value })));
   });
   if (s.addOptions.length) {
+    applyBreakBefore(paras, 'Add Options:');
     paras.push(wp('Add Options: ', { bold: true, before: 240 }));
-    s.addOptions.forEach(function(a) { paras.push(wp(a.text, { numId: 35 })); });
+    s.addOptions.forEach(function(a) {
+      applyBreakBefore(paras, a.text);
+      paras.push(wp(a.text, { numId: 35 }));
+    });
   }
+  applyBreakBefore(paras, 'Warranty:');
   paras.push(wp('Warranty:', { bold: true, before: 240 }));
+  applyBreakBefore(paras, s.warrantyText);
   paras.push(wp(s.warrantyText));
   var activeInclusions = INCLUSIONS_MASTER.filter(function(inc) { return s.inclusions[inc.id]; });
   if (activeInclusions.length) {
+    applyBreakBefore(paras, 'Inclusions & Exclusions:');
     paras.push(wp('Inclusions & Exclusions:', { bold: true, underline: true, before: 240 }));
     activeInclusions.forEach(function(inc) {
       const incText = getIncText(inc);
       const incBold = !!(s.inclusionBold && s.inclusionBold[inc.id]);
-      const cont = checkBreak(incText);
-      if (cont) paras.push(wp(cont, { bold: true, underline: true, pageBreakBefore: true }));
+      applyBreakBefore(paras, incText);
       paras.push(wp(incText, { numId: 36, bold: incBold }));
     });
   }
   if (!s.omitPaymentTerms) {
     if (ct === 'gc') {
+      applyBreakBefore(paras, 'General Contractor Payment Draw Terms:');
       paras.push(wp('General Contractor Payment Draw Terms:', { bold: true, before: 240 }));
       paras.push(wp(s.paymentTerms || 'Payment draws are due on the 10th of the month, the second month following the month of the draw invoice. For example: January draws are due on the 10th of March. Any payments delinquent 30 days or more will be subject to work stoppage or a 1.5% interest charge until the account is current.', { bold: true }));
     } else {
+      applyBreakBefore(paras, 'Standard HTI Customer Payment Terms');
       paras.push(wp('Standard HTI Customer Payment Terms', { bold: true, before: 240 }));
       paras.push(wp(s.paymentTerms || "Terms of acceptance and pricing are based upon NET 30 from the completion date. Material invoicing will be sent in the month material is landed on the customer\u2019s site, due NET 30. Progress billing will be sent monthly for % of work completed through the end of that calendar month."));
     }
   }
   if (!s.omitMobilization) {
+    applyBreakBefore(paras, 'Extra mobilizations and non-sequential work exclusion:');
     paras.push(wp('Extra mobilizations and non-sequential work exclusion:', { bold: true, before: 240 }));
     paras.push(wp(resolveTemplateText(s.mobilizationTemplate || '', s)));
   }
@@ -10440,20 +11605,20 @@ function buildProposalHTML(s) {
   const prodItems = s.products.map((p, i) => `<li>${fl('products',`product_${i}`,escH(p.text))}</li>`).join('');
   const productsHTML = s.products.length ? `<div class="products-block"><div class="section-label-nb">Products:</div><ul class="products-list">${prodItems}</ul></div>` : '';
 
-  // EXISTING CONDITIONS
-  let existHTML = '';
-  if (s.existingConditions) {
-    existHTML = `<div class="existing-conditions"><strong>Existing Site Conditions:</strong><br><strong>${fl('procedures','existingConditions',escH(s.existingConditions))}</strong></div>`;
-  }
-
-  // PROCEDURES
+  // PROCEDURES — the existing-conditions / notes / clarifications blob renders
+  // inline right after the first procedures header, with no sub-header and no
+  // bullet (it's a free-form paragraph, not a step).
+  const existingConditionsInline = s.existingConditions
+    ? `<div class="procedure-existing">${fl('procedures','existingConditions',escH(s.existingConditions))}</div>`
+    : '';
   const proceduresHTML = s.procedureSections.map((sec, pi) => {
     const items = sec.steps.map((step, i) => {
       // Strip {braces} but don't auto-bold the contents
       const t = escH(step.text).replace(/\{([^}]+)\}/g, '$1');
       return `<li>${fl('procedures',`procedure_${pi}_${i}`,t)}</li>`;
     }).join('');
-    return `<div class="procedure-block"><div class="section-label-nb">Procedures: ${fl('procedures',`procedureHeader_${pi}`,escH(sec.header))}</div><ul class="procedures-doc-list">${items}</ul></div>`;
+    const inlineNotes = pi === 0 ? existingConditionsInline : '';
+    return `<div class="procedure-block"><div class="section-label-nb">Procedures: ${fl('procedures',`procedureHeader_${pi}`,escH(sec.header))}</div>${inlineNotes}<ul class="procedures-doc-list">${items}</ul></div>`;
   }).join('');
 
   // COST
@@ -10521,7 +11686,7 @@ function buildProposalHTML(s) {
     <p>PO#: <span class="line-sm"></span></p>
   </div></div>`;
 
-  const spacedSections = [recip, greeting, intro, scopeHTML, productsHTML, existHTML, proceduresHTML, costHTML, addOptHTML, warHTML, incHTML, payHTML, mobHTML, signHTML].filter(Boolean).join('');
+  const spacedSections = [recip, greeting, intro, scopeHTML, productsHTML, proceduresHTML, costHTML, addOptHTML, warHTML, incHTML, payHTML, mobHTML, signHTML].filter(Boolean).join('');
 
   return `<div class="proposal-page">
     ${hdr}${spacedSections}
@@ -11747,6 +12912,72 @@ function openProfilePanel() {
   document.getElementById('profileMsg').textContent = '';
   document.getElementById('profileMsg').className = 'profile-msg';
   document.getElementById('profileModal').classList.add('active');
+  // Load existing signature onto the canvas
+  initSignatureCanvas();
+  if (currentProfile.signature) loadSignatureFromData(currentProfile.signature);
+  else clearSignatureCanvas();
+}
+
+// ---- Signature Canvas ----
+let _sigCtx = null, _sigDrawing = false;
+function initSignatureCanvas() {
+  const c = document.getElementById('signatureCanvas');
+  if (!c) return;
+  _sigCtx = c.getContext('2d');
+  // Remove previous listeners by cloning
+  const clone = c.cloneNode(true);
+  c.parentNode.replaceChild(clone, c);
+  const canvas = document.getElementById('signatureCanvas');
+  _sigCtx = canvas.getContext('2d');
+
+  const getPos = (e) => {
+    const r = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / r.width;
+    const scaleY = canvas.height / r.height;
+    const touch = e.touches ? e.touches[0] : e;
+    return { x: (touch.clientX - r.left) * scaleX, y: (touch.clientY - r.top) * scaleY };
+  };
+  const start = (e) => { e.preventDefault(); _sigDrawing = true; _sigCtx.beginPath(); const p = getPos(e); _sigCtx.moveTo(p.x, p.y); };
+  const move = (e) => { if (!_sigDrawing) return; e.preventDefault(); const p = getPos(e); _sigCtx.lineWidth = 2; _sigCtx.lineCap = 'round'; _sigCtx.strokeStyle = '#000'; _sigCtx.lineTo(p.x, p.y); _sigCtx.stroke(); };
+  const end = () => { _sigDrawing = false; };
+  canvas.addEventListener('mousedown', start);
+  canvas.addEventListener('mousemove', move);
+  canvas.addEventListener('mouseup', end);
+  canvas.addEventListener('mouseleave', end);
+  canvas.addEventListener('touchstart', start, { passive: false });
+  canvas.addEventListener('touchmove', move, { passive: false });
+  canvas.addEventListener('touchend', end);
+}
+function clearSignatureCanvas() {
+  const c = document.getElementById('signatureCanvas');
+  if (!c) return;
+  const ctx = c.getContext('2d');
+  ctx.clearRect(0, 0, c.width, c.height);
+}
+function loadSignatureFromData(dataUrl) {
+  const c = document.getElementById('signatureCanvas');
+  if (!c || !dataUrl) return;
+  const ctx = c.getContext('2d');
+  const img = new Image();
+  img.onload = () => { ctx.clearRect(0, 0, c.width, c.height); ctx.drawImage(img, 0, 0, c.width, c.height); };
+  img.src = dataUrl;
+}
+function uploadSignatureImage(input) {
+  const file = input.files && input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => { loadSignatureFromData(e.target.result); };
+  reader.readAsDataURL(file);
+  input.value = '';
+}
+function getSignatureDataUrl() {
+  const c = document.getElementById('signatureCanvas');
+  if (!c) return null;
+  // Check if canvas is blank
+  const ctx = c.getContext('2d');
+  const data = ctx.getImageData(0, 0, c.width, c.height).data;
+  const isBlank = !data.some((v, i) => i % 4 === 3 && v > 0); // check alpha channel
+  return isBlank ? null : c.toDataURL('image/png');
 }
 
 function closeProfilePanel() {
@@ -11759,11 +12990,13 @@ async function saveProfile() {
   msg.textContent = 'Saving...';
   msg.className = 'profile-msg';
 
+  const sigData = getSignatureDataUrl();
   const updates = {
     pm_name: document.getElementById('profilePmName').value.trim(),
     pm_cell: document.getElementById('profilePmCell').value.trim(),
     pm_email: document.getElementById('profilePmEmail').value.trim(),
-    signoff_closing: document.getElementById('profileSignoffClosing').value
+    signoff_closing: document.getElementById('profileSignoffClosing').value,
+    signature: sigData || null
   };
 
   const { error } = await supa.from('profiles').update(updates).eq('id', currentUser.id);
@@ -11863,7 +13096,7 @@ const TRAVEL_CREW_MULT_CODES = new Set([
 
 const QUOTE_ADDITIONAL_CODES = [
   { code: '4-100', label: 'Subcontractor' },
-  { code: '5-100', label: 'Freight' },
+  // Freight (5-100) moved to the Selected Materials section
   { code: '5-400', label: 'Tools' },
   { code: '5-500', label: 'Consumables Box Store' },
   { code: '5-550', label: 'PO Consumables' },
@@ -11892,8 +13125,8 @@ function ensureQuoteState() {
       travel: {},
       additional: {},
       taxMaterial: 10,
-      taxRental: 0,
-      taxFreight: 0,
+      taxRental: 10,
+      taxFreight: 10,
       markupPct: 0
     };
   }
@@ -11932,8 +13165,8 @@ function ensureQuoteState() {
   if (state.quote.taxMaterial == null) {
     state.quote.taxMaterial = state.quote.taxRate != null ? state.quote.taxRate : 10;
   }
-  if (state.quote.taxRental == null) state.quote.taxRental = 0;
-  if (state.quote.taxFreight == null) state.quote.taxFreight = 0;
+  if (state.quote.taxRental == null) state.quote.taxRental = 10;
+  if (state.quote.taxFreight == null) state.quote.taxFreight = 10;
   delete state.quote.taxRate;
   if (state.quote.markupPct == null) state.quote.markupPct = 0;
 }
@@ -12102,6 +13335,50 @@ function nextDupIndex(vendor, name) {
   return max + 1;
 }
 
+// Custom category order per vendor — PMs are used to seeing categories in this specific
+// sequence, so we preserve it instead of alphabetizing. Each slot is a list of keyword
+// variants; the first category whose lowercased name contains any variant wins that slot.
+// Categories with no match fall to the end, then get alphabetical tiebreak.
+const VENDOR_CATEGORY_ORDER = {
+  SW: [
+    ['primer', 'sealer'],
+    ['epoxy'],
+    ['crack'],
+    ['patch'],
+    ['colorant'],
+    ['polyaspartic'],
+    ['poly-crete', 'polycrete'],
+    ['polyurethane', 'urethane'],
+    ['mma', 'methacrylate'],
+    ['aggregate']
+  ],
+  Sika: [
+    ['primer'],
+    ['ucrete', 'polyurethane cement', 'urethane cement'],
+    ['epoxy'],
+    ['colorant'],
+    ['urethane', 'polyaspartic'],
+    ['aggregate', 'other']
+  ],
+  SGC: [
+    ['epoxy', 'deck coat'],
+    ['crete'],
+    ['colorant'],
+    ['aggregate'],
+    ['polyaspartic'],
+    ['mma', 'methacrylate']
+  ]
+};
+function vendorCategoryIndex(vendor, catName) {
+  const order = VENDOR_CATEGORY_ORDER[vendor];
+  if (!order) return 9999;
+  const lower = (catName || '').toLowerCase();
+  for (let i = 0; i < order.length; i++) {
+    if (order[i].some(kw => lower.includes(kw))) return i;
+  }
+  return 9999;
+}
+
 function renderCatalogueView() {
   const container = document.getElementById('catalogueContainer');
   if (!container || !_productsCatalogCache.length) {
@@ -12137,13 +13414,26 @@ function renderCatalogueView() {
     categories[cat].push(g);
   });
 
-  // Sort categories alphabetically, but pin any category made up entirely of
-  // ALL-vendor (agnostic) products to the end.
+  // Sort categories using vendor-specific PM-familiar ordering. ALL-vendor (agnostic)
+  // categories are pinned to the end. When viewing multiple vendors, group by vendor
+  // alphabetically, then apply per-vendor ordering inside each group.
   const catNames = Object.keys(categories).sort((a, b) => {
     const aAgnostic = categories[a].every(g => g.vendor === 'ALL');
     const bAgnostic = categories[b].every(g => g.vendor === 'ALL');
     if (aAgnostic !== bAgnostic) return aAgnostic ? 1 : -1;
-    return a.localeCompare(b);
+
+    const aVendor = categories[a][0].vendor;
+    const bVendor = categories[b][0].vendor;
+    // Strip "VENDOR • " prefix when looking up the vendor's canonical order
+    const aCat = allVendors ? a.replace(/^[^•]*•\s*/, '') : a;
+    const bCat = allVendors ? b.replace(/^[^•]*•\s*/, '') : b;
+
+    if (allVendors && aVendor !== bVendor) return aVendor.localeCompare(bVendor);
+
+    const ai = vendorCategoryIndex(aVendor, aCat);
+    const bi = vendorCategoryIndex(bVendor, bCat);
+    if (ai !== bi) return ai - bi;
+    return aCat.localeCompare(bCat);
   });
   if (!catNames.length) {
     container.innerHTML = '<div style="color:#666;text-align:center;padding:40px;">No products found for this vendor.</div>';
@@ -12456,49 +13746,81 @@ function removeCustomProduct(idx) {
 // Kept for backwards compatibility with older call sites
 function renderCustomProducts() { /* now rendered inline as a category */ }
 
+function onFreightChange(key, val) {
+  ensureQuoteState();
+  if (!state.quote.additional) state.quote.additional = {};
+  if (!state.quote.additional['5-100']) state.quote.additional['5-100'] = { amount: 0, notes: '' };
+  if (key === 'amount') state.quote.additional['5-100'].amount = parseFloat(val) || 0;
+  else state.quote.additional['5-100'].notes = val;
+  schedulePersist();
+  syncFreightInputs();
+  recalcQuoteSummary();
+}
+
+function syncFreightInputs() {
+  const f = (state.quote && state.quote.additional && state.quote.additional['5-100']) || { amount: 0, notes: '' };
+  document.querySelectorAll('.freight-amount-input').forEach(el => {
+    if (document.activeElement !== el) el.value = f.amount || '';
+  });
+  document.querySelectorAll('.freight-notes-input').forEach(el => {
+    if (document.activeElement !== el) el.value = f.notes || '';
+  });
+}
+
 function renderActiveMaterials() {
   ensureQuoteState();
-  const listEl = document.getElementById('quoteActiveMaterialsList');
-  const breakdownEl = document.getElementById('quoteMaterialsBreakdown');
-  if (!listEl || !breakdownEl) return;
+  // Build the HTML once, then inject into both the Material tab and Labor tab mirrors
   const active = state.quote.materials.filter(m => (m.qty || 0) > 0);
   const activeCustom = (state.quote.customMaterials || []).filter(m => (m.qty || 0) > 0);
+
+  let rowsHtml = '';
+  let breakdownHtml = '';
   if (!active.length && !activeCustom.length) {
-    listEl.innerHTML = '<div class="active-materials-empty">No materials selected yet. Enter a quantity in the catalogue above or add a custom product.</div>';
-    breakdownEl.innerHTML = '';
-    return;
+    rowsHtml = '<div class="active-materials-empty">No materials selected yet. Enter a quantity in the catalogue above or add a custom product.</div>';
+  } else {
+    let subtotal = 0;
+    rowsHtml = active.map(m => {
+      const rate = m.quotedRate != null ? m.quotedRate : m.unitRate;
+      const ext = (m.qty || 0) * rate;
+      subtotal += ext;
+      return `<div class="active-mat-row">
+        <div class="active-mat-name">${escH(m.productName || '')}</div>
+        <div class="active-mat-meta">${escH(m.vendor || '')} • ${escH(m.color || '')} • ${escH(m.uom || '')}</div>
+        <div class="active-mat-qty">${m.qty} &times; ${fmtMoney(rate)}</div>
+        <div class="active-mat-ext">${fmtMoney(ext)}</div>
+      </div>`;
+    }).join('') + activeCustom.map(m => {
+      const rate = m.quotedRate != null ? m.quotedRate : (m.unitRate || 0);
+      const ext = (m.qty || 0) * rate;
+      subtotal += ext;
+      return `<div class="active-mat-row">
+        <div class="active-mat-name">${escH(m.productName || '')} <span style="color:#e2a308; font-size:10px; margin-left:6px;">[CUSTOM]</span></div>
+        <div class="active-mat-meta">${escH(m.color || '')} • ${escH(m.uom || '')}</div>
+        <div class="active-mat-qty">${m.qty} &times; ${fmtMoney(rate)}</div>
+        <div class="active-mat-ext">${fmtMoney(ext)}</div>
+      </div>`;
+    }).join('');
+    const taxRate = parseFloat(state.quote.taxMaterial) || 0;
+    const tax = subtotal * (taxRate / 100);
+    const total = subtotal + tax;
+    breakdownHtml = `
+      <div class="breakdown-row"><span>Materials Subtotal</span><span>${fmtMoney(subtotal)}</span></div>
+      <div class="breakdown-row"><span>Tax (${taxRate.toFixed(2)}%)</span><span>${fmtMoney(tax)}</span></div>
+      <div class="breakdown-row total"><span>Materials Total (with Tax)</span><span>${fmtMoney(total)}</span></div>
+    `;
   }
-  let subtotal = 0;
-  const rowsHtml = active.map(m => {
-    const rate = m.quotedRate != null ? m.quotedRate : m.unitRate;
-    const ext = (m.qty || 0) * rate;
-    subtotal += ext;
-    return `<div class="active-mat-row">
-      <div class="active-mat-name">${escH(m.productName || '')}</div>
-      <div class="active-mat-meta">${escH(m.vendor || '')} • ${escH(m.color || '')} • ${escH(m.uom || '')}</div>
-      <div class="active-mat-qty">${m.qty} &times; ${fmtMoney(rate)}</div>
-      <div class="active-mat-ext">${fmtMoney(ext)}</div>
-    </div>`;
-  }).join('') + activeCustom.map(m => {
-    const rate = m.quotedRate != null ? m.quotedRate : (m.unitRate || 0);
-    const ext = (m.qty || 0) * rate;
-    subtotal += ext;
-    return `<div class="active-mat-row">
-      <div class="active-mat-name">${escH(m.productName || '')} <span style="color:#e2a308; font-size:10px; margin-left:6px;">[CUSTOM]</span></div>
-      <div class="active-mat-meta">${escH(m.color || '')} • ${escH(m.uom || '')}</div>
-      <div class="active-mat-qty">${m.qty} &times; ${fmtMoney(rate)}</div>
-      <div class="active-mat-ext">${fmtMoney(ext)}</div>
-    </div>`;
-  }).join('');
-  listEl.innerHTML = rowsHtml;
-  const taxRate = parseFloat(state.quote.taxMaterial) || 0;
-  const tax = subtotal * (taxRate / 100);
-  const total = subtotal + tax;
-  breakdownEl.innerHTML = `
-    <div class="breakdown-row"><span>Materials Subtotal</span><span>${fmtMoney(subtotal)}</span></div>
-    <div class="breakdown-row"><span>Tax (${taxRate.toFixed(2)}%)</span><span>${fmtMoney(tax)}</span></div>
-    <div class="breakdown-row total"><span>Materials Total (with Tax)</span><span>${fmtMoney(total)}</span></div>
-  `;
+  // Inject into Material tab
+  const listEl = document.getElementById('quoteActiveMaterialsList');
+  const breakdownEl = document.getElementById('quoteMaterialsBreakdown');
+  if (listEl) listEl.innerHTML = rowsHtml;
+  if (breakdownEl) breakdownEl.innerHTML = breakdownHtml;
+  // Mirror into Labor tab
+  const listEl2 = document.getElementById('laborActiveMaterialsList');
+  const breakdownEl2 = document.getElementById('laborMaterialsBreakdown');
+  if (listEl2) listEl2.innerHTML = rowsHtml;
+  if (breakdownEl2) breakdownEl2.innerHTML = breakdownHtml;
+  // Sync freight inputs across both tabs
+  syncFreightInputs();
 }
 
 function addQuoteMaterial(catalogId) {
@@ -12794,10 +14116,30 @@ function onQuoteTaxChange(kind, val) {
   recalcQuoteSummary();
 }
 
-// ---- Markup ----
+// ---- Markup / Bid ----
+// Bid Amount is the source of truth when the user types into it — markup is
+// derived from it. If the user edits markup instead, we clear the override so
+// bid becomes derived-from-markup again.
 function onQuoteMarkupChange(val) {
   ensureQuoteState();
   state.quote.markupPct = parseFloat(val) || 0;
+  state.quote.bidAmountOverride = null;
+  schedulePersist();
+  recalcQuoteSummary();
+}
+function onQuoteBidAmountChange(val) {
+  ensureQuoteState();
+  const bid = parseFloat(val) || 0;
+  state.quote.bidAmountOverride = bid;
+  // Derive markup % from the bid against the current pre-markup grandTotal.
+  // Call calcQuoteTotals() with override temporarily cleared so grandTotal is correct.
+  const saved = state.quote.bidAmountOverride;
+  state.quote.bidAmountOverride = null;
+  const t = calcQuoteTotals();
+  state.quote.bidAmountOverride = saved;
+  if (t.grandTotal > 0) {
+    state.quote.markupPct = ((bid / t.grandTotal) - 1) * 100;
+  }
   schedulePersist();
   recalcQuoteSummary();
 }
@@ -12846,11 +14188,20 @@ function calcQuoteTotals() {
   const taxFreight = freightAmount * (taxFreightRate / 100);
   const tax = taxMaterial + taxRental + taxFreight;
   const grandTotal = matTotal + laborTotal + travelTotal + additionalTotal + equipTotal + tax;
-  const markupPct = state.quote.markupPct || 0;
-  const bidAmount = grandTotal * (1 + markupPct / 100);
+  // If user has entered an explicit bid amount, that's authoritative. Otherwise
+  // derive bid from markup %.
+  let markupPct, bidAmount;
+  const override = state.quote.bidAmountOverride;
+  if (override != null && override > 0) {
+    bidAmount = override;
+    markupPct = grandTotal > 0 ? ((bidAmount / grandTotal) - 1) * 100 : 0;
+  } else {
+    markupPct = state.quote.markupPct || 0;
+    bidAmount = grandTotal * (1 + markupPct / 100);
+  }
   const grossProfit = bidAmount > 0 ? ((bidAmount - grandTotal) / bidAmount) * 100 : 0;
 
-  return { matTotal, laborTotal, travelTotal, additionalTotal, equipTotal, rentalTotal, inHouseTotal, taxMaterial, taxRental, taxFreight, tax, grandTotal, bidAmount, grossProfit };
+  return { matTotal, laborTotal, travelTotal, additionalTotal, equipTotal, rentalTotal, inHouseTotal, taxMaterial, taxRental, taxFreight, tax, grandTotal, bidAmount, markupPct, grossProfit };
 }
 
 function recalcQuoteSummary() {
@@ -12858,7 +14209,13 @@ function recalcQuoteSummary() {
   const setAll = (id, val) => {
     document.querySelectorAll('[data-sum="' + id + '"]').forEach(el => { el.textContent = val; });
     const el = document.getElementById(id);
-    if (el) el.textContent = val;
+    if (!el) return;
+    if (el.tagName === 'INPUT') {
+      // Don't stomp the user's in-progress typing
+      if (document.activeElement !== el) el.value = val;
+    } else {
+      el.textContent = val;
+    }
   };
   setAll('sumMaterials', fmtMoney(t.matTotal));
   setAll('sumLabor', fmtMoney(t.laborTotal));
@@ -12870,12 +14227,62 @@ function recalcQuoteSummary() {
   setAll('sumTaxFreight', fmtMoney(t.taxFreight));
   setAll('sumTax', fmtMoney(t.tax));
   setAll('sumGrandTotal', fmtMoney(t.grandTotal));
-  setAll('quoteBidAmount', fmtMoney(t.bidAmount));
+  // Bid Amount: input gets numeric value, any read-only mirrors get the formatted string
+  const bidInput = document.getElementById('quoteBidAmount');
+  if (bidInput && bidInput.tagName === 'INPUT' && document.activeElement !== bidInput) {
+    bidInput.value = t.bidAmount.toFixed(2);
+  }
+  document.querySelectorAll('[data-sum="quoteBidAmount"]').forEach(el => { el.textContent = fmtMoney(t.bidAmount); });
+  // Markup input reflects the derived value when a bid override is active
+  const markupInput = document.getElementById('quoteMarkupPct');
+  if (markupInput && document.activeElement !== markupInput) {
+    markupInput.value = (Math.round(t.markupPct * 100) / 100).toString();
+  }
   document.querySelectorAll('[data-sum="quoteGrossProfit"]').forEach(el => { el.textContent = t.grossProfit.toFixed(1) + '%'; });
   const gpEl = document.getElementById('quoteGrossProfit');
   if (gpEl) gpEl.textContent = t.grossProfit.toFixed(1) + '%';
   const taxLabel = document.getElementById('quoteTaxAmount');
   if (taxLabel) taxLabel.textContent = 'Total Tax: ' + fmtMoney(t.tax);
+  refreshTopBarStats();
+}
+
+// Top-bar stats: total man-days, total area, price/sqft
+function refreshTopBarStats() {
+  const el = document.getElementById('topBarStats');
+  if (!el) return;
+  ensureProjectInfoState();
+  ensureQuoteState();
+  const q = state.quote || {};
+  const pi = state.pi || {};
+
+  // Total man-days from labor
+  let totalManDays = 0;
+  (q.labor || []).forEach(r => { totalManDays += (parseFloat(r.men)||0) * (parseFloat(r.days)||0); });
+
+  // Total area from scopes — prefer sqFt, fall back to lnFt
+  let totalSqFt = 0;
+  let totalLnFt = 0;
+  (pi.scopes || []).forEach(sc => {
+    totalSqFt += parseFloat(sc.sqFt) || 0;
+    totalLnFt += parseFloat(sc.lnFt) || 0;
+  });
+  const totalArea = totalSqFt || totalLnFt;
+  const areaUnit = totalSqFt ? 'SF' : 'LF';
+
+  // Contract value (bid amount)
+  const totals = (typeof calcQuoteTotals === 'function') ? calcQuoteTotals() : { bidAmount: 0 };
+  const contractValue = totals.bidAmount || 0;
+
+  let html = '';
+  html += `<div class="topbar-stat"><span class="stat-val">${totalManDays.toFixed(0)}</span><span class="stat-label">Man-Days</span></div>`;
+  if (totalArea > 0) {
+    html += `<div class="topbar-stat"><span class="stat-val">${totalArea.toLocaleString('en-US')}</span><span class="stat-label">Total ${areaUnit}</span></div>`;
+    if (contractValue > 0) {
+      const pricePerUnit = contractValue / totalArea;
+      html += `<div class="topbar-stat"><span class="stat-val">$${pricePerUnit.toFixed(2)}</span><span class="stat-label">Per ${areaUnit}</span></div>`;
+    }
+  }
+  el.innerHTML = html;
 }
 
 function renderQuoteTool() {
