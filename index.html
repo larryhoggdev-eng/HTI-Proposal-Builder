@@ -558,7 +558,7 @@
     body * { visibility: hidden !important; }
     .ft-preview-col, .ft-preview-col * { visibility: visible !important; }
     .ft-preview-col { position: absolute !important; left: 0; top: 0; width: 100%; padding: 0 !important; background: #fff !important; color: #000 !important; overflow: visible !important; display: block !important; }
-    .ft-page { box-shadow: none !important; width: 100% !important; min-height: 0 !important; padding: 0.4in 0.5in !important; page-break-after: always; break-after: page; }
+    .ft-page { box-shadow: none !important; width: 100% !important; min-height: 0 !important; padding: 0.4in 0.5in !important; page-break-after: always; break-after: page; zoom: 1 !important; }
     .ft-page:last-child { page-break-after: auto; break-after: auto; }
     .ft-page-break, .ft-page-label { display: none !important; }
   }
@@ -835,7 +835,7 @@
   .page-footer .confidential { font-weight: 700; font-size: 8pt; color: #000; margin-top: 2px; }
   .existing-conditions { margin-bottom: 4px; font-size: 10pt; }
   .existing-conditions strong { font-weight: 700; }
-  .procedure-existing { margin: 4px 0 6px; font-size: 10pt; line-height: 1.35; white-space: pre-wrap; }
+  .procedure-existing { margin: 0; font-size: 10pt; line-height: 1.35; white-space: pre-wrap; }
   .scope-row { display: flex; align-items: center; padding: 0; margin: 0; line-height: 1.1; }
   .scope-desc { flex: 1; }
   .scope-dash { padding: 0 8px; color: #999; }
@@ -999,6 +999,246 @@
   .materials-breakdown .breakdown-row { display: flex; justify-content: space-between; padding: 6px 12px; font-size: 13px; color: #ccc; }
   .materials-breakdown .breakdown-row.total { border-top: 1px solid #2a2a4a; margin-top: 4px; padding-top: 10px; font-size: 15px; color: #e2a308; font-weight: 700; }
 
+  /* Toggle bars for mobile edit/preview — hidden on desktop always */
+  .ft-toggle-bar, .builder-toggle-bar { display: none; }
+
+  /* ================================================================
+     MOBILE RESPONSIVE — everything below only applies at ≤ 768px.
+     Desktop layout is untouched; these rules ONLY add/override when
+     the viewport is narrow enough to trigger the media query.
+     ================================================================ */
+  @media (max-width: 768px) {
+    /* ---- Step 1: Foundation — release overflow locks so mobile can scroll vertically ---- */
+    body { overflow-x: hidden; overflow-y: auto !important; height: auto !important; }
+    .tab-panel { overflow: visible !important; overflow-y: auto !important; }
+    .tab-panel.active { display: flex !important; flex-direction: column !important; min-height: 0; }
+    .main-content { overflow: visible !important; flex-direction: column !important; }
+    .field-tab-view { overflow: visible !important; }
+    .field-tab-view.active { overflow-y: auto !important; }
+    .ft-split { overflow: visible !important; flex-direction: column !important; }
+    .ft-form-col, .ft-preview-col { overflow: visible !important; flex: none !important; height: auto !important; max-height: none !important; }
+    .editor-panel, .preview-panel { overflow: visible !important; flex: none !important; height: auto !important; }
+    /* Builder editor wrap also needs to release overflow */
+    .builder-editor-wrap { overflow: visible !important; }
+    .builder-editor-wrap .main-content { overflow: visible !important; }
+
+    /* ---- Step 2: Top bar — two rows ---- */
+    /* Row 1: Title full width.  Row 2: Profile/Admin/Signout + My Projects + stats */
+    .top-bar { flex-wrap: wrap; padding: 6px 10px; gap: 4px 8px; }
+    .top-bar h1 { font-size: 13px; width: 100%; order: -1; margin-right: 0; }
+    .top-bar > button:first-child { order: 10; } /* My Projects moves to row 2 */
+    .top-bar .bar-section { order: 10; gap: 3px !important; }
+    .topbar-stats { order: 10; margin-left: auto !important; gap: 4px !important; }
+    .topbar-stat { padding: 1px 6px; }
+    .topbar-stat .stat-val { font-size: 11px; }
+    .topbar-stat .stat-label { font-size: 8px; }
+    .top-bar .btn { padding: 4px 8px; font-size: 10px; min-height: 32px; }
+
+    /* ---- Step 2: Tab bar ---- */
+    .tab-bar { overflow-x: auto; -webkit-overflow-scrolling: touch; flex-wrap: nowrap; white-space: nowrap; }
+    .tab-btn { padding: 8px 14px; font-size: 11px; flex-shrink: 0; }
+
+    /* ---- Step 2: Tab panels ---- */
+    .tab-panel { margin-right: 0 !important; }
+
+    /* ---- Step 2: Form layouts — stack inline rows ---- */
+    .form-row-inline, .ft-row-inline { flex-wrap: wrap; }
+    .form-row-inline .form-row, .ft-row-inline .ft-row { flex: 1 1 100% !important; min-width: 0 !important; }
+    /* Let narrow fields (dates, zips) share a row */
+    .form-row-inline .form-row[style*="flex:0 0 1"],
+    .ft-row-inline .ft-row[style*="flex:0 0 "] { flex: 1 1 45% !important; }
+
+    /* ---- Step 2: Main content ---- */
+    .main-content { flex-direction: column !important; }
+    .editor-panel { padding: 12px !important; }
+    .editor-scroll { max-width: 100% !important; }
+
+    /* ---- Step 2: Quote panels ---- */
+    .quote-panel { padding: 8px 10px !important; }
+    .quote-scroll { flex-direction: column !important; gap: 12px !important; }
+    .quote-section { padding: 8px 10px !important; }
+
+    /* ---- Step 2: PI sections ---- */
+    .form-card { padding: 8px 10px !important; }
+    .pi-check-grid { grid-template-columns: 1fr 1fr !important; }
+    .pi-scope-block .ft-row-inline, .pi-scope-block .form-row-inline { flex-wrap: wrap; }
+    .scope-weather { flex-direction: column; }
+
+    /* ---- Step 3: Sidebar — full-screen overlay on mobile ---- */
+    .docs-panel {
+      position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important;
+      width: 100% !important; max-width: 100% !important; min-width: 0 !important;
+      border-left: none !important; border-radius: 0 !important;
+      z-index: 9990 !important; padding: 12px !important;
+      overflow-y: auto !important;
+    }
+    .docs-panel.collapsed {
+      position: fixed !important; top: auto !important; left: auto !important; right: 0 !important; bottom: auto !important;
+      top: 98px !important; width: 48px !important; height: auto !important;
+      background: transparent !important; box-shadow: none !important;
+      padding: 8px 4px !important; border-left: none !important;
+      overflow: visible !important;
+    }
+    .docs-panel.collapsed .docs-toggle-wrap { gap: 4px; }
+    .docs-panel.collapsed .docs-toggle-btn { padding: 6px; }
+    .docs-resize-handle { display: none !important; }
+    .docs-scroll { max-width: 100% !important; }
+    .docs-grid { grid-template-columns: 1fr !important; }
+    .docs-preview-area .preview-body iframe { height: 350px; }
+
+    /* ---- Step 4: Team doc + builder split views — stack vertically, toggle ---- */
+    .ft-split { flex-direction: column !important; }
+    /* Builder editor/preview stacking */
+    #builderEditor .main-content { flex-direction: column !important; }
+    #builderEditor .editor-panel { flex: none !important; width: 100% !important; overflow-y: auto !important; }
+    #builderEditor .preview-panel {
+      flex: none !important; width: 100% !important; overflow-y: auto !important;
+      border-left: none !important; border-top: 2px solid #e2a308; padding: 8px !important;
+    }
+    /* Zoom the 850px preview down to fit the viewport width — no horizontal scroll.
+       JS sets --mobile-zoom-builder as a concrete number. */
+    #builderEditor .preview-scroll {
+      width: 850px;
+      zoom: var(--mobile-zoom-builder, 0.42);
+    }
+    #builderEditor .preview-panel { overflow-y: auto !important; overflow-x: hidden !important; max-height: none !important; }
+    .mobile #builderEditor .editor-panel.mobile-hidden { display: none !important; }
+    .mobile #builderEditor .preview-panel.mobile-hidden { display: none !important; }
+    .mobile #builderEditor .editor-panel:not(.mobile-hidden) { display: block !important; padding: 12px !important; }
+    .mobile #builderEditor .preview-panel:not(.mobile-hidden) { display: block !important; padding: 8px !important; overflow-x: hidden !important; }
+    .mobile .builder-toggle-bar { display: flex !important; }
+    .ft-form-col, .ft-preview-col { flex: none !important; width: 100% !important; }
+    .ft-preview-col { max-height: none; padding: 10px 0 !important; }
+    .ft-header { flex-wrap: wrap; gap: 6px; padding: 8px 12px !important; }
+    .ft-header h2 { font-size: 13px; width: 100%; order: -1; }
+    /* Keep .ft-page at its native desktop dimensions (8.5in × 11in) so the
+       mobile preview is identical to the exported PDF. Zoom it down to fit
+       the viewport width via a JS-computed custom property. */
+    .ft-page:not(.ft-page-probe) {
+      width: 8.5in !important; min-height: 11in !important;
+      zoom: var(--mobile-zoom, 0.45);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3) !important;
+    }
+    .ft-page-label { font-size: 9px; }
+    .ft-preview-col { overflow-y: auto !important; overflow-x: hidden !important; }
+    .mobile .ft-toggle-bar { display: flex !important; }
+
+    /* ---- Step 5: Tables — horizontal scroll ---- */
+    .quote-table, .quote-summary-table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .quote-table table, .quote-summary-table table { min-width: 500px; }
+
+    /* ---- Step 5: Touch targets ---- */
+    .btn, .tab-btn, .docs-toggle-btn, .calc-btn, .ft-add-btn, .team-doc-box {
+      min-height: 44px; min-width: 44px;
+    }
+    .form-row input, .form-row select, .form-row textarea,
+    .form-card .form-row input, .form-card .form-row select, .form-card .form-row textarea,
+    .ft-row input, .ft-row textarea, .quote-table input {
+      font-size: 16px !important; /* prevents iOS zoom on focus */
+      padding: 8px 10px !important;
+    }
+
+    /* ---- Step 4: Mobile toggle bar for form/preview in team docs ---- */
+    .ft-toggle-bar {
+      display: none; /* shown via .mobile class */
+      justify-content: center; gap: 0; background: #0f1d3a; border-bottom: 1px solid #2a2a4a; flex-shrink: 0;
+    }
+    .ft-toggle-bar button {
+      flex: 1; padding: 10px; font-size: 12px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.5px; color: #888; background: transparent; border: none; cursor: pointer;
+      border-bottom: 2px solid transparent;
+    }
+    .ft-toggle-bar button.active { color: #e2a308; border-bottom-color: #e2a308; }
+    .mobile .ft-form-col.mobile-hidden { display: none !important; }
+    .mobile .ft-preview-col.mobile-hidden { display: none !important; }
+    .mobile .ft-form-col:not(.mobile-hidden) { display: block !important; padding: 12px !important; }
+    .mobile .ft-preview-col:not(.mobile-hidden) { display: block !important; padding: 10px !important; }
+    /* Builder toggle bar — same look as team doc toggle */
+    .builder-toggle-bar {
+      display: none; /* shown via .mobile class */
+      justify-content: center; gap: 0; background: #0f1d3a; border-bottom: 1px solid #2a2a4a; flex-shrink: 0;
+    }
+    .builder-toggle-bar button {
+      flex: 1; padding: 10px; font-size: 12px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.5px; color: #888; background: transparent; border: none; cursor: pointer;
+      border-bottom: 2px solid transparent;
+    }
+    .builder-toggle-bar button.active { color: #e2a308; border-bottom-color: #e2a308; }
+
+    /* ---- Material tab: single-column catalogue ---- */
+    .catalogue-columns { flex-direction: column !important; }
+    .catalogue-column { flex: none !important; width: 100% !important; }
+    .catalogue-vendor-tabs { overflow-x: auto; -webkit-overflow-scrolling: touch; flex-wrap: nowrap !important; white-space: nowrap; }
+    .catalogue-vendor-tabs .cat-vendor-tab { flex-shrink: 0; padding: 6px 12px; font-size: 11px; }
+    /* Hide the column-header row on mobile */
+    .catalogue-item-head { display: none !important; }
+    /* Two-row GRID layout per product — fixed column tracks so every product aligns.
+       Row 1: name spans full width
+       Row 2: color | uom | price | qty | qt-rate | ext | dup-btn   */
+    .catalogue-item {
+      display: grid !important;
+      grid-template-columns: minmax(60px,1fr) minmax(50px,1fr) 58px 55px 60px 65px 28px !important;
+      grid-template-rows: auto auto !important;
+      gap: 2px 4px !important;
+      padding: 6px 8px !important;
+      align-items: center !important;
+    }
+    /* Row 1: name spans all columns */
+    .catalogue-item .cat-name { grid-column: 1 / -1 !important; font-size: 11px !important; flex: none !important; min-width: 0 !important; overflow: hidden; text-overflow: ellipsis; }
+    /* Row 2: each item in its own fixed-width column */
+    .catalogue-item .cat-color, .catalogue-item .cat-color-select {
+      grid-column: 1 !important; flex: none !important; width: auto !important; min-width: 0 !important; max-width: none !important;
+      font-size: 10px !important; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .catalogue-item .cat-uom, .catalogue-item .cat-uom-select {
+      grid-column: 2 !important; flex: none !important; width: auto !important; min-width: 0 !important; max-width: none !important;
+      font-size: 10px !important; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .catalogue-item .cat-price { grid-column: 3 !important; flex: none !important; font-size: 10px !important; text-align: right; }
+    .catalogue-item .cat-input:first-of-type { grid-column: 4 !important; }
+    .catalogue-item .cat-input-norate, .catalogue-item .cat-input:nth-of-type(2) { grid-column: 5 !important; }
+    .catalogue-item .cat-input {
+      flex: none !important; width: 100% !important; font-size: 13px !important;
+      padding: 4px 4px !important; box-sizing: border-box;
+    }
+    .catalogue-item .cat-ext { grid-column: 6 !important; flex: none !important; font-size: 11px !important; text-align: right; }
+    .catalogue-item .cat-dup-btn { grid-column: 7 !important; min-width: 28px; min-height: 28px; justify-self: center; }
+    .catalogue-item select { font-size: 12px !important; width: 100% !important; }
+    /* Custom product rows also use the grid — their extra inputs need to align */
+    .catalogue-item .cat-custom-input { font-size: 10px !important; width: 100% !important; box-sizing: border-box; }
+    .quote-search-wrap input { font-size: 16px !important; }
+
+    /* ---- Thin scrollbar on tab bar + any horizontal scroll areas ---- */
+    .tab-bar::-webkit-scrollbar { height: 3px; }
+    .tab-bar::-webkit-scrollbar-track { background: transparent; }
+    .tab-bar::-webkit-scrollbar-thumb { background: #444; border-radius: 2px; }
+    .quote-table::-webkit-scrollbar, .catalogue-vendor-tabs::-webkit-scrollbar { height: 3px; }
+    .quote-table::-webkit-scrollbar-thumb, .catalogue-vendor-tabs::-webkit-scrollbar-thumb { background: #444; border-radius: 2px; }
+    /* Firefox */
+    .tab-bar, .quote-table, .catalogue-vendor-tabs { scrollbar-width: thin; scrollbar-color: #444 transparent; }
+
+    /* Scratchpad / engineering modals */
+    .scratchpad-modal, .engineering-modal {
+      width: calc(100vw - 20px) !important; max-width: 100vw !important;
+      right: 10px !important; left: 10px !important;
+      max-height: calc(100vh - 110px) !important;
+    }
+
+    /* Team docs grid */
+    .team-docs-wrap { padding: 16px !important; }
+    .team-docs-grid { grid-template-columns: 1fr 1fr !important; gap: 10px !important; }
+    .team-docs-title { font-size: 20px; }
+
+    /* Cost Summary */
+    .quote-summary-table td { padding: 3px 6px !important; font-size: 12px !important; }
+    .quote-summary-table tr.grand-total td { font-size: 14px !important; }
+
+    /* Profile modal */
+    .profile-modal { width: calc(100vw - 20px) !important; max-width: 100% !important; }
+    #signatureCanvas { max-width: 100%; height: auto; }
+
+    /* Print — unchanged; print is always desktop layout */
+  }
 </style>
 </head>
 <body>
@@ -1143,10 +1383,10 @@
 
 <div class="tab-bar">
   <button class="tab-btn active" onclick="switchTab('project')">Project Info</button>
-  <button class="tab-btn" onclick="switchTab('teamdocs')">Team Docs</button>
   <button class="tab-btn" onclick="switchTab('material')">Material</button>
   <button class="tab-btn" onclick="switchTab('labor')">Labor, Travel &amp; Misc</button>
   <button class="tab-btn" onclick="switchTab('summary')">Cost Summary</button>
+  <button class="tab-btn" onclick="switchTab('teamdocs')">Team Docs</button>
   <button class="tab-btn" onclick="switchTab('builder')">Proposal Builder</button>
 </div>
 
@@ -1339,7 +1579,7 @@
       <button class="btn btn-back" onclick="closeFieldTabSurvey()">&larr; Back to Team Docs</button>
       <h2>Field Tab / Site Survey</h2>
       <div style="display:flex; gap:6px;">
-        <button class="btn btn-export" onclick="printFieldTab()">Export / Print</button>
+        <button class="btn btn-export" onclick="exportTeamDocPDF('ftPreview','Field_Tab')">Export PDF</button>
         <button class="btn btn-export od-save-btn" onclick="exportPreviewToOneDrive('ftPreview','sitesurveys',(state.projectName||'Project')+' - Field Tab')" title="Save to OneDrive Site Surveys folder">Save to OneDrive</button>
       </div>
     </div>
@@ -1354,7 +1594,7 @@
       <button class="btn btn-back" onclick="closePurchaseOrder()">&larr; Back to Team Docs</button>
       <h2>Purchase Order</h2>
       <div style="display:flex; gap:6px;">
-        <button class="btn btn-export" onclick="printPurchaseOrder()">Export / Print</button>
+        <button class="btn btn-export" onclick="exportTeamDocPDF('poPreview','Purchase_Order')">Export PDF</button>
         <button class="btn btn-export od-save-btn" onclick="exportPreviewToOneDrive('poPreview','additional',(state.projectName||'Project')+' - Purchase Order')" title="Save to OneDrive Additional Documents folder">Save to OneDrive</button>
       </div>
     </div>
@@ -1369,7 +1609,7 @@
       <button class="btn btn-back" onclick="closeCostCodes()">&larr; Back to Team Docs</button>
       <h2>Cost Codes</h2>
       <div style="display:flex; gap:6px;">
-        <button class="btn btn-export" onclick="window.print()">Export / Print</button>
+        <button class="btn btn-export" onclick="exportTeamDocPDF('ccPreview','Cost_Codes')">Export PDF</button>
         <button class="btn btn-export od-save-btn" onclick="exportPreviewToOneDrive('ccPreview','additional',(state.projectName||'Project')+' - Cost Codes')" title="Save to OneDrive Additional Documents folder">Save to OneDrive</button>
       </div>
     </div>
@@ -1386,7 +1626,7 @@
       <button class="btn btn-back" onclick="closeWorkOrder()">&larr; Back to Team Docs</button>
       <h2>Work Order</h2>
       <div style="display:flex; gap:6px;">
-        <button class="btn btn-export" onclick="window.print()">Export / Print</button>
+        <button class="btn btn-export" onclick="exportTeamDocPDF('woPreview','Work_Order')">Export PDF</button>
         <button class="btn btn-export od-save-btn" onclick="exportPreviewToOneDrive('woPreview','workorders',(state.projectName||'Project')+' - Work Order')" title="Save to OneDrive Work Orders folder">Save to OneDrive</button>
       </div>
     </div>
@@ -2753,6 +2993,7 @@ function makeBlankDraftData() {
     pmCell: (currentProfile && currentProfile.pm_cell) || '',
     pmEmail: (currentProfile && currentProfile.pm_email) || '',
     signoffClosing: (currentProfile && currentProfile.signoff_closing) || 'Best regards,',
+    showSignature: true,
     scopeSections: [{ name: 'Installation of SYSTEM', scopes: [{ desc: 'FLOORING SCOPE', qty: '', unit: 'Square Feet' }] }],
     products: [],
     procedureSections: [{ header: '', steps: [] }],
@@ -3727,6 +3968,7 @@ function getIncText(inc) {
       const lt = state.laborType || 'open-shop';
       if (lt === 'open-shop') raw = "Pricing is not based on union or prevailing wage labor rates.";
       else if (lt === 'prevailing') raw = "Work to be performed utilizing Prevailing Wage labor rates.";
+      else if (lt === 'local-528') raw = "Work to be performed utilizing Local 528 labor rates. Overtime, weekend, and holiday hours may result in increased labor rates.";
       else raw = "Work to be performed utilizing Union labor rates. Overtime, weekend, and holiday hours may result in increased labor rates.";
     } else {
       const ct = state.clientType;
@@ -3747,6 +3989,7 @@ function getIncRawText(inc) {
     const lt = state.laborType || 'open-shop';
     if (lt === 'open-shop') return "Pricing is not based on union or prevailing wage labor rates.";
     if (lt === 'prevailing') return "Work to be performed utilizing Prevailing Wage labor rates.";
+    if (lt === 'local-528') return "Work to be performed utilizing Local 528 labor rates. Overtime, weekend, and holiday hours may result in increased labor rates.";
     return "Work to be performed utilizing Union labor rates. Overtime, weekend, and holiday hours may result in increased labor rates.";
   }
   const ct = state.clientType;
@@ -7779,6 +8022,12 @@ function newDraftFromProjectInfo() {
   if (js.siteContact) {
     data.contactName = js.siteContact.name || '';
   }
+  // Map PI labor type to builder labor type (PI uses 'non-union', builder uses 'open-shop')
+  if (js.laborType) {
+    const ltMap = { 'non-union': 'open-shop', 'union': 'union', 'local-528': 'local-528' };
+    data.laborType = ltMap[js.laborType] || 'open-shop';
+  }
+  if (js.prevailingWage) data.laborType = 'prevailing';
   // Pull ALL scope sections from Project Info. Each pi.scope becomes its own
   // scope section so multi-phase projects hydrate fully in the draft.
   const piScopes = (pi.scopes || []).filter(sc => sc && (sc.phaseName || sc.installedSystem || sc.sqFt || sc.lnFt || sc.lnFtJoints));
@@ -8583,7 +8832,8 @@ function loadPreviousProject(projectId) {
     pmCell: (currentProfile && currentProfile.pm_cell) || '',
     pmEmail: (currentProfile && currentProfile.pm_email) || '',
     signoffClosing: (currentProfile && currentProfile.signoff_closing) || 'Best regards,',
-  
+    showSignature: true,
+
     paymentTerms: '',
     omitPaymentTerms: false,
     inclusionBold: {},
@@ -8742,10 +8992,11 @@ function render() {
         </select>
       </div>
       <div class="form-row"><label>Labor Type</label>
-        <select onchange="state.laborType=this.value; renderInclusionChecks();">
+        <select onchange="state.laborType=this.value; render(); schedulePersist();">
           <option value="open-shop" ${s.laborType==='open-shop'?'selected':''}>Non-Union</option>
           <option value="prevailing" ${s.laborType==='prevailing'?'selected':''}>Prevailing Wage</option>
           <option value="union" ${s.laborType==='union'?'selected':''}>Union Labor</option>
+          <option value="local-528" ${s.laborType==='local-528'?'selected':''}>Local 528</option>
         </select>
       </div>
       <div class="form-row" style="flex:0 0 60px;"><label>Mobs</label><input value="${esc(s.numMobilizations)}" oninput="syncField('numMobilizations',this.value)" placeholder="1" style="text-align:center;"></div>
@@ -8819,7 +9070,8 @@ function render() {
 
   // PROCEDURES
   h += `<div class="form-card">${cardHeader("procedures","Procedures")}
-    <div class="form-row"><label>Existing Conditions, Notes, Clarifications, ETC.</label><textarea style="min-height:60px;" oninput="syncField('existingConditions',this.value)" placeholder="Describe existing site conditions, notes, clarifications, etc. (optional)">${escH(s.existingConditions)}</textarea></div>`;
+    <div class="form-row"><label>Existing Conditions, Notes, Clarifications, ETC.</label><textarea style="min-height:60px;" oninput="syncField('existingConditions',this.value)" placeholder="Describe existing site conditions, notes, clarifications, etc. (optional)">${escH(s.existingConditions)}</textarea></div>
+    <label style="display:flex; align-items:center; gap:6px; font-size:11px; color:#ccc; margin-top:4px; cursor:pointer;"><input type="checkbox" ${s.boldExistingConditions ? 'checked' : ''} onchange="state.boldExistingConditions=this.checked; render(); schedulePersist();"> Bold existing conditions in proposal</label>`;
   s.procedureSections.forEach((sec, pi) => {
     h += `<div class="procedure-section-block">
       <div class="form-row-inline" style="margin-bottom:6px;">
@@ -8919,6 +9171,11 @@ function render() {
       <div class="form-row"><label>Cell Number</label><input value="${esc(s.pmCell)}" oninput="syncField('pmCell',this.value)" placeholder="206-xxx-xxxx"></div>
       <div class="form-row"><label>Email</label><input value="${esc(s.pmEmail)}" oninput="syncField('pmEmail',this.value)" placeholder="name@HTIPolymer.com"></div>
     </div>
+    <label style="display:flex; align-items:center; gap:6px; font-size:11px; color:#ccc; margin-top:6px; cursor:pointer;">
+      <input type="checkbox" ${s.showSignature ? 'checked' : ''} onchange="state.showSignature=this.checked; render(); schedulePersist();">
+      Include signature image above PM name
+    </label>
+    ${s.showSignature && currentProfile && currentProfile.signature ? '<div style="margin-top:6px; padding:6px; background:#fff; border-radius:4px; display:inline-block;"><img src="' + escH(currentProfile.signature) + '" style="height:50px; width:auto;"></div>' : (s.showSignature ? '<div style="margin-top:4px; font-size:10px; color:#888; font-style:italic;">No signature found — upload one in Profile settings.</div>' : '')}
   </div></div>`;
 
   schedulePersist();
@@ -9015,8 +9272,8 @@ async function exportPreviewToOneDrive(previewElId, odCategory, filenameBase) {
     th { background: #e6e6e6; color: #333; font-size: 9px; text-transform: uppercase; font-weight: 600; }
     .ft-general-box { font-size: 11px; white-space: pre-wrap; word-wrap: break-word; border: 1px solid #bbb; padding: 6px 8px; background: #f8f8f8; }
     .po-total-row td { background: #f0f0f0; border-top: 2px solid #888; }
-    .procedure-existing { margin: 4px 0 6px; font-size: 10pt; line-height: 1.35; white-space: pre-wrap; }
-    @media print { @page { size: letter portrait; margin: 0; } .ft-page { box-shadow: none; } }
+    .procedure-existing { margin: 0; font-size: 10pt; line-height: 1.35; white-space: pre-wrap; }
+    @media print { @page { size: letter portrait; margin: 0; } .ft-page { box-shadow: none; zoom: 1 !important; width: 100% !important; } }
   `;
 
   const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${esc(filenameBase)}</title><style>${styles}</style></head><body>${pagesHtml}</body></html>`;
@@ -9056,7 +9313,29 @@ function closeFieldTabSurvey() {
   if (grid) grid.style.display = '';
   if (view) view.classList.remove('active');
 }
-function printFieldTab() { window.print(); }
+// Export a team-doc preview to PDF using html2pdf.js (same lib as proposal builder)
+function exportTeamDocPDF(previewElId, filenameLabel) {
+  const previewCol = document.getElementById(previewElId);
+  if (!previewCol) { alert('Preview not rendered.'); return; }
+  const container = document.createElement('div');
+  previewCol.querySelectorAll('.ft-page').forEach(page => {
+    const clone = page.cloneNode(true);
+    clone.style.zoom = '1';
+    clone.style.boxShadow = 'none';
+    clone.style.marginBottom = '0';
+    container.appendChild(clone);
+  });
+  const projectName = (state && state.projectName) || 'Project';
+  const filename = `HTI_${filenameLabel}_${projectName.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
+  const opt = {
+    margin: 0,
+    filename,
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2, useCORS: true },
+    jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+  };
+  html2pdf().set(opt).from(container).save();
+}
 
 function renderFieldTabForm() {
   const host = document.getElementById('ftForm');
@@ -9261,7 +9540,7 @@ function ftPaginate(sections, opts) {
 
   // Hidden probe — same width & padding as a real .ft-page so measurements match
   const probe = document.createElement('div');
-  probe.className = pageClass;
+  probe.className = pageClass + ' ft-page-probe';
   probe.style.cssText = 'position:absolute; visibility:hidden; left:-9999px; top:-9999px; width:8.5in; min-height:0; padding:0.4in 0.5in; box-sizing:border-box;';
   document.body.appendChild(probe);
   const measure = (html) => { probe.innerHTML = html; return probe.offsetHeight; };
@@ -9278,6 +9557,8 @@ function ftPaginate(sections, opts) {
     // Force-page-break marker — starts a fresh page unconditionally
     if (section && section.forcePageBreak) {
       newPage();
+      // Tag the new page so the PDF exporter can add page-break-before
+      cur()._forceBreak = true;
       return;
     }
     if (typeof section === 'string') {
@@ -9347,8 +9628,9 @@ function ftPaginate(sections, opts) {
 
   return pages.map((secs, i) => {
     const labelText = `Page ${i + 1} of ${pages.length} — ${labelPrefix}`;
+    const forceBreak = secs._forceBreak ? ' data-force-break="1"' : '';
     return `<div class="ft-page-label">${labelText}</div>
-            <div class="${pageClass}">${secs.join('')}</div>`;
+            <div class="${pageClass}"${forceBreak}>${secs.join('')}</div>`;
   }).join('');
 }
 
@@ -9673,11 +9955,7 @@ function closePurchaseOrder() {
   if (grid) grid.style.display = '';
   if (view) view.classList.remove('active');
 }
-function printPurchaseOrder() {
-  document.body.classList.add('print-po');
-  window.print();
-  setTimeout(() => document.body.classList.remove('print-po'), 500);
-}
+// printPurchaseOrder removed — all team docs now export via exportTeamDocPDF()
 
 // Build a flat list of PO line items from state.quote.materials + customMaterials
 function _buildPOLines() {
@@ -10778,6 +11056,8 @@ function renderProjectTab() {
           <select onchange="piSyncJobsite('laborType',this.value)">
             <option value="union" ${js.laborType==='union'?'selected':''}>Union</option>
             <option value="non-union" ${js.laborType==='non-union'?'selected':''}>Non-Union</option>
+            <option value="prevailing" ${js.laborType==='prevailing'?'selected':''}>Prevailing Wage</option>
+            <option value="local-528" ${js.laborType==='local-528'?'selected':''}>Local 528</option>
           </select>
         </div>
         <div class="form-row" style="flex:0 0 200px;"><label>Prevailing Wage</label>
@@ -11039,7 +11319,7 @@ async function generateWordBlob() {
     applyBreakBefore(paras, procHeader);
     paras.push(wp(procHeader, { bold: true, before: 240 }));
     if (pi === 0 && s.existingConditions) {
-      paras.push(wp(s.existingConditions));
+      paras.push(wp(s.existingConditions, { bold: !!s.boldExistingConditions }));
     }
     sec.steps.forEach(function(step) {
       const stepText = step.text.replace(/\{([^}]+)\}/g, '$1');
@@ -11102,9 +11382,45 @@ async function generateWordBlob() {
   var closingParas = closingLines.map(function(line, i) {
     return wp((i === closingLines.length - 1 ? line + ' ' : line), i === 0 ? { before: 240 } : {});
   }).join('');
+  // Build signature image paragraph for Word if enabled
+  var sigParagraph = '';
+  var _wordSigData = null; // set below if we have a signature to embed
+  if (s.showSignature && currentProfile && currentProfile.signature) {
+    // Canvas is 600x200px. Render at ~2in wide in the doc, preserving 3:1 aspect ratio.
+    var sigWidthIn = 2, sigHeightIn = 2 / 3;
+    var cxEmu = Math.round(sigWidthIn * 914400);
+    var cyEmu = Math.round(sigHeightIn * 914400);
+    var rIdSig = 'rIdSig99';
+    sigParagraph = '<w:p><w:pPr><w:spacing w:before="120" w:after="0" w:line="240" w:lineRule="auto"/></w:pPr><w:r><w:drawing>' +
+      '<wp:inline distT="0" distB="0" distL="0" distR="0" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing">' +
+        '<wp:extent cx="' + cxEmu + '" cy="' + cyEmu + '"/>' +
+        '<wp:docPr id="99" name="Signature"/>' +
+        '<a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">' +
+          '<a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">' +
+            '<pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">' +
+              '<pic:nvPicPr><pic:cNvPr id="99" name="signature.png"/><pic:cNvPicPr/></pic:nvPicPr>' +
+              '<pic:blipFill>' +
+                '<a:blip r:embed="' + rIdSig + '" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"/>' +
+                '<a:stretch><a:fillRect/></a:stretch>' +
+              '</pic:blipFill>' +
+              '<pic:spPr>' +
+                '<a:xfrm><a:off x="0" y="0"/><a:ext cx="' + cxEmu + '" cy="' + cyEmu + '"/></a:xfrm>' +
+                '<a:prstGeom prst="rect"><a:avLst/></a:prstGeom>' +
+              '</pic:spPr>' +
+            '</pic:pic>' +
+          '</a:graphicData>' +
+        '</a:graphic>' +
+      '</wp:inline>' +
+    '</w:drawing></w:r></w:p>';
+    // Strip the data URL prefix and decode the base64 PNG for the ZIP
+    var b64 = currentProfile.signature.replace(/^data:image\/\w+;base64,/, '');
+    _wordSigData = { b64: b64, rId: rIdSig };
+  }
+
   var signoffParas = [
     closingParas,
-    wp(s.pmName || 'PROJECT MANAGER', { bold: true, before: 240 }),
+    sigParagraph,
+    wp(s.pmName || 'PROJECT MANAGER', { bold: true, before: sigParagraph ? 0 : 240 }),
     wp(s.pmCell || 'CELL NUMBER'),
     wp(s.pmEmail || 'PM EMAIL'),
     wp('HTI Polymer, INC.'),
@@ -11177,6 +11493,27 @@ async function generateWordBlob() {
       '</w:compat>';
     settingsXml = settingsXml.replace('</w:settings>', compatBlock + '</w:settings>');
     zip.file('word/settings.xml', settingsXml);
+  }
+
+  // Embed signature image in the ZIP if present
+  if (_wordSigData) {
+    // 1. Add the PNG binary to word/media/
+    zip.file('word/media/signature.png', _wordSigData.b64, { base64: true });
+
+    // 2. Add relationship to word/_rels/document.xml.rels
+    var relsFile = 'word/_rels/document.xml.rels';
+    var relsXml = await zip.file(relsFile).async('string');
+    var sigRel = '<Relationship Id="' + _wordSigData.rId + '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/signature.png"/>';
+    relsXml = relsXml.replace('</Relationships>', sigRel + '</Relationships>');
+    zip.file(relsFile, relsXml);
+
+    // 3. Ensure [Content_Types].xml has PNG entry
+    var ctFile = '[Content_Types].xml';
+    var ctXml = await zip.file(ctFile).async('string');
+    if (!ctXml.includes('Extension="png"')) {
+      ctXml = ctXml.replace('</Types>', '<Default Extension="png" ContentType="image/png"/></Types>');
+      zip.file(ctFile, ctXml);
+    }
   }
 
   var bodyContent = paras.join('') + sectPr;
@@ -11609,7 +11946,7 @@ function buildProposalHTML(s) {
   // inline right after the first procedures header, with no sub-header and no
   // bullet (it's a free-form paragraph, not a step).
   const existingConditionsInline = s.existingConditions
-    ? `<div class="procedure-existing">${fl('procedures','existingConditions',escH(s.existingConditions))}</div>`
+    ? `<div class="procedure-existing"${s.boldExistingConditions ? ' style="font-weight:700;"' : ''}>${fl('procedures','existingConditions',escH(s.existingConditions))}</div>`
     : '';
   const proceduresHTML = s.procedureSections.map((sec, pi) => {
     const items = sec.steps.map((step, i) => {
@@ -11674,8 +12011,12 @@ function buildProposalHTML(s) {
   }
 
   // SIGNOFF
+  const sigImg = s.showSignature && currentProfile && currentProfile.signature
+    ? `<img src="${escH(currentProfile.signature)}" style="height:50px; width:auto; display:block; margin-bottom:2px;">`
+    : '';
   const signHTML = `<div class="signoff-block"><div class="signoff">
     <p>${fl('signoff','signoffClosing',escH(s.signoffClosing||'Best regards,').replace(/\n/g,'<br>'))}</p><br>
+    ${sigImg}
     <p class="pm-name">${fl('signoff','pmName',escH(s.pmName) || 'PROJECT MANAGER')}</p>
     ${s.pmCell ? `<p>${fl('signoff','pmCell',escH(s.pmCell))}</p>` : ''}
     ${s.pmEmail ? `<p>${fl('signoff','pmEmail',escH(s.pmEmail))}</p>` : ''}
@@ -13481,9 +13822,9 @@ function renderCatalogueView() {
       ${colorCell}
       ${uomCell}
       <span class="cat-price">${fmtMoney(rateForCombo(g, uom, color))}</span>
-      <input class="cat-input" type="number" min="0" placeholder="—" value="${qty || ''}"
+      <input class="cat-input" type="number" min="0" placeholder="Qty" value="${qty || ''}"
         onchange="onLineQtyChange('${escH(g.vendor)}','${escH(g.name)}',${dupIdx},this.value)" title="Quantity">
-      <input class="cat-input cat-input-norate" type="number" min="0" step="0.01" placeholder="—" value="${qr}"
+      <input class="cat-input cat-input-norate" type="number" min="0" step="0.01" placeholder="Qt Rate" value="${qr}"
         onchange="onLineRateChange('${escH(g.vendor)}','${escH(g.name)}',${dupIdx},this.value)" title="Quoted Rate Override">
       <span class="cat-ext">${ext > 0 ? fmtMoney(ext) : ''}</span>
       ${dupBtn}
@@ -13700,8 +14041,8 @@ function buildCustomProductsCategoryHtml() {
       <input class="cat-color cat-custom-input" value="${escH(m.color || '')}" placeholder="Color" onchange="onCustomProductFieldChange(${i},'color',this.value)">
       <input class="cat-uom cat-custom-input" value="${escH(m.uom || '')}" placeholder="UOM" onchange="onCustomProductFieldChange(${i},'uom',this.value)">
       <input class="cat-price cat-custom-input" type="number" min="0" step="0.01" value="${m.unitRate || ''}" placeholder="Rate" onchange="onCustomProductFieldChange(${i},'unitRate',this.value)">
-      <input class="cat-input" type="number" min="0" placeholder="—" value="${m.qty || ''}" onchange="onCustomProductFieldChange(${i},'qty',this.value)" title="Quantity">
-      <input class="cat-input" type="number" min="0" step="0.01" placeholder="—" value="${m.quotedRate != null ? m.quotedRate : ''}" onchange="onCustomProductFieldChange(${i},'quotedRate',this.value)" title="Quoted Rate Override">
+      <input class="cat-input" type="number" min="0" placeholder="Qty" value="${m.qty || ''}" onchange="onCustomProductFieldChange(${i},'qty',this.value)" title="Quantity">
+      <input class="cat-input" type="number" min="0" step="0.01" placeholder="Qt Rate" value="${m.quotedRate != null ? m.quotedRate : ''}" onchange="onCustomProductFieldChange(${i},'quotedRate',this.value)" title="Quoted Rate Override">
       <span class="cat-ext">${ext > 0 ? fmtMoney(ext) : ''}</span>
       <button class="cat-dup-btn remove" style="opacity:1;" onclick="removeCustomProduct(${i})" title="Remove row">&times;</button>
     </div>`;
@@ -14313,6 +14654,108 @@ document.addEventListener('click', function(e) {
     dd.classList.remove('open');
   }
 });
+
+// ============================================================
+// MOBILE DETECTION & FORM/PREVIEW TOGGLE
+// Only activates at ≤ 768px. Zero effect on desktop.
+// ============================================================
+(function initMobileSupport() {
+  function checkMobile() {
+    const isMobile = window.innerWidth <= 768;
+    document.body.classList.toggle('mobile', isMobile);
+    if (isMobile) updateMobileZoom();
+  }
+  function updateMobileZoom() {
+    const vw = window.innerWidth;
+    // ft-page is 8.5in = 816px. Leave 24px padding.
+    const ftZoom = Math.min(1, (vw - 24) / 816);
+    // builder preview-scroll is 850px. Leave 16px padding.
+    const builderZoom = Math.min(1, (vw - 16) / 850);
+    document.documentElement.style.setProperty('--mobile-zoom', ftZoom.toFixed(4));
+    document.documentElement.style.setProperty('--mobile-zoom-builder', builderZoom.toFixed(4));
+  }
+  checkMobile();
+  window.addEventListener('resize', checkMobile);
+
+  // Disable sidebar drag-resize on mobile (the handle is hidden via CSS, but
+  // this prevents any residual mousedown from firing)
+  const origHandle = document.getElementById('docsResizeHandle');
+  if (origHandle) {
+    origHandle.addEventListener('mousedown', function(e) {
+      if (window.innerWidth <= 768) e.stopImmediatePropagation();
+    }, true);
+  }
+})();
+
+// Builder editor / preview toggle on mobile
+function mobileBuilderToggle(show) {
+  if (window.innerWidth > 768) return;
+  const wrap = document.getElementById('builderEditor');
+  if (!wrap) return;
+  const editor = wrap.querySelector('.editor-panel');
+  const preview = wrap.querySelector('.preview-panel');
+  if (!editor || !preview) return;
+  if (show === 'edit') {
+    editor.classList.remove('mobile-hidden');
+    preview.classList.add('mobile-hidden');
+  } else {
+    editor.classList.add('mobile-hidden');
+    preview.classList.remove('mobile-hidden');
+  }
+  wrap.querySelectorAll('.builder-toggle-bar button').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.show === show);
+  });
+}
+
+// Form / Preview toggle for team doc split views on mobile.
+// Injects a toggle bar into each .field-tab-view that has a .ft-split.
+function mobileDocToggle(viewId, show) {
+  if (window.innerWidth > 768) return;
+  const view = document.getElementById(viewId);
+  if (!view) return;
+  const form = view.querySelector('.ft-form-col');
+  const preview = view.querySelector('.ft-preview-col');
+  if (!form || !preview) return;
+  if (show === 'form') {
+    form.classList.remove('mobile-hidden');
+    preview.classList.add('mobile-hidden');
+  } else {
+    form.classList.add('mobile-hidden');
+    preview.classList.remove('mobile-hidden');
+  }
+  // Update toggle buttons
+  view.querySelectorAll('.ft-toggle-bar button').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.show === show);
+  });
+}
+
+// Inject toggle bars into all team-doc split views AND the proposal builder
+// on first load. Safe to call multiple times — skips if already injected.
+(function injectMobileToggleBars() {
+  // Team doc views
+  const views = ['fieldTabView','purchaseOrderView','costCodesView','workOrderView'];
+  views.forEach(id => {
+    const view = document.getElementById(id);
+    if (!view) return;
+    const split = view.querySelector('.ft-split');
+    if (!split || view.querySelector('.ft-toggle-bar')) return;
+    const bar = document.createElement('div');
+    bar.className = 'ft-toggle-bar';
+    bar.innerHTML = `<button class="active" data-show="form" onclick="mobileDocToggle('${id}','form')">Edit</button><button data-show="preview" onclick="mobileDocToggle('${id}','preview')">Preview</button>`;
+    split.parentNode.insertBefore(bar, split);
+  });
+  // Builder view
+  const builderWrap = document.getElementById('builderEditor');
+  if (builderWrap && !builderWrap.querySelector('.builder-toggle-bar')) {
+    const mainContent = builderWrap.querySelector('.main-content');
+    if (mainContent) {
+      const bar = document.createElement('div');
+      bar.className = 'builder-toggle-bar';
+      bar.innerHTML = `<button class="active" data-show="edit" onclick="mobileBuilderToggle('edit')">Edit</button><button data-show="preview" onclick="mobileBuilderToggle('preview')">Preview</button>`;
+      mainContent.parentNode.insertBefore(bar, mainContent);
+    }
+  }
+})();
 
 </script>
 
